@@ -58,7 +58,7 @@ interface MenuItem {
 export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage, onNavigate }: AdminLayoutProps) {
   const { settings } = useSiteSettings();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['users', 'projects', 'gigs', 'transactions', 'subscriptions', 'disputes', 'content', 'taxonomies']);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['users', 'projects', 'gigs', 'transactions', 'subscriptions', 'disputes', 'content', 'taxonomies', 'startup-ideas']);
   const [notificationCount] = useState(5);
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -76,6 +76,8 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
       icon: <Users className="w-5 h-5" />,
       submenu: [
         { id: 'users', label: 'Users/Customers', icon: <Users className="w-4 h-4" /> },
+        { id: 'verification', label: 'KYC Verifications', icon: <UserCheck className="w-4 h-4" /> },
+        { id: 'suspended', label: 'Suspended Users', icon: <UserX className="w-4 h-4" /> },
       ]
     },
     {
@@ -107,7 +109,9 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
         { id: 'startup-categories', label: 'Idea Categories', icon: <Grid3x3 className="w-4 h-4" /> },
         { id: 'startup-ideas-faq', label: 'Startup Ideas FAQ', icon: <MessageSquare className="w-4 h-4" /> },
         { id: 'startup-ideas-terms', label: 'Terms & Conditions', icon: <Scale className="w-4 h-4" /> },
-        { id: 'startup-ideas-privacy', label: 'Privacy Policy', icon: <FileCheck className="w-4 h-4" /> }
+        { id: 'startup-ideas-privacy', label: 'Privacy Policy', icon: <FileCheck className="w-4 h-4" /> },
+        { id: 'investor-meetings', label: 'Investor Meetings', icon: <Briefcase className="w-4 h-4" /> },
+        { id: 'investor-opportunities', label: 'Opportunities Tracking', icon: <ClipboardList className="w-4 h-4" /> }
       ]
     },
     {

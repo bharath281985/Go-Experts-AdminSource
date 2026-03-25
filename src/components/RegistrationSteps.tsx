@@ -46,6 +46,7 @@ interface RegistrationStep {
     field: string;
     options: StepOption[];
     isActive: boolean;
+    applicableRoles: string[];
 }
 
 /* ================= PAGE ================= */
@@ -413,6 +414,36 @@ function EditModal({ open, onClose, step, setStep, onSave }: any) {
                                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <div className="space-y-2 pt-4 border-t border-gray-100 dark:border-white/5">
+                                    <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Applicable Roles (Empty if all)</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['freelancer', 'client', 'investor', 'startup_creator'].map(role => {
+                                            const isSelected = step?.applicableRoles?.includes(role);
+                                            return (
+                                                <button
+                                                    key={role}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const currentRoles = step?.applicableRoles || [];
+                                                        const nextRoles = isSelected 
+                                                            ? currentRoles.filter((r: string) => r !== role)
+                                                            : [...currentRoles, role];
+                                                        setStep({ ...step, applicableRoles: nextRoles });
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
+                                                        isSelected 
+                                                        ? 'bg-[#F24C20] text-white border-[#F24C20]' 
+                                                        : 'bg-gray-50 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10 hover:border-[#F24C20] hover:text-[#F24C20]'
+                                                    }`}
+                                                >
+                                                    {role.replace('_', ' ').toUpperCase()}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 italic">If no role is selected, this step will be shown to everyone.</p>
                                 </div>
                             </div>
                         </section>

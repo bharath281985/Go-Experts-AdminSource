@@ -37,7 +37,7 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'suspended' | 'pending'>(
     viewType === 'suspended' ? 'suspended' : viewType === 'verification' ? 'pending' : 'all'
   );
-  const [filterRole, setFilterRole] = useState<'all' | 'client' | 'freelancer' | 'both'>('all');
+  const [filterRole, setFilterRole] = useState<'all' | 'client' | 'freelancer' | 'investor' | 'startup_creator' | 'both'>('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -157,17 +157,25 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
       email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const isSuspended = user.is_suspended || false;
-    const isVerified = user.is_email_verified || false;
+    const isEmailVerified = user.is_email_verified || false;
+    const isKycVerified = user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified;
+    const isPendingKyc = user.kyc_status === 'pending' || (user.kyc && user.kyc_status === 'unverified');
 
-    // Filter by Status: All, Active (not suspended & verified), Suspended, Pending (unverified)
+    // Filter by Status: All, Active (not suspended & verified), Suspended, Pending (unverified or kyc pending)
     const matchesStatus = filterStatus === 'all' ||
       (filterStatus === 'suspended' && isSuspended) ||
-      (filterStatus === 'active' && !isSuspended && isVerified) ||
-      (filterStatus === 'pending' && !isVerified);
+      (filterStatus === 'active' && !isSuspended && isEmailVerified && isKycVerified) ||
+      (filterStatus === 'pending' && (!isEmailVerified || user.kyc_status === 'pending' || (user.kyc && user.kyc_status === 'unverified')));
 
     const isFreelancer = user.roles?.includes('freelancer');
     const isClient = user.roles?.includes('client');
-    const roleKey = isFreelancer && isClient ? 'both' : isFreelancer ? 'freelancer' : 'client';
+    const isInvestor = user.roles?.includes('investor');
+    const isStartupCreator = user.roles?.includes('startup_creator');
+
+    const roleKey = isFreelancer && isClient ? 'both' : 
+                    isInvestor ? 'investor' : 
+                    isStartupCreator ? 'startup_creator' :
+                    isFreelancer ? 'freelancer' : 'client';
     const matchesRole = filterRole === 'all' || roleKey === filterRole;
 
     return matchesSearch && matchesStatus && matchesRole;
@@ -274,6 +282,8 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
               <option value="all">All Roles</option>
               <option value="client">Client</option>
               <option value="freelancer">Freelancer</option>
+              <option value="investor">Investor</option>
+              <option value="startup_creator">Startup Creator</option>
               <option value="both">Both</option>
             </select>
           </div>
@@ -367,6 +377,8 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
                 </tr>
               ) : (paginatedUsers.map((user, index) => {
                 const role = user.roles?.includes('freelancer') && user.roles?.includes('client') ? 'both' :
+                  user.roles?.includes('investor') ? 'investor' :
+                  user.roles?.includes('startup_creator') ? 'startup_creator' :
                   user.roles?.includes('freelancer') ? 'freelancer' : 'client';
                 const status = user.is_suspended ? 'suspended' : user.is_email_verified ? 'active' : 'pending';
                 const avatar = user.profile_image ? (user.profile_image.startsWith('http') ? user.profile_image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${user.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'U')}&background=random`;
@@ -410,7 +422,10 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
                             : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                           }`}
                       >
-                        {role === 'both' ? 'Freelancer & Client' : role.charAt(0).toUpperCase() + role.slice(1)}
+                        {role === 'both' ? 'Freelancer & Client' : 
+                         role === 'investor' ? 'Venture Investor' :
+                         role === 'startup_creator' ? 'Startup Founder' :
+                         role.charAt(0).toUpperCase() + role.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -450,18 +465,18 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
                       )}
                     </td>
                     <td className="px-6 py-4">
-                       {user.kyc_details?.is_verified ? (
-                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 w-fit">
+                       {user.kyc_status === 'fully_verified' ? (
+                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 w-fit">
                             <ShieldAlert className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">KYC Verified</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
                          </div>
-                       ) : user.kyc_details?.pancard ? (
+                       ) : user.kyc_status === 'pending' || (user.kyc_details?.pancard) ? (
                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 w-fit animate-pulse">
                             <Database className="w-3.5 h-3.5" />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Review Required</span>
                          </div>
                        ) : (
-                         <span className="text-[10px] text-gray-400 italic">No Docs</span>
+                         <span className="text-[10px] text-gray-400 italic font-medium uppercase tracking-tighter">Unverified</span>
                        )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">

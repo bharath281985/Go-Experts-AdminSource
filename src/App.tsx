@@ -40,6 +40,8 @@ import { StartupIdeasManagement } from './components/StartupIdeasManagement';
 import { StartupCategories } from './components/StartupCategories';
 import { StartupIdeaDetail } from './components/StartupIdeaDetail';
 import { StartupIdeaLegalSection } from './components/StartupIdeaLegalSection';
+import { InvestorMeetingsManagement } from './components/InvestorMeetingsManagement';
+import { InvestorOpportunitiesManagement } from './components/InvestorOpportunitiesManagement';
 
 
 
@@ -139,7 +141,9 @@ export default function App() {
     'startup-categories': '/startup-categories',
     'startup-ideas-faq': '/startup-ideas/faq',
     'startup-ideas-terms': '/startup-ideas/terms',
-    'startup-ideas-privacy': '/startup-ideas/privacy'
+    'startup-ideas-privacy': '/startup-ideas/privacy',
+    'investor-meetings': '/investor-meetings',
+    'investor-opportunities': '/investor-opportunities'
   };
 
   const getPageFromUrl = () => {
@@ -260,6 +264,10 @@ export default function App() {
         return <StartupIdeaLegalSection type="terms" />;
       case 'startup-ideas-privacy':
         return <StartupIdeaLegalSection type="privacy" />;
+      case 'investor-meetings':
+        return <InvestorMeetingsManagement />;
+      case 'investor-opportunities':
+        return <InvestorOpportunitiesManagement />;
 
       // Subscriptions
       case 'subscriptions':

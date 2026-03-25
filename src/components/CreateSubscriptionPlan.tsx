@@ -7,7 +7,12 @@ import {
   IndianRupee,
   ListCheck,
   Save,
-  Users
+  Users,
+  Star,
+  Rocket,
+  Shield,
+  AlertCircle,
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
@@ -15,6 +20,21 @@ import api from '../lib/api';
 interface CreateSubscriptionPlanProps {
   onBack: () => void;
   onNavigate: (page: string) => void;
+}
+
+const inputCls = "w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626]/50 focus:bg-white dark:focus:bg-[#262626] focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10 focus:border-[#F24C20] text-sm transition-all text-gray-900 dark:text-white placeholder:text-gray-400";
+const selectCls = "w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626]/50 focus:bg-white dark:focus:bg-[#262626] focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10 focus:border-[#F24C20] text-sm transition-all text-gray-900 dark:text-white cursor-pointer";
+
+function Field({ label, icon: Icon, children }: { label: string; icon?: any; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <label className="flex items-center gap-2 text-[13px] font-bold text-gray-700 dark:text-gray-300 ml-0.5 uppercase tracking-wide opacity-80">
+        {Icon && <Icon className="w-4 h-4 text-[#F24C20]" />}
+        {label}
+      </label>
+      {children}
+    </div>
+  );
 }
 
 export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptionPlanProps) {
@@ -32,6 +52,11 @@ export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptio
       interest_click_limit: Number(formData.get('interest_click_limit')),
       billing_cycle: formData.get('billing_cycle'),
       target_role: formData.get('target_role'),
+      badge: formData.get('badge'),
+      cta: formData.get('cta'),
+      description: formData.get('description'),
+      featured: formData.get('featured') === 'on',
+      group: formData.get('group'),
       features: (formData.get('features') as string).split('\n').filter(f => f.trim())
     };
 
@@ -85,73 +110,64 @@ export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptio
                 Plan Configuration
               </h2>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                   <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                     <Calendar className="w-4 h-4 text-[#F24C20]" /> Billing Cycle
-                   </label>
-                   <select 
-                     name="billing_cycle" 
-                     defaultValue="monthly"
-                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent outline-none focus:border-[#F24C20] focus:ring-1 focus:ring-[#F24C20] transition-all"
-                   >
+                <Field label="Billing Cycle" icon={Calendar}>
+                   <select name="billing_cycle" defaultValue="monthly" className={selectCls}>
                      <option value="one-time">One-time</option>
                      <option value="monthly">Monthly</option>
                      <option value="yearly">Yearly</option>
                    </select>
-                </div>
-                <div>
-                   <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                     <Users className="w-4 h-4 text-[#F24C20]" /> Target Role
-                   </label>
-                   <select 
-                     name="target_role" 
-                     defaultValue="client"
-                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent outline-none focus:border-[#F24C20] focus:ring-1 focus:ring-[#F24C20] transition-all"
-                   >
-                     <option value="client">Clients Only</option>
-                     <option value="freelancer">Freelancers Only</option>
-                     <option value="both">All Users (Both)</option>
+                </Field>
+                <Field label="Target Role" icon={Users}>
+                   <select name="target_role" defaultValue="client" className={selectCls}>
+                     <option value="client">For Clients Only</option>
+                     <option value="freelancer">For Freelancers Only</option>
+                     <option value="investor">For Investors Only</option>
+                     <option value="startup_creator">For Startup Creators Only</option>
+                     <option value="both">For All Users (Both)</option>
                    </select>
-                </div>
-                <div>
-                   <label className="block text-sm font-medium mb-2">Plan Name</label>
-                   <input 
-                     name="name" 
-                     placeholder="e.g., Premium Pro"
-                     required 
-                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent outline-none focus:border-[#F24C20] focus:ring-1 focus:ring-[#F24C20] transition-all" 
-                   />
-                </div>
+                </Field>
+                <Field label="Plan Name">
+                   <input name="name" placeholder="e.g., Premium Pro" required className={inputCls} />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Field label="Plan Badge" icon={Star}>
+                   <input name="badge" placeholder="e.g., Popular" className={inputCls} />
+                </Field>
+                <Field label="Plan Group" icon={Rocket}>
+                   <select name="group" defaultValue="Freelancer Plans" className={selectCls}>
+                     <option>Freelancer Plans</option>
+                     <option>Client Plans</option>
+                     <option>Start-Up Idea Creator Plans</option>
+                     <option>Investor Plans</option>
+                     <option>Combo Plan</option>
+                   </select>
+                </Field>
+                <Field label="Button text (CTA)" icon={Shield}>
+                   <input name="cta" defaultValue="Get Started" className={inputCls} />
+                </Field>
+              </div>
+
+              <Field label="Plan Description (Quick Summary)">
+                <input name="description" placeholder="e.g., Pro tools for growing professionals" className={inputCls} />
+              </Field>
+
+              <div className="flex items-center gap-3 p-4 bg-gray-50/50 dark:bg-[#0a0a0a]/50 rounded-2xl border border-dashed border-gray-200 dark:border-[#262626]">
+                <input type="checkbox" name="featured" id="featured" className="w-5 h-5 accent-[#F24C20] cursor-pointer" />
+                <label htmlFor="featured" className="text-sm font-bold cursor-pointer select-none">Feature this plan (Glow effect on website)</label>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                    <IndianRupee className="w-4 h-4 text-[#F24C20]" /> Price (₹)
-                  </label>
-                  <input 
-                    type="number" 
-                    name="price" 
-                    placeholder="0 for Free Trial"
-                    required 
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent outline-none focus:border-[#F24C20] focus:ring-1 focus:ring-[#F24C20]" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#F24C20]" /> Duration (Days)
-                  </label>
-                  <input 
-                    type="number" 
-                    name="duration_days" 
-                    placeholder="e.g., 30"
-                    required 
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent outline-none focus:border-[#F24C20] focus:ring-1 focus:ring-[#F24C20]" 
-                  />
-                </div>
+                <Field label="Price (₹)" icon={IndianRupee}>
+                  <input type="number" name="price" placeholder="0 for Free Trial" required className={inputCls} />
+                </Field>
+                <Field label="Duration (Days)" icon={Calendar}>
+                  <input type="number" name="duration_days" placeholder="e.g., 30" required className={inputCls} />
+                </Field>
               </div>
 
               <div className="bg-gray-50 dark:bg-[#0a0a0a] p-4 rounded-2xl space-y-4 border border-gray-100 dark:border-[#262626]">
@@ -169,7 +185,7 @@ export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptio
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium mb-1">Project Posts</label>
+                    <label className="block text-xs font-medium mb-1">Post Projects/Tasks</label>
                     <input 
                       type="number" 
                       name="project_post_limit" 
@@ -210,15 +226,14 @@ export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptio
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Features List (One Per Line)</label>
+              <Field label="Features List (One Per Line)">
                 <textarea 
                   name="features" 
                   rows={6}
                   placeholder="Unlimited Chat&#10;Verified Badge&#10;Priority Support"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent outline-none focus:border-[#F24C20] resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626]/50 focus:bg-white dark:focus:bg-[#262626] focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10 focus:border-[#F24C20] text-sm transition-all text-gray-900 dark:text-white placeholder:text-gray-400 resize-none"
                 />
-              </div>
+              </Field>
 
               <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-[#262626]">
                 <button 
@@ -277,6 +292,3 @@ export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptio
     </div>
   );
 }
-
-// Re-using some icons
-import { AlertCircle, Eye } from 'lucide-react';

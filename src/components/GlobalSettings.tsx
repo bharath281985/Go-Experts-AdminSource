@@ -36,6 +36,7 @@ type Settings = {
   home_stats: { label: string; value: number; suffix: string; icon: string }[];
   trust_badges: string[];
   startup_nda_template: string;
+  subscription_highlights: { label: string; enabled: boolean }[];
 };
 
 const defaultSettings: Settings = {
@@ -49,20 +50,28 @@ const defaultSettings: Settings = {
   maintenance_mode: false, points_per_rupee: 1, points_signup_bonus: 100,
   home_stats: [],
   trust_badges: [],
-  startup_nda_template: ''
+  startup_nda_template: '',
+  subscription_highlights: [
+    { label: "No bidding system", enabled: true },
+    { label: "No commission charges", enabled: true },
+    { label: "Direct hiring and direct investor contact", enabled: true },
+    { label: "Yearly subscription model", enabled: true },
+    { label: "Admin email support included", enabled: true },
+    { label: "Private chat support between clients and freelancers", enabled: true },
+  ]
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">{label}</label>
+    <div className="space-y-2">
+      <label className="block text-[13px] font-bold text-gray-700 dark:text-gray-300 ml-0.5 uppercase tracking-wide opacity-80">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputCls = "w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20] text-sm";
-const selectCls = inputCls;
+const inputCls = "w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626]/50 focus:bg-white dark:focus:bg-[#262626] focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10 focus:border-[#F24C20] text-sm transition-all text-gray-900 dark:text-white placeholder:text-gray-400";
+const selectCls = "w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626]/50 focus:bg-white dark:focus:bg-[#262626] focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10 focus:border-[#F24C20] text-sm transition-all text-gray-900 dark:text-white cursor-pointer";
 
 export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
   const { settings: currentSettings, refreshSettings } = useSiteSettings();
@@ -186,13 +195,15 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
               <Field label="Site Logo Path (e.g. /logo.png)">
                 <input className={inputCls} value={settings.site_logo} onChange={e => set('site_logo', e.target.value)} />
               </Field>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-[#262626] rounded-xl border border-gray-100 dark:border-[#333]">
-                <div className="text-xs text-gray-500 mb-1 block w-full">Logo Preview:</div>
-                {settings.site_logo ? (
-                  <img src={settings.site_logo.startsWith('http') ? settings.site_logo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${settings.site_logo}`} alt="Preview" className="h-8 w-auto brightness-0 invert" />
-                ) : (
-                  <span className="text-xs text-gray-400 italic">No logo set</span>
-                )}
+              <div className="flex flex-col justify-end p-3.5 bg-gray-50 dark:bg-[#262626]/30 rounded-xl border border-gray-100 dark:border-[#333] min-h-[72px]">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#F24C20] mb-2 opacity-80">Logo Preview</div>
+                <div className="flex-1 flex items-center justify-center">
+                  {settings.site_logo ? (
+                    <img src={settings.site_logo.startsWith('http') ? settings.site_logo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${settings.site_logo}`} alt="Preview" className="h-10 w-auto object-contain brightness-0 invert opacity-90" />
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">No logo set</span>
+                  )}
+                </div>
               </div>
               <Field label="Contact Email">
                 <input className={inputCls} type="email" value={settings.contact_email} onChange={e => set('contact_email', e.target.value)} />
@@ -378,7 +389,7 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                   <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-[#262626] rounded-full text-sm">
                     <span>{badge}</span>
                     <button onClick={() => set('trust_badges', settings.trust_badges.filter((_, i) => i !== idx))}>
-                      <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                       <Trash2 className="w-3.5 h-3.5 text-red-500" />
                     </button>
                   </div>
                 ))}
@@ -417,12 +428,70 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                   </button>
                 </div>
               </Field>
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  This PDF will be shown as a mandatory preview/download when a user submits a Startup Idea that requires an NDA.
-                </p>
-              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Row 5: Subscription Highlights */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]">
+          <SectionTitle icon={Rocket} title="Subscription Experience Highlights" color="#F24C20" />
+          <p className="text-sm text-gray-500 mb-6 px-1">These highlights appear on the website pricing page to explain the platform's core value proposition.</p>
+          
+          <div className="space-y-4">
+             <div className="flex gap-2 mb-4">
+                <input 
+                  id="new-highlight"
+                  className={inputCls} 
+                  placeholder="New Highlight (e.g. 24/7 Phone Support)" 
+                />
+                <button 
+                  onClick={() => {
+                    const input = document.getElementById('new-highlight') as HTMLInputElement;
+                    if (input.value) {
+                      set('subscription_highlights', [...settings.subscription_highlights, { label: input.value, enabled: true }]);
+                      input.value = '';
+                    }
+                  }}
+                  className="bg-[#F24C20] text-white px-6 py-2 rounded-xl text-sm font-bold flex-shrink-0"
+                >
+                  Add
+                </button>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {settings.subscription_highlights.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#262626] rounded-2xl border border-gray-100 dark:border-[#333]">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-1.5 rounded-lg ${item.enabled ? 'bg-orange-500/10 text-orange-500' : 'bg-gray-500/10 text-gray-400'}`}>
+                                <Rocket className="w-4 h-4" />
+                            </div>
+                            <span className={`text-sm font-medium ${item.enabled ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{item.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <button
+                                onClick={() => {
+                                    const newHighs = [...settings.subscription_highlights];
+                                    newHighs[idx].enabled = !newHighs[idx].enabled;
+                                    set('subscription_highlights', newHighs);
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    item.enabled 
+                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                }`}
+                            >
+                                {item.enabled ? 'Visible' : 'Hidden'}
+                            </button>
+                            <button 
+                                onClick={() => set('subscription_highlights', settings.subscription_highlights.filter((_, i) => i !== idx))}
+                                className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+             </div>
           </div>
         </div>
       </div>
