@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { Save, Globe, Mail, Shield, Loader2, Coins, Link, Search, Trash2, BarChart3 } from 'lucide-react';
+import { Save, Globe, Mail, Shield, Loader2, Coins, Link, Search, Trash2, BarChart3, Rocket, Upload } from 'lucide-react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { toast } from 'sonner';
 import { Breadcrumb } from './Breadcrumb';
@@ -35,6 +35,7 @@ type Settings = {
   points_signup_bonus: number;
   home_stats: { label: string; value: number; suffix: string; icon: string }[];
   trust_badges: string[];
+  startup_nda_template: string;
 };
 
 const defaultSettings: Settings = {
@@ -48,6 +49,7 @@ const defaultSettings: Settings = {
   maintenance_mode: false, points_per_rupee: 1, points_signup_bonus: 100,
   home_stats: [],
   trust_badges: [],
+  startup_nda_template: ''
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -79,6 +81,30 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
       toast.error('Failed to load site settings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNDAUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast.error('Please upload a PDF file');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('nda', file);
+
+    try {
+      const res = await api.post('/cms/settings/nda-template', formData);
+      if (res.data.success) {
+        toast.success('NDA Template uploaded successfully!');
+        set('startup_nda_template', res.data.filePath);
+        refreshSettings();
+      }
+    } catch {
+      toast.error('Failed to upload NDA template');
     }
   };
 
@@ -358,6 +384,44 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                 ))}
               </div>
               <p className="text-xs text-gray-400">These will appear in the "Trusted By" section on the homepage.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: Startup Ideas Configuration */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]">
+          <SectionTitle icon={Rocket} title="Startup Ideas Configuration" color="#F24C20" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <Field label="Default Startup NDA (PDF Path)">
+                <div className="flex gap-2">
+                  <input 
+                    className={inputCls} 
+                    value={settings.startup_nda_template} 
+                    onChange={e => set('startup_nda_template', e.target.value)} 
+                    placeholder="/uploads/templates/startup-nda.pdf"
+                  />
+                  <input 
+                    type="file" 
+                    id="nda-upload" 
+                    className="hidden" 
+                    accept=".pdf" 
+                    onChange={handleNDAUpload} 
+                  />
+                  <button 
+                    onClick={() => document.getElementById('nda-upload')?.click()}
+                    className="px-4 py-2.5 bg-gray-100 dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl hover:bg-gray-200 dark:hover:bg-[#333] transition-colors flex items-center gap-2 text-sm font-medium"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload
+                  </button>
+                </div>
+              </Field>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  This PDF will be shown as a mandatory preview/download when a user submits a Startup Idea that requires an NDA.
+                </p>
+              </div>
             </div>
           </div>
         </div>

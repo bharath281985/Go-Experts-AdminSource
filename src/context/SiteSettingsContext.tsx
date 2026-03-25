@@ -9,6 +9,10 @@ export interface SiteSettings {
     contact_email: string;
     contact_phone: string;
     contact_address: string;
+    meta_title: string;
+    meta_description: string;
+    meta_keywords: string;
+    startup_nda_template: string;
 }
 
 export const defaultSiteSettings: SiteSettings = {
@@ -19,6 +23,10 @@ export const defaultSiteSettings: SiteSettings = {
     contact_email: '',
     contact_phone: '',
     contact_address: '',
+    meta_title: '',
+    meta_description: '',
+    meta_keywords: '',
+    startup_nda_template: '',
 };
 
 interface ContextType {

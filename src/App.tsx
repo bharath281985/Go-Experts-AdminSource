@@ -36,6 +36,11 @@ import { TestimonialsManagement } from './components/TestimonialsManagement';
 import { CreateSubscriptionPlan } from './components/CreateSubscriptionPlan';
 import { EditSubscriptionPlan } from './components/EditSubscriptionPlan';
 import { ResetPassword } from './components/ResetPassword';
+import { StartupIdeasManagement } from './components/StartupIdeasManagement';
+import { StartupCategories } from './components/StartupCategories';
+import { StartupIdeaDetail } from './components/StartupIdeaDetail';
+import { StartupIdeaLegalSection } from './components/StartupIdeaLegalSection';
+
 
 
 export default function App() {
@@ -129,7 +134,12 @@ export default function App() {
     'languages': '/languages',
     'analytics': '/analytics',
     'website-demo': '/website-demo',
-    'admin-profile': '/admin-profile'
+    'admin-profile': '/admin-profile',
+    'startup-ideas': '/startup-ideas',
+    'startup-categories': '/startup-categories',
+    'startup-ideas-faq': '/startup-ideas/faq',
+    'startup-ideas-terms': '/startup-ideas/terms',
+    'startup-ideas-privacy': '/startup-ideas/privacy'
   };
 
   const getPageFromUrl = () => {
@@ -142,13 +152,14 @@ export default function App() {
     return page || 'dashboard';
   };
 
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [currentPage, setCurrentPage] = useState(getPageFromUrl());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
   const [selectedDisputeId, setSelectedDisputeId] = useState<string | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedStartupIdeaId, setSelectedStartupIdeaId] = useState<string | null>(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(() => {
     const path = window.location.pathname;
@@ -171,6 +182,7 @@ export default function App() {
     setSelectedSubscriptionId(null);
     setSelectedDisputeId(null);
     setSelectedOrderId(null);
+    setSelectedStartupIdeaId(null);
     setShowAddUser(false);
 
     // Update URL
@@ -205,6 +217,10 @@ export default function App() {
       return <GigOrderDetails orderId={selectedOrderId} onBack={() => setSelectedOrderId(null)} onNavigate={handleNavigate} />;
     }
 
+    if (selectedStartupIdeaId) {
+      return <StartupIdeaDetail ideaId={selectedStartupIdeaId} onBack={() => setSelectedStartupIdeaId(null)} />;
+    }
+
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard />;
@@ -232,6 +248,18 @@ export default function App() {
         return <GigOrders onSelectOrder={setSelectedOrderId} />;
       case 'gig-approvals':
         return <GigsList />;
+
+      // Startup Ideas
+      case 'startup-ideas':
+        return <StartupIdeasManagement onSelectIdea={setSelectedStartupIdeaId} />;
+      case 'startup-categories':
+        return <StartupCategories />;
+      case 'startup-ideas-faq':
+        return <StartupIdeaLegalSection type="faq" />;
+      case 'startup-ideas-terms':
+        return <StartupIdeaLegalSection type="terms" />;
+      case 'startup-ideas-privacy':
+        return <StartupIdeaLegalSection type="privacy" />;
 
       // Subscriptions
       case 'subscriptions':

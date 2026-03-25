@@ -7,6 +7,8 @@ import {
   Users,
   FolderKanban,
   Briefcase,
+  Rocket,
+  Lightbulb,
   Wallet,
   Scale,
   FileText,
@@ -86,14 +88,26 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
         { id: 'proposals', label: 'Proposals Overview', icon: <FileText className="w-4 h-4" /> }
       ]
     },
+    // {
+    //   id: 'gigs',
+    //   label: 'Gigs',
+    //   icon: <Briefcase className="w-5 h-5" />,
+    //   submenu: [
+    //     { id: 'gigs', label: 'Gig Listings', icon: <ShoppingBag className="w-4 h-4" /> },
+    //     { id: 'gig-orders', label: 'Gig Orders', icon: <ClipboardList className="w-4 h-4" /> },
+    //     { id: 'gig-approvals', label: 'Gig Approvals', icon: <FileCheck className="w-4 h-4" /> }
+    //   ]
+    // },
     {
-      id: 'gigs',
-      label: 'Gigs',
-      icon: <Briefcase className="w-5 h-5" />,
+      id: 'startup-ideas',
+      label: 'Startup Ideas',
+      icon: <Rocket className="w-5 h-5" />,
       submenu: [
-        { id: 'gigs', label: 'Gig Listings', icon: <ShoppingBag className="w-4 h-4" /> },
-        { id: 'gig-orders', label: 'Gig Orders', icon: <ClipboardList className="w-4 h-4" /> },
-        { id: 'gig-approvals', label: 'Gig Approvals', icon: <FileCheck className="w-4 h-4" /> }
+        { id: 'startup-ideas', label: 'Manage Ideas', icon: <Lightbulb className="w-4 h-4" /> },
+        { id: 'startup-categories', label: 'Idea Categories', icon: <Grid3x3 className="w-4 h-4" /> },
+        { id: 'startup-ideas-faq', label: 'Startup Ideas FAQ', icon: <MessageSquare className="w-4 h-4" /> },
+        { id: 'startup-ideas-terms', label: 'Terms & Conditions', icon: <Scale className="w-4 h-4" /> },
+        { id: 'startup-ideas-privacy', label: 'Privacy Policy', icon: <FileCheck className="w-4 h-4" /> }
       ]
     },
     {
