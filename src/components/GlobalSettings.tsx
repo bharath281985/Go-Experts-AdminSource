@@ -37,6 +37,7 @@ type Settings = {
   trust_badges: string[];
   startup_nda_template: string;
   subscription_highlights: { label: string; enabled: boolean }[];
+  subscription_groups: { name: string; label: string; icon: string; description: string }[];
 };
 
 const defaultSettings: Settings = {
@@ -58,6 +59,13 @@ const defaultSettings: Settings = {
     { label: "Yearly subscription model", enabled: true },
     { label: "Admin email support included", enabled: true },
     { label: "Private chat support between clients and freelancers", enabled: true },
+  ],
+  subscription_groups: [
+    { name: 'Freelancer Plans', label: 'Freelancer', icon: 'Briefcase', description: 'Built for professionals who want direct access to projects without losing earnings to commissions.' },
+    { name: 'Client Plans', label: 'Client', icon: 'Building2', description: 'Designed for businesses and hiring teams looking to connect directly with skilled freelancers.' },
+    { name: 'Start-Up Idea Creator Plans', label: 'Startup Creator', icon: 'Rocket', description: 'Perfect for founders who want to publish ideas, attract investors, and grow with subscription-based access.' },
+    { name: 'Investor Plans', label: 'Investor', icon: 'Users', description: 'Created for investors who want streamlined access to quality startup ideas.' },
+    { name: 'Combo Plan', label: 'Combo / All Access', icon: 'Layers', description: 'Full access to all platform features for multi-role users.' }
   ]
 };
 
@@ -492,6 +500,57 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                     </div>
                 ))}
              </div>
+          </div>
+        </div>
+
+        {/* Row 6: Subscription Category Groups */}
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]">
+          <SectionTitle icon={BarChart3} title="Subscription Experience: Categories & Icons" color="#F24C20" />
+          <p className="text-sm text-gray-500 mb-6 px-1">Customize the labels, icons, and descriptions for each plan category shown on the website.</p>
+          
+          <div className="space-y-6">
+            {settings.subscription_groups.map((group, idx) => (
+              <div key={idx} className="p-6 bg-gray-50 dark:bg-[#262626]/50 rounded-[28px] border border-gray-100 dark:border-[#333] grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div className="md:col-span-1">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Category Key (Fixed)</p>
+                   <div className="px-4 py-3 bg-gray-200/50 dark:bg-[#1a1a1a] rounded-xl text-xs font-mono text-gray-500">{group.name}</div>
+                </div>
+                <div className="md:col-span-1">
+                   <Field label="Display Label">
+                      <input className={inputCls} value={group.label} onChange={e => {
+                        const newGroups = [...settings.subscription_groups];
+                        newGroups[idx].label = e.target.value;
+                        set('subscription_groups', newGroups);
+                      }} />
+                   </Field>
+                </div>
+                <div className="md:col-span-1">
+                   <Field label="Icon Name (Lucide)">
+                      <input className={inputCls} value={group.icon} onChange={e => {
+                        const newGroups = [...settings.subscription_groups];
+                        newGroups[idx].icon = e.target.value;
+                        set('subscription_groups', newGroups);
+                      }} />
+                   </Field>
+                </div>
+                <div className="md:col-span-1 font-black text-xs text-gray-400">
+                    <p className="mb-2">Preview:</p>
+                    <div className="p-3 bg-[#F24C20]/10 rounded-xl inline-block">
+                        <Rocket className="w-5 h-5 text-[#F24C20]" /> 
+                        {/* Note: In a real app we'd use a dynamic icon component, but here we just show a placeholder or standard rocket for UI consistency */}
+                    </div>
+                </div>
+                <div className="md:col-span-4">
+                   <Field label="Category Description">
+                      <textarea className={inputCls + " h-20 resize-none"} value={group.description} onChange={e => {
+                        const newGroups = [...settings.subscription_groups];
+                        newGroups[idx].description = e.target.value;
+                        set('subscription_groups', newGroups);
+                      }} />
+                   </Field>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -15,7 +15,11 @@ import {
   X,
   Trash2,
   Loader2,
-  ListCheck
+  ListCheck,
+  Briefcase,
+  Rocket,
+  Building2,
+  Layers
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
@@ -33,6 +37,8 @@ interface SubscriptionPlan {
   features: string[];
   status: 'enabled' | 'disabled';
   billing_cycle: 'monthly' | 'yearly' | 'one-time';
+  group: string;
+  target_role: string;
 }
 
 interface SubscriptionsManagementProps {
@@ -40,9 +46,18 @@ interface SubscriptionsManagementProps {
   onEditPlan: (id: string) => void;
 }
 
+const GROUPS = [
+  { id: 'Freelancer Plans', label: 'Freelancer', icon: Briefcase },
+  { id: 'Client Plans', label: 'Client', icon: Building2 },
+  { id: 'Start-Up Idea Creator Plans', label: 'Startup Creator', icon: Rocket },
+  { id: 'Investor Plans', label: 'Investor', icon: Users },
+  { id: 'Combo Plan', label: 'Combo / All Access', icon: Layers },
+];
+
 export function SubscriptionsManagement({ onNavigate, onEditPlan }: SubscriptionsManagementProps) {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(GROUPS[0].id);
 
   useEffect(() => {
     fetchPlans();
@@ -89,6 +104,8 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
     }
   };
 
+  const filteredPlans = plans.filter(plan => plan.group === activeTab);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -108,17 +125,46 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
           className="flex items-center gap-2 px-4 py-2 bg-[#F24C20] text-white rounded-lg hover:bg-[#d43d15] transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Create Custom Plan
+          Create New Plan
         </motion.button>
       </div>
 
-      {/* Stats Overview */}
+      {/* Tabs */}
+      <div className="flex items-center gap-2 p-1 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl overflow-x-auto no-scrollbar">
+        {GROUPS.map((group) => {
+          const Icon = group.icon;
+          const isActive = activeTab === group.id;
+          const count = plans.filter(p => p.group === group.id).length;
+
+          return (
+            <button
+              key={group.id}
+              onClick={() => setActiveTab(group.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                isActive
+                  ? 'bg-white dark:bg-[#262626] text-[#F24C20] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[#F24C20]' : ''}`} />
+              {group.label}
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                isActive ? 'bg-[#F24C20]/10 text-[#F24C20]' : 'bg-gray-200 dark:bg-[#333] text-gray-400'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Stats Overview for Active Tab */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Subscribers', value: '1,234', icon: Users, color: 'bg-blue-500' },
-          { label: 'Active Plans', value: plans.filter(p => p.status === 'enabled').length.toString(), icon: Crown, color: 'bg-[#F24C20]' },
-          { label: 'Monthly Revenue', value: '₹4.5L', icon: IndianRupee, color: 'bg-green-500' },
-          { label: 'Credits Consumed', value: '145K', icon: TrendingUp, color: 'bg-[#044071]' }
+          { label: `${GROUPS.find(g => g.id === activeTab)?.label} Subscribers`, value: '---', icon: Users, color: 'bg-blue-500' },
+          { label: 'Active Plans', value: filteredPlans.filter(p => p.status === 'enabled').length.toString(), icon: Crown, color: 'bg-[#F24C20]' },
+          { label: 'Category Revenue', value: '---', icon: IndianRupee, color: 'bg-green-500' },
+          { label: 'Category Clicks', value: '---', icon: TrendingUp, color: 'bg-[#044071]' }
         ].map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -142,13 +188,16 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
 
       {/* Subscription Plans Table */}
       <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#262626] overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-[#262626]">
+        <div className="p-6 border-b border-gray-200 dark:border-[#262626] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-[#F24C20]" />
             <h2 className="text-xl font-bold text-[#044071] dark:text-white">
-              Subscription Plans
+              {GROUPS.find(g => g.id === activeTab)?.label} Plans
             </h2>
           </div>
+          <span className="text-sm text-gray-500">
+            Showing {filteredPlans.length} plans
+          </span>
         </div>
 
         <div className="overflow-x-auto">
@@ -172,7 +221,20 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                     <p className="mt-2 text-gray-500">Loading plans...</p>
                   </td>
                 </tr>
-              ) : plans.map((plan, index) => (
+              ) : filteredPlans.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-10 text-center">
+                    <AlertCircle className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                    <p className="text-gray-500">No plans found in this category.</p>
+                    <button 
+                      onClick={() => onNavigate('create-subscription-plan')}
+                      className="mt-4 text-[#F24C20] font-semibold hover:underline"
+                    >
+                      Create the first plan
+                    </button>
+                  </td>
+                </tr>
+              ) : filteredPlans.map((plan, index) => (
                 <motion.tr
                   key={plan._id}
                   initial={{ opacity: 0, y: 20 }}
@@ -231,7 +293,6 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('Edit clicked for plan:', plan._id);
                           onEditPlan(plan._id);
                         }}
                         className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg text-blue-600"
@@ -268,7 +329,7 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
 
       {/* Plan Details Cards (Informational) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {plans.map((plan, index) => (
+        {filteredPlans.map((plan, index) => (
           <motion.div
             key={plan._id}
             initial={{ opacity: 0, y: 20 }}
@@ -312,17 +373,19 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                     </span>
                   </li>
                 ))}
+                {plan.target_role === 'client' || plan.target_role === 'both' ? (
+                  <li className="flex items-start gap-2 text-blue-600 dark:text-blue-400">
+                    <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                        <span className="text-xs">✓</span>
+                    </div>
+                    <p className="text-sm font-medium">{plan.project_post_limit} Project Posts</p>
+                  </li>
+                ) : null}
                 <li className="flex items-start gap-2 text-blue-600 dark:text-blue-400">
                    <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
                       <span className="text-xs">✓</span>
                    </div>
-                   <p className="text-sm font-medium">{plan.project_visit_limit} Project Detail Visits</p>
-                </li>
-                <li className="flex items-start gap-2 text-blue-600 dark:text-blue-400">
-                   <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                      <span className="text-xs">✓</span>
-                   </div>
-                   <p className="text-sm font-medium">{plan.portfolio_visit_limit} Portfolio Visits</p>
+                   <p className="text-sm font-medium">{plan.project_visit_limit} Detail Visits</p>
                 </li>
               </ul>
             </div>

@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import { AdminLayout } from './components/AdminLayout';
@@ -108,9 +111,9 @@ export default function App() {
     'projects': '/projects',
     'pending-approvals': '/pending-approvals',
     'proposals': '/proposals',
-    'gigs': '/gigs',
-    'gig-orders': '/gig-orders',
-    'gig-approvals': '/gig-approvals',
+    // 'gigs': '/gigs',
+    // 'gig-orders': '/gig-orders',
+    // 'gig-approvals': '/gig-approvals',
     'subscriptions': '/subscriptions',
     'create-subscription-plan': '/subscriptions/create',
     'edit-subscription-plan': '/subscriptions/edit',
@@ -245,13 +248,13 @@ export default function App() {
       case 'proposals':
         return <ProjectsList onSelectProject={setSelectedProjectId} />;
 
-      // Gigs
+      /* // Gigs
       case 'gigs':
         return <GigsList />;
       case 'gig-orders':
         return <GigOrders onSelectOrder={setSelectedOrderId} />;
       case 'gig-approvals':
-        return <GigsList />;
+        return <GigsList />; */
 
       // Startup Ideas
       case 'startup-ideas':
