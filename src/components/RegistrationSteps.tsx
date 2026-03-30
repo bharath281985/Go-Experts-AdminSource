@@ -42,7 +42,8 @@ interface RegistrationStep {
     label: string;
     title: string;
     description: string;
-    type: 'single-selection' | 'multi-selection' | 'input' | 'otp-verification' | 'account-creation';
+    type: 'single-selection' | 'multi-selection' | 'input' | 'otp-verification' | 'account-creation' | 'subscription-plan';
+    module: 'onboarding' | 'project_finder';
     field: string;
     options: StepOption[];
     isActive: boolean;
@@ -57,10 +58,23 @@ export const RegistrationSteps = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentStep, setCurrentStep] = useState<Partial<RegistrationStep> | null>(null);
 
+    const [activeModule, setActiveModule] = useState<'onboarding' | 'project_finder'>('onboarding');
+    const [stats, setStats] = useState({ onboarding: 0, project_finder: 0 });
+    
     const fetchSteps = async () => {
         try {
+            setLoading(true);
             const res = await api.get('/cms/registration-steps/admin');
-            setSteps(res.data.data);
+            const allSteps: RegistrationStep[] = res.data.data;
+            
+            // Filter by active module
+            setSteps(allSteps.filter(s => (s.module || 'onboarding') === activeModule));
+            
+            // Calculate stats
+            setStats({
+                onboarding: allSteps.filter(s => (s.module || 'onboarding') === 'onboarding').length,
+                project_finder: allSteps.filter(s => s.module === 'project_finder').length
+            });
         } catch {
             toast.error('Failed to fetch steps');
         } finally {
@@ -70,7 +84,7 @@ export const RegistrationSteps = () => {
 
     useEffect(() => {
         fetchSteps();
-    }, []);
+    }, [activeModule]);
 
     const toggleStatus = async (id: string, active: boolean) => {
         await api.patch(`/cms/registration-steps/${id}/toggle`);
@@ -104,11 +118,11 @@ export const RegistrationSteps = () => {
     };
 
     const resetSteps = async () => {
-        if (!confirm('This will delete all current steps and restore default dummy registration data. Continue?')) return;
+        if (!confirm(`This will delete ALL ${activeModule.replace('_', ' ')} steps and restore default seed data. Continue?`)) return;
         try {
             setLoading(true);
-            await api.post('/cms/registration-steps/reset');
-            toast.success('Onboarding flow reset to defaults');
+            await api.post('/cms/registration-steps/reset', { module: activeModule });
+            toast.success('Flow reset to defaults');
             fetchSteps();
         } catch {
             toast.error('Failed to reset steps');
@@ -135,44 +149,75 @@ export const RegistrationSteps = () => {
                     />
                 </div>
 
-                <div className="relative z-10 flex justify-between items-center">
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="flex gap-4 items-center">
                         <div className="p-4 rounded-xl bg-white/20">
                             <Settings2 />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold">Onboarding Flow</h1>
-                            <p className="text-white/80 text-sm">
-                                Orchestrate the user registration journey
+                            <h1 className="text-3xl font-bold">Dynamic Logic Flows</h1>
+                            <p className="text-white/80 text-sm font-medium">
+                                Configure steps for {activeModule === 'onboarding' ? 'User Registration' : 'Project Search Quiz'}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-4">
                         <button
                             onClick={resetSteps}
-                            className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 border border-white/20 transition-all active:scale-95"
+                            className="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 border border-white/20 transition-all active:scale-95 text-sm"
                         >
-                            <CircleDashed className="w-5 h-5" /> Reset to Defaults
+                            <CircleDashed className="w-4 h-4" /> Reset Flow
                         </button>
                         <button
                             onClick={() => {
+                                const nextOrder = steps.length ? Math.max(...steps.map(s => s.order)) + 1 : 1;
                                 setCurrentStep({
                                     label: '',
                                     title: '',
                                     description: '',
                                     field: '',
                                     type: 'single-selection',
+                                    module: activeModule,
                                     options: [],
-                                    isActive: true
+                                    isActive: true,
+                                    order: nextOrder
                                 });
                                 setIsEditing(true);
                             }}
-                            className="bg-white text-[#F24C20] px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-white/20 transition-all active:scale-95"
+                            className="bg-white text-[#F24C20] px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-white/20 transition-all active:scale-95 text-sm"
                         >
-                            <Plus /> Add Logic Step
+                            <Plus className="w-4 h-4" /> Add Step
                         </button>
                     </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="relative z-10 mt-8 flex gap-2">
+                    {[
+                        { id: 'onboarding', label: 'Onboarding Flow', count: stats.onboarding, icon: UserPlus },
+                        { id: 'project_finder', label: 'Project Finder Filter', count: stats.project_finder, icon: Database }
+                    ].map(tab => {
+                        const Icon = tab.icon;
+                        const isSelected = activeModule === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveModule(tab.id as any)}
+                                className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold transition-all text-xs border ${
+                                    isSelected 
+                                    ? 'bg-white text-[#F24C20] border-white' 
+                                    : 'bg-black/10 hover:bg-black/20 text-white border-white/10'
+                                }`}
+                            >
+                                <Icon className="w-4 h-4" />
+                                {tab.label}
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] ${isSelected ? 'bg-[#F24C20]/10 text-[#F24C20]' : 'bg-white/10 text-white'}`}>
+                                    {tab.count}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </motion.div>
 
@@ -183,13 +228,15 @@ export const RegistrationSteps = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <AnimatePresence>
                         {steps.map((step, i) => {
-                            const TypeIcon = {
+                            const typeIcons: Record<string, any> = {
                                 'single-selection': MousePointerClick,
                                 'multi-selection': ListChecks,
                                 'input': Type,
                                 'otp-verification': CircleDashed,
-                                'account-creation': UserPlus
-                            }[step.type] || CheckCircle2;
+                                'account-creation': UserPlus,
+                                'subscription-plan': Database
+                            };
+                            const TypeIcon = typeIcons[step.type] || CheckCircle2;
 
                             return (
                                 <motion.div
@@ -353,6 +400,17 @@ function EditModal({ open, onClose, step, setStep, onSave }: any) {
 
                             <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200/60 dark:border-white/5 rounded-3xl p-6 space-y-6 shadow-sm">
                                 <div className="flex flex-col gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Logic Module</label>
+                                        <select
+                                            value={step?.module || 'onboarding'}
+                                            onChange={e => setStep({ ...step, module: e.target.value })}
+                                            className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-2xl p-4 text-sm focus:outline-none focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 transition-all font-semibold text-gray-900 dark:text-white"
+                                        >
+                                            <option value="onboarding">User Onboarding Flow</option>
+                                            <option value="project_finder">Project Finder Filter</option>
+                                        </select>
+                                    </div>
                                     <div className="space-y-2">
                                         <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Internal Reference</label>
                                         <input

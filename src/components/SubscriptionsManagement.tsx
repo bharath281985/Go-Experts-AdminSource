@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  CreditCard, 
-  Crown, 
-  Edit2, 
-  Plus, 
-  Power, 
-  Eye, 
-  Users, 
+import {
+  CreditCard,
+  Crown,
+  Edit2,
+  Plus,
+  Power,
+  Eye,
+  Users,
   Calendar,
   IndianRupee,
   TrendingUp,
@@ -37,8 +37,8 @@ interface SubscriptionPlan {
   features: string[];
   status: 'enabled' | 'disabled';
   billing_cycle: 'monthly' | 'yearly' | 'one-time';
-  group: string;
-  target_role: string;
+  group: string | string[];
+  target_role: string | string[];
 }
 
 interface SubscriptionsManagementProps {
@@ -104,7 +104,12 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
     }
   };
 
-  const filteredPlans = plans.filter(plan => plan.group === activeTab);
+  const filteredPlans = plans.filter(plan => {
+    if (Array.isArray(plan.group)) {
+      return plan.group.includes(activeTab);
+    }
+    return plan.group === activeTab;
+  });
 
   return (
     <div className="space-y-6">
@@ -130,27 +135,28 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl overflow-x-auto no-scrollbar">
         {GROUPS.map((group) => {
           const Icon = group.icon;
           const isActive = activeTab === group.id;
-          const count = plans.filter(p => p.group === group.id).length;
+          const count = plans.filter(p => {
+            if (Array.isArray(p.group)) return p.group.includes(group.id);
+            return p.group === group.id;
+          }).length;
 
           return (
             <button
               key={group.id}
               onClick={() => setActiveTab(group.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                isActive
-                  ? 'bg-white dark:bg-[#262626] text-[#F24C20] shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${isActive
+                ? 'bg-white dark:bg-[#262626] text-[#F24C20] shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-[#F24C20]' : ''}`} />
               {group.label}
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                isActive ? 'bg-[#F24C20]/10 text-[#F24C20]' : 'bg-gray-200 dark:bg-[#333] text-gray-400'
-              }`}>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-[#F24C20]/10 text-[#F24C20]' : 'bg-gray-200 dark:bg-[#333] text-gray-400'
+                }`}>
                 {count}
               </span>
             </button>
@@ -226,7 +232,7 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                   <td colSpan={7} className="px-6 py-10 text-center">
                     <AlertCircle className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                     <p className="text-gray-500">No plans found in this category.</p>
-                    <button 
+                    <button
                       onClick={() => onNavigate('create-subscription-plan')}
                       className="mt-4 text-[#F24C20] font-semibold hover:underline"
                     >
@@ -270,7 +276,7 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="text-sm">
-                        <div className="font-medium text-[#F24C20]">{plan.points_granted} Points</div>
+                        {/* <div className="font-medium text-[#F24C20]">{plan.points_granted} Points</div> */}
                         <div className="text-[10px] text-gray-500">{plan.project_visit_limit} P / {plan.portfolio_visit_limit} F visits</div>
                       </div>
                     </div>
@@ -279,11 +285,10 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                     {plan.billing_cycle}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      plan.status === 'enabled'
-                        ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                        : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${plan.status === 'enabled'
+                      ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                      : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                      }`}>
                       {plan.status}
                     </span>
                   </td>
@@ -373,19 +378,21 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                     </span>
                   </li>
                 ))}
-                {plan.target_role === 'client' || plan.target_role === 'both' ? (
+                {(Array.isArray(plan.target_role) 
+                  ? (plan.target_role.includes('client') || plan.target_role.includes('both'))
+                  : (plan.target_role === 'client' || plan.target_role === 'both')) ? (
                   <li className="flex items-start gap-2 text-blue-600 dark:text-blue-400">
                     <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                        <span className="text-xs">✓</span>
+                      <span className="text-xs">✓</span>
                     </div>
                     <p className="text-sm font-medium">{plan.project_post_limit} Project Posts</p>
                   </li>
                 ) : null}
                 <li className="flex items-start gap-2 text-blue-600 dark:text-blue-400">
-                   <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                      <span className="text-xs">✓</span>
-                   </div>
-                   <p className="text-sm font-medium">{plan.project_visit_limit} Detail Visits</p>
+                  <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                    <span className="text-xs">✓</span>
+                  </div>
+                  <p className="text-sm font-medium">{plan.project_visit_limit} Detail Visits</p>
                 </li>
               </ul>
             </div>

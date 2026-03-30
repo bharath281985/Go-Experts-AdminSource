@@ -76,6 +76,21 @@ export function StartupCategories() {
     }
   };
 
+  const handleToggleStatus = async (cat: any) => {
+    try {
+      const newStatus = cat.status === 'active' ? 'inactive' : 'active';
+      await api.put(`/admin/startup-categories/${cat._id}`, {
+        name: cat.name,
+        description: cat.description,
+        status: newStatus
+      });
+      toast.success(`Category marked as ${newStatus}`);
+      fetchCategories();
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -110,12 +125,20 @@ export function StartupCategories() {
             </div>
             <h3 className="text-lg font-bold mb-1">{cat.name}</h3>
             <p className="text-sm text-gray-500 line-clamp-2 mb-4">{cat.description || 'No description available'}</p>
-            <div className="flex items-center justify-between mt-auto">
-               <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${cat.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+             <div className="flex items-center justify-between mt-auto">
+               <button 
+                 onClick={() => handleToggleStatus(cat)}
+                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
+                    cat.status === 'active' 
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-sm' 
+                    : 'bg-red-500/10 text-red-600 border border-red-500/20 shadow-sm'
+                 }`}
+                 title="Click to toggle status"
+               >
                  {cat.status}
-               </span>
-               <div className="text-xs text-gray-400">Created: {new Date(cat.createdAt).toLocaleDateString()}</div>
-            </div>
+               </button>
+               <div className="text-xs font-semibold text-gray-400">Created: {new Date(cat.createdAt).toLocaleDateString()}</div>
+             </div>
           </div>
         ))}
       </div>

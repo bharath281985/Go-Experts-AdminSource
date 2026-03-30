@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { Save, Globe, Mail, Shield, Loader2, Coins, Link, Search, Trash2, BarChart3, Rocket, Upload } from 'lucide-react';
+import { Save, Globe, Mail, Shield, Loader2, Coins, Link, Search, Trash2, BarChart3, Rocket, Upload, Image as LucideImage } from 'lucide-react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { toast } from 'sonner';
 import { Breadcrumb } from './Breadcrumb';
@@ -41,7 +41,7 @@ type Settings = {
 };
 
 const defaultSettings: Settings = {
-  site_name: 'Go Experts', site_tagline: '', site_logo: '',
+  site_name: 'Go Experts', site_tagline: '', site_logo: '', site_favicon: '',
   contact_email: '', contact_phone: '', contact_address: '',
   meta_title: '', meta_description: '', meta_keywords: '',
   social_facebook: '', social_twitter: '', social_linkedin: '', social_instagram: '',
@@ -82,10 +82,11 @@ const inputCls = "w-full px-4 py-3 rounded-xl border border-gray-200 dark:border
 const selectCls = "w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626]/50 focus:bg-white dark:focus:bg-[#262626] focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10 focus:border-[#F24C20] text-sm transition-all text-gray-900 dark:text-white cursor-pointer";
 
 export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
-  const { settings: currentSettings, refreshSettings } = useSiteSettings();
+  const { refreshSettings } = useSiteSettings();
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => { fetchSettings(); }, []);
 
@@ -122,6 +123,40 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
       }
     } catch {
       toast.error('Failed to upload NDA template');
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('site_logo', file);
+    try {
+      const res = await api.post('/cms/settings/logo', formData);
+      if (res.data.success) {
+        toast.success('Logo updated successfully!');
+        set('site_logo', res.data.filePath);
+        refreshSettings();
+      }
+    } catch {
+      toast.error('Failed to upload logo');
+    }
+  };
+
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('site_favicon', file);
+    try {
+      const res = await api.post('/cms/settings/favicon', formData);
+      if (res.data.success) {
+        toast.success('Favicon updated successfully!');
+        set('site_favicon', res.data.filePath);
+        refreshSettings();
+      }
+    } catch {
+      toast.error('Failed to upload favicon');
     }
   };
 
@@ -200,24 +235,54 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
               <Field label="Tagline">
                 <input className={inputCls} value={settings.site_tagline} onChange={e => set('site_tagline', e.target.value)} placeholder="Find the best freelancers" />
               </Field>
-              <Field label="Site Logo Path (e.g. /logo.png)">
-                <input className={inputCls} value={settings.site_logo} onChange={e => set('site_logo', e.target.value)} />
+              <Field label="Site Logo">
+                <div className="flex gap-2">
+                  <input className={inputCls} value={settings.site_logo} onChange={e => set('site_logo', e.target.value)} placeholder="/logo.png" />
+                  <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                  <button onClick={() => document.getElementById('logo-upload')?.click()} className="px-4 py-2.5 bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl hover:bg-gray-100 dark:hover:bg-[#333] transition-colors flex items-center gap-2 text-sm font-medium">
+                    <Upload className="w-4 h-4" /> Upload
+                  </button>
+                </div>
               </Field>
-              <div className="flex flex-col justify-end p-3.5 bg-gray-50 dark:bg-[#262626]/30 rounded-xl border border-gray-100 dark:border-[#333] min-h-[72px]">
-                <div className="text-[10px] font-black uppercase tracking-widest text-[#F24C20] mb-2 opacity-80">Logo Preview</div>
-                <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-col p-4 bg-black/40 dark:bg-black/60 rounded-2xl border border-gray-100 dark:border-[#262626] h-full transition-all hover:border-[#F24C20]/50 group/preview">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Branding Preview</div>
+                  <div className="flex items-center gap-1.5 opacity-0 group-hover/preview:opacity-100 transition-opacity">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Live Sync</span>
+                  </div>
+                </div>
+                <div className="flex-1 flex items-center justify-center bg-[#1a1a1a] rounded-xl border border-[#333]/30 min-h-[140px] relative overflow-hidden">
+                  {/* Subtle Grid Pattern Background */}
+                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+                  
                   {settings.site_logo ? (
-                    <img src={settings.site_logo.startsWith('http') ? settings.site_logo : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${settings.site_logo}`} alt="Preview" className="h-10 w-auto object-contain brightness-0 invert opacity-90" />
+                    <img 
+                      src={settings.site_logo.startsWith('http') ? settings.site_logo : `${apiUrl}${settings.site_logo}`} 
+                      alt="Site Logo" 
+                      className="max-h-20 w-48 object-contain relative z-10 transition-transform hover:scale-105 duration-500" 
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
                   ) : (
-                    <span className="text-xs text-gray-400 italic">No logo set</span>
+                    <div className="flex flex-col items-center gap-2 text-gray-500 relative z-10">
+                      <LucideImage className="w-8 h-8 opacity-20" />
+                      <span className="text-[10px] font-medium uppercase tracking-widest opacity-40">No Logo Loaded</span>
+                    </div>
                   )}
                 </div>
+                <p className="mt-3 text-[9px] text-gray-500 text-center leading-relaxed italic opacity-60">This is how your logo will appear on the high-contrast navigation bar</p>
               </div>
               <Field label="Contact Email">
-                <input className={inputCls} type="email" value={settings.contact_email} onChange={e => set('contact_email', e.target.value)} />
+                <input className={inputCls} type="email" placeholder="contact@goexperts.com" value={settings.contact_email} onChange={e => set('contact_email', e.target.value)} />
               </Field>
-              <Field label="Contact Phone">
-                <input className={inputCls} value={settings.contact_phone} onChange={e => set('contact_phone', e.target.value)} />
+              <Field label="Site Favicon">
+                 <div className="flex gap-2">
+                    <input className={inputCls} value={settings.site_favicon} onChange={e => set('site_favicon', e.target.value)} placeholder="/favicon.ico" />
+                    <input type="file" id="favicon-upload" className="hidden" accept="image/*" onChange={handleFaviconUpload} />
+                    <button onClick={() => document.getElementById('favicon-upload')?.click()} className="px-4 py-2.5 bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl hover:bg-gray-100 dark:hover:bg-[#333] transition-colors flex items-center gap-2 text-sm font-medium">
+                        <Upload className="w-4 h-4" /> Upload
+                    </button>
+                 </div>
               </Field>
               <div className="col-span-2">
                 <Field label="Contact Address">
@@ -252,7 +317,7 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
         {/* Row 2: SEO + Points + Social */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* SEO */}
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]">
+          <div className="bg-black dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]">
             <SectionTitle icon={Search} title="SEO" color="#7c3aed" />
             <div className="space-y-4">
               <Field label="Meta Title">
@@ -343,15 +408,15 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                   }} placeholder="+" />
                   <div className="flex justify-end">
                     <button onClick={() => {
-                       const newStats = settings.home_stats.filter((_, i) => i !== idx);
-                       set('home_stats', newStats);
+                      const newStats = settings.home_stats.filter((_, i) => i !== idx);
+                      set('home_stats', newStats);
                     }} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               ))}
-              <button 
+              <button
                 onClick={() => set('home_stats', [...settings.home_stats, { label: '', value: 0, suffix: '+', icon: 'CheckIcon' }])}
                 className="w-full py-2 border-2 border-dashed border-gray-200 dark:border-[#262626] rounded-xl text-sm text-gray-500 hover:border-[#F24C20] hover:text-[#F24C20] transition-all"
               >
@@ -365,10 +430,10 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
             <SectionTitle icon={Shield} title="Trust Badges (Partners)" color="#6366f1" />
             <div className="space-y-3">
               <div className="flex gap-2">
-                <input 
+                <input
                   id="new-badge"
-                  className={inputCls} 
-                  placeholder="Partner Name (e.g. Forbes)" 
+                  className={inputCls}
+                  placeholder="Partner Name (e.g. Forbes)"
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       const val = (e.target as HTMLInputElement).value;
@@ -379,7 +444,7 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                     }
                   }}
                 />
-                <button 
+                <button
                   onClick={() => {
                     const input = document.getElementById('new-badge') as HTMLInputElement;
                     if (input.value) {
@@ -397,7 +462,7 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                   <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-[#262626] rounded-full text-sm">
                     <span>{badge}</span>
                     <button onClick={() => set('trust_badges', settings.trust_badges.filter((_, i) => i !== idx))}>
-                       <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                      <Trash2 className="w-3.5 h-3.5 text-red-500" />
                     </button>
                   </div>
                 ))}
@@ -414,20 +479,20 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
             <div className="space-y-4">
               <Field label="Default Startup NDA (PDF Path)">
                 <div className="flex gap-2">
-                  <input 
-                    className={inputCls} 
-                    value={settings.startup_nda_template} 
-                    onChange={e => set('startup_nda_template', e.target.value)} 
+                  <input
+                    className={inputCls}
+                    value={settings.startup_nda_template}
+                    onChange={e => set('startup_nda_template', e.target.value)}
                     placeholder="/uploads/templates/startup-nda.pdf"
                   />
-                  <input 
-                    type="file" 
-                    id="nda-upload" 
-                    className="hidden" 
-                    accept=".pdf" 
-                    onChange={handleNDAUpload} 
+                  <input
+                    type="file"
+                    id="nda-upload"
+                    className="hidden"
+                    accept=".pdf"
+                    onChange={handleNDAUpload}
                   />
-                  <button 
+                  <button
                     onClick={() => document.getElementById('nda-upload')?.click()}
                     className="px-4 py-2.5 bg-gray-100 dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl hover:bg-gray-200 dark:hover:bg-[#333] transition-colors flex items-center gap-2 text-sm font-medium"
                   >
@@ -444,110 +509,109 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
         <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]">
           <SectionTitle icon={Rocket} title="Subscription Experience Highlights" color="#F24C20" />
           <p className="text-sm text-gray-500 mb-6 px-1">These highlights appear on the website pricing page to explain the platform's core value proposition.</p>
-          
-          <div className="space-y-4">
-             <div className="flex gap-2 mb-4">
-                <input 
-                  id="new-highlight"
-                  className={inputCls} 
-                  placeholder="New Highlight (e.g. 24/7 Phone Support)" 
-                />
-                <button 
-                  onClick={() => {
-                    const input = document.getElementById('new-highlight') as HTMLInputElement;
-                    if (input.value) {
-                      set('subscription_highlights', [...settings.subscription_highlights, { label: input.value, enabled: true }]);
-                      input.value = '';
-                    }
-                  }}
-                  className="bg-[#F24C20] text-white px-6 py-2 rounded-xl text-sm font-bold flex-shrink-0"
-                >
-                  Add
-                </button>
-             </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {settings.subscription_highlights.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#262626] rounded-2xl border border-gray-100 dark:border-[#333]">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-1.5 rounded-lg ${item.enabled ? 'bg-orange-500/10 text-orange-500' : 'bg-gray-500/10 text-gray-400'}`}>
-                                <Rocket className="w-4 h-4" />
-                            </div>
-                            <span className={`text-sm font-medium ${item.enabled ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{item.label}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                             <button
-                                onClick={() => {
-                                    const newHighs = [...settings.subscription_highlights];
-                                    newHighs[idx].enabled = !newHighs[idx].enabled;
-                                    set('subscription_highlights', newHighs);
-                                }}
-                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    item.enabled 
-                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
-                                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                                }`}
-                            >
-                                {item.enabled ? 'Visible' : 'Hidden'}
-                            </button>
-                            <button 
-                                onClick={() => set('subscription_highlights', settings.subscription_highlights.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </div>
+          <div className="space-y-4">
+            <div className="flex gap-2 mb-4">
+              <input
+                id="new-highlight"
+                className={inputCls}
+                placeholder="New Highlight (e.g. 24/7 Phone Support)"
+              />
+              <button
+                onClick={() => {
+                  const input = document.getElementById('new-highlight') as HTMLInputElement;
+                  if (input.value) {
+                    set('subscription_highlights', [...settings.subscription_highlights, { label: input.value, enabled: true }]);
+                    input.value = '';
+                  }
+                }}
+                className="bg-[#F24C20] text-white px-6 py-2 rounded-xl text-sm font-bold flex-shrink-0"
+              >
+                Add
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {settings.subscription_highlights.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#262626] rounded-2xl border border-gray-100 dark:border-[#333]">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-1.5 rounded-lg ${item.enabled ? 'bg-orange-500/10 text-orange-500' : 'bg-gray-500/10 text-gray-400'}`}>
+                      <Rocket className="w-4 h-4" />
                     </div>
-                ))}
-             </div>
+                    <span className={`text-sm font-medium ${item.enabled ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>{item.label}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const newHighs = [...settings.subscription_highlights];
+                        newHighs[idx].enabled = !newHighs[idx].enabled;
+                        set('subscription_highlights', newHighs);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${item.enabled
+                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                        }`}
+                    >
+                      {item.enabled ? 'Visible' : 'Hidden'}
+                    </button>
+                    <button
+                      onClick={() => set('subscription_highlights', settings.subscription_highlights.filter((_, i) => i !== idx))}
+                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Row 6: Subscription Category Groups */}
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]">
+        <div className="bg-dark dark:bg-[#111] rounded-2xl p-8 border border-gray-200 dark:border-[#262626]">
           <SectionTitle icon={BarChart3} title="Subscription Experience: Categories & Icons" color="#F24C20" />
           <p className="text-sm text-gray-500 mb-6 px-1">Customize the labels, icons, and descriptions for each plan category shown on the website.</p>
-          
+
           <div className="space-y-6">
             {settings.subscription_groups.map((group, idx) => (
-              <div key={idx} className="p-6 bg-gray-50 dark:bg-[#262626]/50 rounded-[28px] border border-gray-100 dark:border-[#333] grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div key={idx} className="p-8 bg-black dark:bg-black/20 rounded-[32px] border border-gray-100 dark:border-[#262626] grid grid-cols-1 md:grid-cols-4 gap-6 items-end group/card">
                 <div className="md:col-span-1">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Category Key (Fixed)</p>
-                   <div className="px-4 py-3 bg-gray-200/50 dark:bg-[#1a1a1a] rounded-xl text-xs font-mono text-gray-500">{group.name}</div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Category Key (Fixed)</p>
+                  <div className="px-4 py-3 bg-gray-200/50 dark:bg-[#1a1a1a] rounded-xl text-xs font-mono text-gray-500">{group.name}</div>
                 </div>
                 <div className="md:col-span-1">
-                   <Field label="Display Label">
-                      <input className={inputCls} value={group.label} onChange={e => {
-                        const newGroups = [...settings.subscription_groups];
-                        newGroups[idx].label = e.target.value;
-                        set('subscription_groups', newGroups);
-                      }} />
-                   </Field>
+                  <Field label="Display Label">
+                    <input className={inputCls} value={group.label} onChange={e => {
+                      const newGroups = [...settings.subscription_groups];
+                      newGroups[idx].label = e.target.value;
+                      set('subscription_groups', newGroups);
+                    }} />
+                  </Field>
                 </div>
                 <div className="md:col-span-1">
-                   <Field label="Icon Name (Lucide)">
-                      <input className={inputCls} value={group.icon} onChange={e => {
-                        const newGroups = [...settings.subscription_groups];
-                        newGroups[idx].icon = e.target.value;
-                        set('subscription_groups', newGroups);
-                      }} />
-                   </Field>
+                  <Field label="Icon Name (Lucide)">
+                    <input className={inputCls} value={group.icon} onChange={e => {
+                      const newGroups = [...settings.subscription_groups];
+                      newGroups[idx].icon = e.target.value;
+                      set('subscription_groups', newGroups);
+                    }} />
+                  </Field>
                 </div>
                 <div className="md:col-span-1 font-black text-xs text-gray-400">
-                    <p className="mb-2">Preview:</p>
-                    <div className="p-3 bg-[#F24C20]/10 rounded-xl inline-block">
-                        <Rocket className="w-5 h-5 text-[#F24C20]" /> 
-                        {/* Note: In a real app we'd use a dynamic icon component, but here we just show a placeholder or standard rocket for UI consistency */}
-                    </div>
+                  <p className="mb-2">Preview:</p>
+                  <div className="p-3 bg-[#F24C20]/10 rounded-xl inline-block">
+                    <Rocket className="w-5 h-5 text-[#F24C20]" />
+                    {/* Note: In a real app we'd use a dynamic icon component, but here we just show a placeholder or standard rocket for UI consistency */}
+                  </div>
                 </div>
                 <div className="md:col-span-4">
-                   <Field label="Category Description">
-                      <textarea className={inputCls + " h-20 resize-none"} value={group.description} onChange={e => {
-                        const newGroups = [...settings.subscription_groups];
-                        newGroups[idx].description = e.target.value;
-                        set('subscription_groups', newGroups);
-                      }} />
-                   </Field>
+                  <Field label="Category Description">
+                    <textarea className={inputCls + " h-20 resize-none"} value={group.description} onChange={e => {
+                      const newGroups = [...settings.subscription_groups];
+                      newGroups[idx].description = e.target.value;
+                      set('subscription_groups', newGroups);
+                    }} />
+                  </Field>
                 </div>
               </div>
             ))}

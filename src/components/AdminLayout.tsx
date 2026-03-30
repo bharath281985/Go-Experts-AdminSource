@@ -194,7 +194,7 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-[#0a0a0a]' : 'bg-white'}`}>
+    <div className={`h-screen flex flex-col ${darkMode ? 'dark bg-[#0a0a0a]' : 'bg-white'} overflow-hidden`}>
       {/* Glassmorphic Header */}
       <motion.header
         initial={{ y: -100 }}
@@ -272,7 +272,7 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
             exit={{ x: -280 }}
             transition={{ type: 'spring', damping: 20 }}
             className={`fixed left-0 top-16 bottom-0 w-64 ${darkMode ? 'bg-[#1a1a1a] border-[#262626]' : 'bg-white border-gray-200'
-              } border-r overflow-y-auto z-40`}
+              } border-r overflow-y-auto z-40 scrollbar-hide select-none`}
           >
             <nav className="p-4 space-y-1">
               {menuItems.map(item => (
@@ -356,17 +356,19 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
-      <main className={`pt-16 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="p-6"
-        >
-          {children}
-        </motion.div>
-      </main>
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        <main className={`flex-1 pt-16 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'} overflow-y-auto h-full`}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="p-6"
+          >
+            {children}
+          </motion.div>
+        </main>
+      </div>
     </div>
   );
 }

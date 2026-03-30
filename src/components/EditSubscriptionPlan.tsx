@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
+import {
   ArrowLeft,
   Crown,
   Calendar,
@@ -96,6 +96,7 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
       project_post_limit: Number(formData.get('project_post_limit')),
       task_post_limit: Number(formData.get('task_post_limit')),
       chat_limit: Number(formData.get('chat_limit')),
+      points_granted: Number(formData.get('points_granted')),
       database_access_limit: Number(formData.get('database_access_limit')),
       project_visit_limit: Number(formData.get('project_visit_limit')),
       portfolio_visit_limit: Number(formData.get('portfolio_visit_limit')),
@@ -153,7 +154,7 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
         <div className="lg:col-span-2">
           <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
             className="bg-white dark:bg-[#1a1a1a] rounded-[32px] border border-gray-200 dark:border-[#262626] overflow-hidden shadow-sm">
-            
+
             <form onSubmit={handleSubmit} className="p-8 space-y-8">
               {/* Row 1: Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -163,10 +164,10 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <Field label="Plan Type">
-                        <div className="flex bg-gray-50 dark:bg-black/20 p-1 rounded-xl border border-gray-100 dark:border-[#262626]">
-                            <button type="button" onClick={() => setIsPaid(false)} className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${!isPaid ? 'bg-white dark:bg-[#262626] text-[#F24C20] shadow-sm' : 'text-gray-400'}`}>Free</button>
-                            <button type="button" onClick={() => setIsPaid(true)} className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${isPaid ? 'bg-[#F24C20] text-white shadow-lg shadow-[#F24C20]/20' : 'text-gray-400'}`}>Paid</button>
-                        </div>
+                      <div className="flex bg-gray-50 dark:bg-black/20 p-1 rounded-xl border border-gray-100 dark:border-[#262626]">
+                        <button type="button" onClick={() => setIsPaid(false)} className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${!isPaid ? 'bg-white dark:bg-[#262626] text-[#F24C20] shadow-sm' : 'text-gray-400'}`}>Free</button>
+                        <button type="button" onClick={() => setIsPaid(true)} className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${isPaid ? 'bg-[#F24C20] text-white shadow-lg shadow-[#F24C20]/20' : 'text-gray-400'}`}>Paid</button>
+                      </div>
                     </Field>
                   </div>
                   <div className="flex-1">
@@ -179,134 +180,145 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
 
               {/* Row 2: Roles & Groups */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <Field label="Target Role" icon={Users}>
-                   <select name="target_role" defaultValue={plan?.target_role} className={selectCls}>
-                      <option value="client">Client</option>
-                      <option value="freelancer">Freelancer</option>
-                      <option value="investor">Investor</option>
-                      <option value="startup_creator">Startup Creator</option>
-                      <option value="both">Both (Combo)</option>
-                   </select>
-                 </Field>
-                 <Field label="Category Group" icon={Rocket}>
-                    <select name="group" defaultValue={plan?.group} className={selectCls}>
-                       <option>Freelancer Plans</option>
-                       <option>Client Plans</option>
-                       <option>Start-Up Idea Creator Plans</option>
-                       <option>Investor Plans</option>
-                       <option>Combo Plan</option>
-                    </select>
-                 </Field>
+                <Field label="Target Role" icon={Users}>
+                  <select name="target_role" defaultValue={plan?.target_role} className={selectCls}>
+                    <option value="client">Client</option>
+                    <option value="freelancer">Freelancer</option>
+                    <option value="investor">Investor</option>
+                    <option value="startup_creator">Startup Creator</option>
+                    <option value="both">Both (Combo)</option>
+                  </select>
+                </Field>
+                <Field label="Category Group" icon={Rocket}>
+                  <select name="group" defaultValue={plan?.group} className={selectCls}>
+                    <option>Freelancer Plans</option>
+                    <option>Client Plans</option>
+                    <option>Start-Up Idea Creator Plans</option>
+                    <option>Investor Plans</option>
+                    <option>Combo Plan</option>
+                  </select>
+                </Field>
               </div>
 
               {/* Row 3: Limits & Pricing */}
               <div className="p-6 bg-gray-50/50 dark:bg-[#111] rounded-[24px] border border-gray-100 dark:border-[#262626] space-y-6">
-                 <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-[#262626]">
-                    <div className="p-2 bg-[#F24C20]/10 rounded-lg"><IndianRupee className="w-4 h-4 text-[#F24C20]" /></div>
-                    <h3 className="font-black text-xs uppercase tracking-[0.2em] text-gray-500">Pricing & Core Limits</h3>
-                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Field label="Price (₹)">
-                        <input name="price" type="number" disabled={!isPaid} required={isPaid} defaultValue={plan?.price} className={inputCls + ( !isPaid ? ' opacity-50' : '')} />
-                    </Field>
-                    <Field label="Validity (Days)">
-                        <input name="duration_days" type="number" defaultValue={plan?.duration_days} className={inputCls} />
-                    </Field>
-                    <Field label="Billing Cycle">
-                        <select name="billing_cycle" defaultValue={plan?.billing_cycle} className={selectCls}>
-                            <option value="yearly">Yearly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="one-time">One-time</option>
-                        </select>
-                    </Field>
-                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                    <Field label="Project Posts" icon={Briefcase}>
-                       <input name="project_post_limit" type="number" defaultValue={plan?.project_post_limit} className={inputCls} />
-                       <p className="text-[10px] text-gray-400 mt-1 italic">Large high-value job milestones.</p>
-                    </Field>
-                    <Field label="Task Posts" icon={LayoutDashboard}>
-                       <input name="task_post_limit" type="number" defaultValue={plan?.task_post_limit} className={inputCls} />
-                       <p className="text-[10px] text-gray-400 mt-1 italic">Short-term/Fast gigs.</p>
-                    </Field>
-                    <Field label="Chat Allowed" icon={MessageCircle}>
-                       <input name="chat_limit" type="number" defaultValue={plan?.chat_limit} className={inputCls} />
-                    </Field>
-                 </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <Field label="DB Access Hits" icon={Database}>
-                        <input name="database_access_limit" type="number" defaultValue={plan?.database_access_limit} className={inputCls} />
-                        <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing verified experts from the library.</p>
-                     </Field>
-                     <Field label="Interest Clicks" icon={Rocket}>
-                        <input name="interest_click_limit" type="number" defaultValue={plan?.interest_click_limit} className={inputCls} />
-                     </Field>
-                  </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <Field label="Badge (e.g. Popular, Gold)" icon={Crown}>
-                    <input name="badge" defaultValue={plan?.badge} placeholder="Gold Badge" className={inputCls} />
-                 </Field>
-                 <Field label="Theme Color" icon={Star}>
-                    <select name="color_theme" defaultValue={plan?.color_theme || 'orange'} className={selectCls}>
-                       <option value="orange">Standard Orange</option>
-                       <option value="green">Basic Green</option>
-                       <option value="blue">Pro Blue</option>
-                       <option value="gold">Premium Gold</option>
+                <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-[#262626]">
+                  <div className="p-2 bg-[#F24C20]/10 rounded-lg"><IndianRupee className="w-4 h-4 text-[#F24C20]" /></div>
+                  <h3 className="font-black text-xs uppercase tracking-[0.2em] text-gray-500">Pricing & Core Limits</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Field label="Price (₹)">
+                    <input name="price" type="number" disabled={!isPaid} required={isPaid} defaultValue={plan?.price} className={inputCls + (!isPaid ? ' opacity-50' : '')} />
+                  </Field>
+                  <Field label="Validity (Days)">
+                    <input name="duration_days" type="number" defaultValue={plan?.duration_days} className={inputCls} />
+                  </Field>
+                  <Field label="Billing Cycle">
+                    <select name="billing_cycle" defaultValue={plan?.billing_cycle} className={selectCls}>
+                      <option value="yearly">Yearly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="one-time">One-time</option>
                     </select>
-                 </Field>
+                  </Field>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                  <Field label="Project Posts" icon={Briefcase}>
+                    <input name="project_post_limit" type="number" defaultValue={plan?.project_post_limit} className={inputCls} />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Large high-value job milestones.</p>
+                  </Field>
+                  <Field label="Task Posts" icon={LayoutDashboard}>
+                    <input name="task_post_limit" type="number" defaultValue={plan?.task_post_limit} className={inputCls} />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Short-term/Fast gigs.</p>
+                  </Field>
+                  <Field label="Chat Allowed" icon={MessageCircle}>
+                    <input name="chat_limit" type="number" defaultValue={plan?.chat_limit} className={inputCls} />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  <Field label="DB Access Hits" icon={Database}>
+                    <input name="database_access_limit" type="number" defaultValue={plan?.database_access_limit} className={inputCls} />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing verified experts from the library.</p>
+                  </Field>
+                  <Field label="Interest Clicks(Detail Visit)" icon={Rocket}>
+                    <input name="interest_click_limit" type="number" defaultValue={plan?.interest_click_limit} className={inputCls} />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                  {/* <Field label="Points Granted" icon={Crown}>
+                        <input name="points_granted" type="number" defaultValue={plan?.points_granted} className={inputCls} />
+                     </Field> */}
+                  <Field label="Project Visit Limit" icon={Eye}>
+                    <input name="project_visit_limit" type="number" defaultValue={plan?.project_visit_limit} className={inputCls} />
+                  </Field>
+                  <Field label="Portfolio Visit Limit" icon={Eye}>
+                    <input name="portfolio_visit_limit" type="number" defaultValue={plan?.portfolio_visit_limit} className={inputCls} />
+                  </Field>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <Field label="Button Text (CTA)">
-                    <input name="cta" defaultValue={plan?.cta} className={inputCls} />
-                 </Field>
-                 <Field label="Description (Small Line)">
-                    <input name="description" defaultValue={plan?.description} placeholder="Everything you need to hire at scale." className={inputCls} />
-                 </Field>
+                <Field label="Badge (e.g. Popular, Gold)" icon={Crown}>
+                  <input name="badge" defaultValue={plan?.badge} placeholder="Gold Badge" className={inputCls} />
+                </Field>
+                <Field label="Theme Color" icon={Star}>
+                  <select name="color_theme" defaultValue={plan?.color_theme || 'orange'} className={selectCls}>
+                    <option value="orange">Standard Orange</option>
+                    <option value="green">Basic Green</option>
+                    <option value="blue">Pro Blue</option>
+                    <option value="gold">Premium Gold</option>
+                  </select>
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Field label="Button Text (CTA)">
+                  <input name="cta" defaultValue={plan?.cta} className={inputCls} />
+                </Field>
+                <Field label="Description (Small Line)">
+                  <input name="description" defaultValue={plan?.description} placeholder="Everything you need to hire at scale." className={inputCls} />
+                </Field>
               </div>
 
               {/* Row 5: Dynamic Features */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-2">
-                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Available Features (Marketing List)</label>
-                    <button type="button" onClick={addFeature} className="text-[#F24C20] hover:bg-[#F24C20]/10 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5">
-                        <Plus className="w-3.5 h-3.5" /> Add Row
-                    </button>
+                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Available Features (Marketing List)</label>
+                  <button type="button" onClick={addFeature} className="text-[#F24C20] hover:bg-[#F24C20]/10 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5" /> Add Row
+                  </button>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
-                    <AnimatePresence mode="popLayout">
-                        {features.map((feature, idx) => (
-                           <motion.div key={idx} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="flex gap-2">
-                              <input value={feature} onChange={(e) => updateFeature(idx, e.target.value)} placeholder="e.g. Priority Support" className={inputCls} />
-                              <button type="button" onClick={() => removeFeature(idx)} className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl border border-gray-100 dark:border-[#262626]">
-                                <Minus className="w-4 h-4" />
-                              </button>
-                              {idx === features.length - 1 && (
-                                <button type="button" onClick={addFeature} className="p-3 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl border border-emerald-500/10">
-                                    <Plus className="w-4 h-4" />
-                                </button>
-                              )}
-                           </motion.div>
-                        ))}
-                    </AnimatePresence>
+                  <AnimatePresence mode="popLayout">
+                    {features.map((feature, idx) => (
+                      <motion.div key={idx} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="flex gap-2">
+                        <input value={feature} onChange={(e) => updateFeature(idx, e.target.value)} placeholder="e.g. Priority Support" className={inputCls} />
+                        <button type="button" onClick={() => removeFeature(idx)} className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl border border-gray-100 dark:border-[#262626]">
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        {idx === features.length - 1 && (
+                          <button type="button" onClick={addFeature} className="p-3 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl border border-emerald-500/10">
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               </div>
 
               <div className="flex items-center gap-4 p-5 bg-[#F24C20]/5 rounded-2xl border border-[#F24C20]/10">
                 <input type="checkbox" name="featured" id="feat" defaultChecked={plan?.featured} className="w-6 h-6 accent-[#F24C20] rounded-lg cursor-pointer" />
                 <div>
-                   <label htmlFor="feat" className="block text-sm font-black text-gray-900 dark:text-white cursor-pointer select-none italic uppercase">Feature Plan (Orange Glow)</label>
-                   <p className="text-xs text-gray-500">Highlighted as the "Recommended" choice on the website</p>
+                  <label htmlFor="feat" className="block text-sm font-black text-gray-900 dark:text-white cursor-pointer select-none italic uppercase">Feature Plan (Orange Glow)</label>
+                  <p className="text-xs text-gray-500">Highlighted as the "Recommended" choice on the website</p>
                 </div>
               </div>
 
               <div className="flex gap-4 pt-4">
-                 <button type="button" onClick={onBack} className="flex-1 py-4 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#262626] rounded-2xl font-bold hover:bg-gray-100 transition-all">Cancel</button>
-                 <button type="submit" disabled={saving} className="flex-[2] py-4 bg-[#F24C20] text-white rounded-2xl font-black uppercase tracking-widest hover:bg-[#d4431b] transition-all shadow-xl shadow-[#F24C20]/20 flex items-center justify-center gap-2 disabled:opacity-50">
-                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Save Changes
-                 </button>
+                <button type="button" onClick={onBack} className="flex-1 py-4 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#262626] rounded-2xl font-bold hover:bg-gray-100 transition-all">Cancel</button>
+                <button type="submit" disabled={saving} className="flex-[2] py-4 px-4 bg-[#F24C20] text-white rounded-2xl font-black uppercase tracking-widest hover:bg-[#d4431b] transition-all shadow-xl shadow-[#F24C20]/20 flex items-center justify-center gap-2 disabled:opacity-50">
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Save Changes
+                </button>
               </div>
             </form>
           </motion.div>
@@ -314,17 +326,17 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
 
         {/* Info Column */}
         <div className="space-y-6">
-           <div className="bg-[#044071] rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
-              <h3 className="text-xl font-black italic uppercase tracking-tighter mb-6 relative">Sync Details</h3>
-              <p className="text-blue-100/70 text-sm leading-relaxed mb-6">Editing this plan will update it for all future subscribers. Existing users will keep their current benefits until renewal.</p>
-              <div className="space-y-4">
-                 <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <Eye className="w-4 h-4 text-orange-400" />
-                    <span className="text-xs font-bold uppercase tracking-widest">Real-time update enabled</span>
-                 </div>
+          <div className="bg-[#044071] rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+            <h3 className="text-xl font-black italic uppercase tracking-tighter mb-6 relative">Sync Details</h3>
+            <p className="text-blue-100/70 text-sm leading-relaxed mb-6">Editing this plan will update it for all future subscribers. Existing users will keep their current benefits until renewal.</p>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/10">
+                <Eye className="w-4 h-4 text-orange-400" />
+                <span className="text-xs font-bold uppercase tracking-widest">Real-time update enabled</span>
               </div>
-           </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

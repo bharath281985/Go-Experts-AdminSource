@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Search, Eye, CheckCircle, X, AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Search, Eye, CheckCircle, X, AlertTriangle, ChevronLeft, ChevronRight, Loader2, Star } from 'lucide-react';
 import api from '../lib/api';
 
 interface ProjectsListProps {
@@ -30,6 +30,19 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
       console.error('Error fetching projects:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleFeatured = async (projectId: string) => {
+    try {
+      const response = await api.put(`/admin/projects/${projectId}/featured`);
+      if (response.data.success) {
+        setProjects(prev => prev.map(p => 
+          p._id === projectId ? { ...p, is_featured: !p.is_featured } : p
+        ));
+      }
+    } catch (error) {
+      console.error('Error toggling featured status:', error);
     }
   };
 
@@ -198,6 +211,21 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleFeatured(project._id);
+                          }}
+                          className={`p-2 rounded-lg transition-colors group ${
+                            project.is_featured 
+                              ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-500' 
+                              : 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20 text-gray-400 hover:text-yellow-500'
+                          }`}
+                        >
+                          <Star className={`w-4 h-4 ${project.is_featured ? 'fill-current' : ''}`} />
+                        </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
