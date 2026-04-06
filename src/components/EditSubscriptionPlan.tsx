@@ -101,6 +101,8 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
       project_visit_limit: Number(formData.get('project_visit_limit')),
       portfolio_visit_limit: Number(formData.get('portfolio_visit_limit')),
       interest_click_limit: Number(formData.get('interest_click_limit')),
+      startup_idea_post_limit: Number(formData.get('startup_idea_post_limit')),
+      startup_idea_explore_limit: Number(formData.get('startup_idea_explore_limit')),
       billing_cycle: formData.get('billing_cycle'),
       target_role: formData.get('target_role'),
       badge: formData.get('badge'),
@@ -200,82 +202,124 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
                 </Field>
               </div>
 
-              {/* Row 3: Limits & Pricing */}
+              {/* Row 3: Limits & Pricing (Dynamic based on role terminology) */}
               <div className="p-6 bg-gray-50/50 dark:bg-[#111] rounded-[24px] border border-gray-100 dark:border-[#262626] space-y-6">
                 <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-[#262626]">
                   <div className="p-2 bg-[#F24C20]/10 rounded-lg"><IndianRupee className="w-4 h-4 text-[#F24C20]" /></div>
-                  <h3 className="font-black text-xs uppercase tracking-[0.2em] text-gray-500">Pricing & Core Limits</h3>
+                  <h3 className="font-black text-xs uppercase tracking-[0.2em] text-gray-500">
+                    {plan?.target_role?.includes('freelancer') ? 'Freelancer Business Parameters' : 
+                     plan?.target_role?.includes('investor') ? 'Investor Access Parameters' :
+                     plan?.target_role?.includes('startup_creator') ? 'Startup Creator Parameters' :
+                     'Client Subscription Parameters'}
+                  </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Field label="Price (₹)">
-                    <input name="price" type="number" disabled={!isPaid} required={isPaid} defaultValue={plan?.price} className={inputCls + (!isPaid ? ' opacity-50' : '')} />
+                  <Field label="Price (₹)*">
+                    <input name="price" type="number" disabled={!isPaid} required={isPaid} defaultValue={plan?.price} placeholder="e.g. 999" className={inputCls + (!isPaid ? ' opacity-50' : '')} />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Enter the plan amount in INR.</p>
                   </Field>
-                  <Field label="Validity (Days)">
-                    <input name="duration_days" type="number" defaultValue={plan?.duration_days} className={inputCls} />
+                  <Field label="Validity (Days)*">
+                    <input name="duration_days" type="number" defaultValue={plan?.duration_days} placeholder="e.g. 365" className={inputCls} required />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Days until renewal (e.g. 365 for 1 year).</p>
                   </Field>
-                  <Field label="Billing Cycle">
-                    <select name="billing_cycle" defaultValue={plan?.billing_cycle} className={selectCls}>
-                      <option value="yearly">Yearly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="one-time">One-time</option>
+                  <Field label="Billing Cycle*">
+                    <select name="billing_cycle" defaultValue={plan?.billing_cycle} className={selectCls} required>
+                      <option value="yearly">Yearly (Standard)</option>
+                      <option value="monthly">Monthly (Recurring)</option>
+                      <option value="one-time">One-time (Fixed)</option>
                     </select>
                   </Field>
                 </div>
+                
+                {/* Dynamically Labeled Fields based on user requirements */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                  <Field label="Project Posts" icon={Briefcase}>
-                    <input name="project_post_limit" type="number" defaultValue={plan?.project_post_limit} className={inputCls} />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Large high-value job milestones.</p>
+                  <Field 
+                    label={(plan?.target_role?.includes('freelancer') ? 'Apply to Projects' : 
+                           plan?.target_role?.includes('investor') ? 'Contact Limit' : 
+                           plan?.target_role?.includes('startup_creator') ? 'Idea Posts' : 
+                           'Post Projects Limit') + "*"} 
+                    icon={Briefcase}
+                  >
+                    <input name="project_post_limit" type="number" defaultValue={plan?.project_post_limit} placeholder="e.g. 36 (0=unlimited)" className={inputCls} required />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Main activity quota for this tier.</p>
                   </Field>
-                  <Field label="Task Posts" icon={LayoutDashboard}>
-                    <input name="task_post_limit" type="number" defaultValue={plan?.task_post_limit} className={inputCls} />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Short-term/Fast gigs.</p>
+                  <Field 
+                    label={(plan?.target_role?.includes('freelancer') ? 'Gig Slots' : 
+                           plan?.target_role?.includes('investor') ? 'Investment Hits' : 
+                           plan?.target_role?.includes('startup_creator') ? 'Task Posts' : 
+                           'Post Tasks Limit') + "*"} 
+                    icon={LayoutDashboard}
+                  >
+                    <input name="task_post_limit" type="number" defaultValue={plan?.task_post_limit} placeholder="e.g. 10" className={inputCls} required />
                   </Field>
-                  <Field label="Chat Allowed" icon={MessageCircle}>
-                    <input name="chat_limit" type="number" defaultValue={plan?.chat_limit} className={inputCls} />
+                  <Field 
+                    label={(plan?.target_role?.includes('freelancer') ? 'Chat with Clients' : 'Chat with Freelancers') + "*"} 
+                    icon={MessageCircle}
+                  >
+                    <input name="chat_limit" type="number" defaultValue={plan?.chat_limit} placeholder="e.g. 50" className={inputCls} required />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Unique contacts allowed in this cycle.</p>
                   </Field>
                 </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Field label="DB Access Hits" icon={Database}>
-                    <input name="database_access_limit" type="number" defaultValue={plan?.database_access_limit} className={inputCls} />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing verified experts from the library.</p>
+                  <Field 
+                    label={plan?.target_role?.includes('freelancer') ? 'Client Database Hits' : 'Freelancer Database Access'} 
+                    icon={Database}
+                  >
+                    <input name="database_access_limit" type="number" defaultValue={plan?.database_access_limit} placeholder="e.g. 99 (0=No Access)" className={inputCls} />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing users in the library.</p>
                   </Field>
-                  <Field label="Interest Clicks(Detail Visit)" icon={Rocket}>
-                    <input name="interest_click_limit" type="number" defaultValue={plan?.interest_click_limit} className={inputCls} />
+                  <Field 
+                    label={plan?.target_role?.includes('freelancer') ? 'Boost Hits' : 'Advanced Tool Hits'} 
+                    icon={Rocket}
+                  >
+                    <input name="interest_click_limit" type="number" defaultValue={plan?.interest_click_limit} placeholder="e.g. 10 (Premium Filters)" className={inputCls} />
                   </Field>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                  {/* <Field label="Points Granted" icon={Crown}>
-                        <input name="points_granted" type="number" defaultValue={plan?.points_granted} className={inputCls} />
-                     </Field> */}
-                  <Field label="Project Visit Limit" icon={Eye}>
-                    <input name="project_visit_limit" type="number" defaultValue={plan?.project_visit_limit} className={inputCls} />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  <Field label={plan?.target_role?.includes('freelancer') ? 'Project Detail Visits' : 'Expert Profile Visits'} icon={Eye}>
+                    <input name="project_visit_limit" type="number" defaultValue={plan?.project_visit_limit} placeholder="e.g. 199 (Page view limit)" className={inputCls} />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">How many full pages can they browse?</p>
                   </Field>
-                  <Field label="Portfolio Visit Limit" icon={Eye}>
-                    <input name="portfolio_visit_limit" type="number" defaultValue={plan?.portfolio_visit_limit} className={inputCls} />
+                  <Field label={plan?.target_role?.includes('freelancer') ? 'Portfolio Exposure Rank' : 'Identity Hidden Reveal'} icon={Eye}>
+                    <input name="portfolio_visit_limit" type="number" defaultValue={plan?.portfolio_visit_limit} placeholder="e.g. 5 (Locked info views)" className={inputCls} />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  <Field label="Startup Idea Post Limit*" icon={Rocket}>
+                    <input name="startup_idea_post_limit" type="number" defaultValue={plan?.startup_idea_post_limit || 0} placeholder="0 = Unlimited" className={inputCls} required />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they submit?</p>
+                  </Field>
+                  <Field label="Explore Ideas Limit*" icon={Eye}>
+                    <input name="startup_idea_explore_limit" type="number" defaultValue={plan?.startup_idea_explore_limit || 0} placeholder="0 = Unlimited" className={inputCls} required />
+                    <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they unlock?</p>
                   </Field>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Field label="Badge (e.g. Popular, Gold)" icon={Crown}>
-                  <input name="badge" defaultValue={plan?.badge} placeholder="Gold Badge" className={inputCls} />
+                <Field label="Badge / Label (Optional)" icon={Crown}>
+                  <input name="badge" defaultValue={plan?.badge} placeholder="e.g. Best Seller / Popular" className={inputCls} />
+                  <p className="text-[10px] text-gray-400 mt-1 italic">Text shown in the corner banner.</p>
                 </Field>
                 <Field label="Theme Color" icon={Star}>
                   <select name="color_theme" defaultValue={plan?.color_theme || 'orange'} className={selectCls}>
-                    <option value="orange">Standard Orange</option>
-                    <option value="green">Basic Green</option>
-                    <option value="blue">Pro Blue</option>
-                    <option value="gold">Premium Gold</option>
+                    <option value="orange">Orange (Startup/Basic)</option>
+                    <option value="green">Green (Free Trial)</option>
+                    <option value="blue">Blue (Pro / Business)</option>
+                    <option value="gold">Gold (Elite / Platinum)</option>
                   </select>
                 </Field>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Field label="Button Text (CTA)">
-                  <input name="cta" defaultValue={plan?.cta} className={inputCls} />
+                <Field label="Button Text (CTA)*">
+                  <input name="cta" defaultValue={plan?.cta} placeholder="e.g. Upgrade Now" className={inputCls} required />
                 </Field>
-                <Field label="Description (Small Line)">
-                  <input name="description" defaultValue={plan?.description} placeholder="Everything you need to hire at scale." className={inputCls} />
+                <Field label="Tagline / Short Line">
+                  <input name="description" defaultValue={plan?.description} placeholder="e.g. Hire the top 1% talent at scale." className={inputCls} />
                 </Field>
               </div>
 

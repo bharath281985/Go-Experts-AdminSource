@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import logoFallback from '../assets/logo.png';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { motion } from 'motion/react';
-import { LogIn, Mail, Lock, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { LogIn, Mail, Lock, Loader2, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 
@@ -14,6 +14,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     const { settings } = useSiteSettings();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
@@ -181,15 +182,22 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                             <div className="relative">
                                 <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.password ? 'text-red-500' : 'text-gray-500'}`} />
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => {
                                         setPassword(e.target.value);
                                         if (errors.password) setErrors({ ...errors, password: undefined });
                                     }}
                                     placeholder="••••••••"
-                                    className={`w-full bg-[#262626] border ${errors.password ? 'border-red-500/50 focus:border-red-500' : 'border-[#333333] focus:border-[#F24C20]'} text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-1 ${errors.password ? 'focus:ring-red-500/20' : 'focus:ring-[#F24C20]/20'} transition-all`}
+                                    className={`w-full bg-[#262626] border ${errors.password ? 'border-red-500/50 focus:border-red-500' : 'border-[#333333] focus:border-[#F24C20]'} text-white rounded-xl py-3 pl-10 pr-12 focus:outline-none focus:ring-1 ${errors.password ? 'focus:ring-red-500/20' : 'focus:ring-[#F24C20]/20'} transition-all`}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                             {errors.password && (
                                 <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-red-500 text-xs ml-1">{errors.password}</motion.p>

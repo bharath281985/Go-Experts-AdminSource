@@ -11,7 +11,7 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'in_queue' | 'approved' | 'rejected'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'in_queue' | 'approved' | 'rejected' | 'flagged'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -37,7 +37,7 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
     try {
       const response = await api.put(`/admin/projects/${projectId}/featured`);
       if (response.data.success) {
-        setProjects(prev => prev.map(p => 
+        setProjects(prev => prev.map(p =>
           p._id === projectId ? { ...p, is_featured: !p.is_featured } : p
         ));
       }
@@ -46,15 +46,30 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
     }
   };
 
+  const handleUpdateStatus = async (projectId: string, status: string) => {
+    try {
+      const response = await api.put(`/admin/projects/${projectId}/status`, { status });
+      if (response.data.success) {
+        setProjects(prev => prev.map(p =>
+          p._id === projectId ? { ...p, status: status } : p
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
   const filteredProjects = projects.filter(project => {
     const matchesSearch = (project.title || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const isApproved = project.status === 'approved';
+    const isApproved = project.status === 'approved' || project.status === 'live';
     const isRejected = project.status === 'rejected';
-    const isPending = !project.status || project.status === 'in_queue';
+    const isFlagged = project.status === 'flagged';
+    const isPending = !project.status || project.status === 'in_queue' || project.status === 'pending';
 
     const matchesStatus = filterStatus === 'all' ||
       (filterStatus === 'approved' && isApproved) ||
       (filterStatus === 'rejected' && isRejected) ||
+      (filterStatus === 'flagged' && isFlagged) ||
       (filterStatus === 'in_queue' && isPending);
 
     return matchesSearch && matchesStatus;
@@ -100,6 +115,7 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
               <option value="in_queue">In Queue</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
+              <option value="flagged">Flagged</option>
             </select>
           </div>
         </div>
@@ -109,8 +125,8 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
           <button
             onClick={() => setFilterStatus('all')}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'all'
-                ? 'bg-[#044071] text-white'
-                : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              ? 'bg-[#044071] text-white'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
             All Projects ({projects.length})
@@ -118,20 +134,38 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
           <button
             onClick={() => setFilterStatus('in_queue')}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'in_queue'
-                ? 'bg-yellow-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              ? 'bg-yellow-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
-            In Queue ({projects.filter(p => !p.status || p.status === 'in_queue').length})
+            In Queue ({projects.filter(p => !p.status || p.status === 'in_queue' || p.status === 'pending').length})
           </button>
           <button
             onClick={() => setFilterStatus('approved')}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'approved'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              ? 'bg-green-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
-            Approved ({projects.filter(p => p.status === 'approved').length})
+            Approved ({projects.filter(p => p.status === 'approved' || p.status === 'live').length})
+          </button>
+          <button
+            onClick={() => setFilterStatus('rejected')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'rejected'
+              ? 'bg-red-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+          >
+            Rejected ({projects.filter(p => p.status === 'rejected').length})
+          </button>
+          <button
+            onClick={() => setFilterStatus('flagged')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'flagged'
+              ? 'bg-orange-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+          >
+            Flagged ({projects.filter(p => p.status === 'flagged').length})
           </button>
         </div>
       </div>
@@ -167,13 +201,15 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    whileHover={{ backgroundColor: 'rgba(242, 76, 32, 0.02)' }}
-                    className="cursor-pointer"
+                    whileHover={{ backgroundColor: 'rgba(242, 76, 32, 0.05)' }}
+                    onClick={() => onSelectProject(project._id)}
+                    className="cursor-pointer transition-colors"
                   >
                     <td className="px-6 py-4">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white mb-1 line-clamp-1">{project.title}</div>
-                        <div className="flex flex-wrap gap-1 mt-2">
+                        <div className="font-bold text-gray-900 dark:text-white mb-0.5 line-clamp-1">{project.title}</div>
+                        <div className="text-xs text-gray-500 mb-2">By: {project.client_id?.full_name || 'Anonymous'}</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
                           {(project.skills || []).slice(0, 3).map((skill: string, i: number) => (
                             <span
                               key={i}
@@ -190,20 +226,20 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${project.work_preference === 'fixed'
-                          ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
-                          : 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                        ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
+                        : 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
                         }`}>
                         {(project.work_preference || 'Fixed').toUpperCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${project.status === 'approved'
-                          ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                          : project.status === 'rejected'
-                            ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                            : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400'
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${project.status === 'approved' || project.status === 'live'
+                        ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                        : project.status === 'rejected'
+                          ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                          : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400'
                         }`}>
-                        {(project.status || 'In Queue').toUpperCase()}
+                        {(project.status === 'live' ? 'Approved' : (project.status || 'In Queue')).toUpperCase()}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
@@ -218,11 +254,10 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
                             e.stopPropagation();
                             handleToggleFeatured(project._id);
                           }}
-                          className={`p-2 rounded-lg transition-colors group ${
-                            project.is_featured 
-                              ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-500' 
+                          className={`p-2 rounded-lg transition-colors group ${project.is_featured
+                              ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-500'
                               : 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20 text-gray-400 hover:text-yellow-500'
-                          }`}
+                            }`}
                         >
                           <Star className={`w-4 h-4 ${project.is_featured ? 'fill-current' : ''}`} />
                         </motion.button>
@@ -231,16 +266,58 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
                           whileTap={{ scale: 0.9 }}
                           onClick={() => onSelectProject(project._id)}
                           className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors group"
+                          title="View Details"
                         >
                           <Eye className="w-4 h-4 text-gray-400 group-hover:text-[#F24C20]" />
                         </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-2 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                        >
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        </motion.button>
+
+                        {/* Approve Button (Hide if already approved/live) */}
+                        {!(project.status === 'live' || project.status === 'approved') && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(project._id, 'live');
+                            }}
+                            className="p-2 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg transition-colors group"
+                            title="Approve Project"
+                          >
+                            <CheckCircle className="w-4 h-4 text-gray-400 group-hover:text-green-600" />
+                          </motion.button>
+                        )}
+
+                        {/* Flag Button (Hide if already flagged) */}
+                        {project.status !== 'flagged' && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(project._id, 'flagged');
+                            }}
+                            className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors group"
+                            title="Flag for Review"
+                          >
+                            <AlertTriangle className="w-4 h-4 text-gray-400 group-hover:text-orange-600" />
+                          </motion.button>
+                        )}
+
+                        {/* Reject Button (Hide if already rejected) */}
+                        {project.status !== 'rejected' && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(project._id, 'rejected');
+                            }}
+                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors group"
+                            title="Reject Project"
+                          >
+                            <X className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
+                          </motion.button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

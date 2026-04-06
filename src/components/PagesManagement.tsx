@@ -159,6 +159,40 @@ export function PagesManagement() {
 
   return (
     <div className="space-y-6">
+      {/* CKEditor Dark Mode Overrides */}
+      <style>{`
+        .ck-editor__main .ck-content {
+          min-height: 350px;
+          background-color: transparent !important;
+          color: inherit !important;
+        }
+        .dark .ck-editor__main .ck-content {
+          background-color: #262626 !important;
+          color: #fff !important;
+          border-color: #333 !important;
+        }
+        .dark .ck.ck-editor__top .ck-sticky-panel .ck-toolbar {
+          background-color: #1a1a1a !important;
+          border-color: #333 !important;
+        }
+        .dark .ck.ck-button {
+          color: #ccc !important;
+        }
+        .dark .ck.ck-button:hover {
+          background-color: #333 !important;
+        }
+        .dark .ck.ck-button.ck-on {
+          background-color: #444 !important;
+          color: #fff !important;
+        }
+        .dark .ck.ck-toolbar__separator {
+          background-color: #333 !important;
+        }
+        .dark .ck.ck-placeholder {
+          color: #666 !important;
+        }
+      `}</style>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#044071] dark:text-white mb-1">Pages Management</h1>

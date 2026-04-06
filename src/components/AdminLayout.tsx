@@ -86,7 +86,7 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
       icon: <FolderKanban className="w-5 h-5" />,
       submenu: [
         { id: 'projects', label: 'Project Listings', icon: <ClipboardList className="w-4 h-4" /> },
-        { id: 'pending-approvals', label: 'Pending Approvals', icon: <AlertCircle className="w-4 h-4" /> },
+        // { id: 'pending-approvals', label: 'Pending Approvals', icon: <AlertCircle className="w-4 h-4" /> },
         { id: 'proposals', label: 'Proposals Overview', icon: <FileText className="w-4 h-4" /> }
       ]
     },
@@ -284,8 +284,8 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${currentPage === item.id || item.submenu.some(s => s.id === currentPage)
                           ? 'bg-[#F24C20] text-white'
                           : darkMode
-                          ? 'hover:bg-[#262626] text-gray-300'
-                          : 'hover:bg-gray-100 text-gray-700'
+                            ? 'hover:bg-[#262626] text-gray-300'
+                            : 'hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         <div className="flex items-center gap-3">
@@ -313,8 +313,8 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
                                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${currentPage === subItem.id
                                   ? 'bg-[#F24C20] text-white'
                                   : darkMode
-                                  ? 'hover:bg-[#262626] text-gray-400'
-                                  : 'hover:bg-gray-100 text-gray-600'
+                                    ? 'hover:bg-[#262626] text-gray-400'
+                                    : 'hover:bg-gray-100 text-gray-600'
                                   }`}
                               >
                                 {subItem.icon}
@@ -331,8 +331,8 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${currentPage === item.id
                         ? 'bg-[#F24C20] text-white'
                         : darkMode
-                        ? 'hover:bg-[#262626] text-gray-300'
-                        : 'hover:bg-gray-100 text-gray-700'
+                          ? 'hover:bg-[#262626] text-gray-300'
+                          : 'hover:bg-gray-100 text-gray-700'
                         }`}
                     >
                       {item.icon}

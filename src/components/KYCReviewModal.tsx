@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, FileText, CheckCircle, Ban, Loader2, ExternalLink, ShieldCheck, User, Briefcase, Landmark, Rocket, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface KYCReviewModalProps {
   isOpen: boolean;
@@ -40,10 +41,10 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
     return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
   };
 
-  return (
+  return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -221,8 +222,9 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
-  );
+    </AnimatePresence>,
+    document.body
+  ) : null;
 }
 
 function StatusChip({ label, active }: { label: string, active: boolean }) {

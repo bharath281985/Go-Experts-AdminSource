@@ -43,7 +43,7 @@ interface RegistrationStep {
     title: string;
     description: string;
     type: 'single-selection' | 'multi-selection' | 'input' | 'otp-verification' | 'account-creation' | 'subscription-plan';
-    module: 'onboarding' | 'project_finder';
+    module: 'onboarding' | 'project_finder' | 'talent_finder';
     field: string;
     options: StepOption[];
     isActive: boolean;
@@ -58,8 +58,9 @@ export const RegistrationSteps = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentStep, setCurrentStep] = useState<Partial<RegistrationStep> | null>(null);
 
-    const [activeModule, setActiveModule] = useState<'onboarding' | 'project_finder'>('onboarding');
-    const [stats, setStats] = useState({ onboarding: 0, project_finder: 0 });
+    const [activeModule, setActiveModule] = useState<'onboarding' | 'project_finder' | 'talent_finder'>('onboarding');
+    const [activeRoleTab, setActiveRoleTab] = useState<'all' | 'freelancer' | 'client' | 'investor' | 'startup_creator'>('all');
+    const [stats, setStats] = useState({ onboarding: 0, project_finder: 0, talent_finder: 0, freelancer: 0, client: 0, investor: 0, startup_creator: 0 });
     
     const fetchSteps = async () => {
         try {
@@ -67,14 +68,27 @@ export const RegistrationSteps = () => {
             const res = await api.get('/cms/registration-steps/admin');
             const allSteps: RegistrationStep[] = res.data.data;
             
-            // Filter by active module
-            setSteps(allSteps.filter(s => (s.module || 'onboarding') === activeModule));
+            // Calculate stats for all sub-roles
+            const onboardingSteps = allSteps.filter(s => (s.module || 'onboarding') === 'onboarding');
             
-            // Calculate stats
             setStats({
-                onboarding: allSteps.filter(s => (s.module || 'onboarding') === 'onboarding').length,
-                project_finder: allSteps.filter(s => s.module === 'project_finder').length
+                onboarding: onboardingSteps.length,
+                project_finder: allSteps.filter(s => s.module === 'project_finder').length,
+                talent_finder: allSteps.filter(s => s.module === 'talent_finder').length,
+                freelancer: onboardingSteps.filter(s => !s.applicableRoles?.length || s.applicableRoles.includes('freelancer')).length,
+                client: onboardingSteps.filter(s => !s.applicableRoles?.length || s.applicableRoles.includes('client')).length,
+                investor: onboardingSteps.filter(s => !s.applicableRoles?.length || s.applicableRoles.includes('investor')).length,
+                startup_creator: onboardingSteps.filter(s => !s.applicableRoles?.length || s.applicableRoles.includes('startup_creator')).length
             });
+
+            // Filter for display
+            let filtered = allSteps.filter(s => (s.module || 'onboarding') === activeModule);
+            
+            if (activeModule === 'onboarding' && activeRoleTab !== 'all') {
+                filtered = filtered.filter(s => !s.applicableRoles?.length || s.applicableRoles.includes(activeRoleTab));
+            }
+
+            setSteps(filtered);
         } catch {
             toast.error('Failed to fetch steps');
         } finally {
@@ -84,7 +98,7 @@ export const RegistrationSteps = () => {
 
     useEffect(() => {
         fetchSteps();
-    }, [activeModule]);
+    }, [activeModule, activeRoleTab]);
 
     const toggleStatus = async (id: string, active: boolean) => {
         await api.patch(`/cms/registration-steps/${id}/toggle`);
@@ -155,9 +169,13 @@ export const RegistrationSteps = () => {
                             <Settings2 />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold">Dynamic Logic Flows</h1>
+                            <h1 className="text-3xl font-bold font-heading">Dynamic Logic Flows</h1>
                             <p className="text-white/80 text-sm font-medium">
-                                Configure steps for {activeModule === 'onboarding' ? 'User Registration' : 'Project Search Quiz'}
+                                Configure steps for {
+                                    activeModule === 'onboarding' ? `Onboarding (Role: ${activeRoleTab.replace('_', ' ').toUpperCase()})` : 
+                                    activeModule === 'project_finder' ? 'Project Search Quiz' : 
+                                    'Talent Finder Flow'
+                                }
                             </p>
                         </div>
                     </div>
@@ -181,6 +199,7 @@ export const RegistrationSteps = () => {
                                     module: activeModule,
                                     options: [],
                                     isActive: true,
+                                    applicableRoles: activeRoleTab !== 'all' ? [activeRoleTab] : [],
                                     order: nextOrder
                                 });
                                 setIsEditing(true);
@@ -193,31 +212,68 @@ export const RegistrationSteps = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="relative z-10 mt-8 flex gap-2">
-                    {[
-                        { id: 'onboarding', label: 'Onboarding Flow', count: stats.onboarding, icon: UserPlus },
-                        { id: 'project_finder', label: 'Project Finder Filter', count: stats.project_finder, icon: Database }
-                    ].map(tab => {
-                        const Icon = tab.icon;
-                        const isSelected = activeModule === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveModule(tab.id as any)}
-                                className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold transition-all text-xs border ${
-                                    isSelected 
-                                    ? 'bg-white text-[#F24C20] border-white' 
-                                    : 'bg-black/10 hover:bg-black/20 text-white border-white/10'
-                                }`}
+                <div className="relative z-10 mt-8 flex flex-col gap-4">
+                    <div className="flex flex-wrap gap-2">
+                        {[
+                            { id: 'onboarding', label: 'Onboarding Flow', count: stats.onboarding, icon: UserPlus },
+                            { id: 'project_finder', label: 'Project Finder Filter', count: stats.project_finder, icon: Database },
+                            { id: 'talent_finder', label: 'Talent Finder Flow', count: stats.talent_finder, icon: Database }
+                        ].map(tab => {
+                            const Icon = tab.icon;
+                            const isSelected = activeModule === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                        setActiveModule(tab.id as any);
+                                        if (tab.id !== 'onboarding') setActiveRoleTab('all');
+                                    }}
+                                    className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold transition-all text-xs border ${
+                                        isSelected 
+                                        ? 'bg-white text-[#F24C20] border-white shadow-xl shadow-black/10' 
+                                        : 'bg-black/10 hover:bg-black/20 text-white border-white/10'
+                                    }`}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    {tab.label}
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] ${isSelected ? 'bg-[#F24C20]/10 text-[#F24C20]' : 'bg-white/10 text-white'}`}>
+                                        {tab.count}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Role Sub-tabs for Onboarding */}
+                    <AnimatePresence>
+                        {activeModule === 'onboarding' && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex flex-wrap gap-2 p-1.5 bg-black/10 rounded-2xl backdrop-blur-md w-fit border border-white/5"
                             >
-                                <Icon className="w-4 h-4" />
-                                {tab.label}
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] ${isSelected ? 'bg-[#F24C20]/10 text-[#F24C20]' : 'bg-white/10 text-white'}`}>
-                                    {tab.count}
-                                </span>
-                            </button>
-                        );
-                    })}
+                                {[
+                                    { id: 'all', label: 'All Steps', count: stats.onboarding },
+                                    { id: 'freelancer', label: 'Freelancer', count: stats.freelancer },
+                                    { id: 'client', label: 'Hire Talent', count: stats.client },
+                                    { id: 'investor', label: 'Investor', count: stats.investor },
+                                    { id: 'startup_creator', label: 'Startup Creator', count: stats.startup_creator }
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setActiveRoleTab(sub.id as any)}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-bold tracking-wide transition-all ${
+                                            activeRoleTab === sub.id 
+                                            ? 'bg-white/20 text-white border border-white/20' 
+                                            : 'text-white/50 hover:text-white'
+                                        }`}
+                                    >
+                                        {sub.label.toUpperCase()} ({sub.count})
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </motion.div>
 
@@ -409,6 +465,7 @@ function EditModal({ open, onClose, step, setStep, onSave }: any) {
                                         >
                                             <option value="onboarding">User Onboarding Flow</option>
                                             <option value="project_finder">Project Finder Filter</option>
+                                            <option value="talent_finder">Talent Finder Flow</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">

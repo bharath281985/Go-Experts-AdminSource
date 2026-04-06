@@ -14,6 +14,9 @@ type Settings = {
   site_name: string;
   site_tagline: string;
   site_logo: string;
+  header_logo: string;
+  footer_logo: string;
+  site_favicon: string;
   contact_email: string;
   contact_phone: string;
   contact_address: string;
@@ -41,7 +44,7 @@ type Settings = {
 };
 
 const defaultSettings: Settings = {
-  site_name: 'Go Experts', site_tagline: '', site_logo: '', site_favicon: '',
+  site_name: 'Go Experts', site_tagline: '', site_logo: '', header_logo: '', footer_logo: '', site_favicon: '',
   contact_email: '', contact_phone: '', contact_address: '',
   meta_title: '', meta_description: '', meta_keywords: '',
   social_facebook: '', social_twitter: '', social_linkedin: '', social_instagram: '',
@@ -160,6 +163,40 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
     }
   };
 
+  const handleHeaderLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('header_logo', file);
+    try {
+      const res = await api.post('/cms/settings/header-logo', formData);
+      if (res.data.success) {
+        toast.success('Header Logo updated successfully!');
+        set('header_logo', res.data.filePath);
+        refreshSettings();
+      }
+    } catch {
+      toast.error('Failed to upload header logo');
+    }
+  };
+
+  const handleFooterLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('footer_logo', file);
+    try {
+      const res = await api.post('/cms/settings/footer-logo', formData);
+      if (res.data.success) {
+        toast.success('Footer Logo updated successfully!');
+        set('footer_logo', res.data.filePath);
+        refreshSettings();
+      }
+    } catch {
+      toast.error('Failed to upload footer logo');
+    }
+  };
+
   const set = (key: keyof Settings, val: any) => setSettings(p => ({ ...p, [key]: val }));
 
   const handleSave = async () => {
@@ -235,12 +272,21 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
               <Field label="Tagline">
                 <input className={inputCls} value={settings.site_tagline} onChange={e => set('site_tagline', e.target.value)} placeholder="Find the best freelancers" />
               </Field>
-              <Field label="Site Logo">
+              <Field label="Header Logo (Nav)">
                 <div className="flex gap-2">
-                  <input className={inputCls} value={settings.site_logo} onChange={e => set('site_logo', e.target.value)} placeholder="/logo.png" />
-                  <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                  <button onClick={() => document.getElementById('logo-upload')?.click()} className="px-4 py-2.5 bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl hover:bg-gray-100 dark:hover:bg-[#333] transition-colors flex items-center gap-2 text-sm font-medium">
-                    <Upload className="w-4 h-4" /> Upload
+                  <input className={inputCls} value={settings.header_logo} onChange={e => set('header_logo', e.target.value)} placeholder="/logo.png" />
+                  <input type="file" id="header-logo-upload" className="hidden" accept="image/*" onChange={handleHeaderLogoUpload} />
+                  <button onClick={() => document.getElementById('header-logo-upload')?.click()} className="px-4 py-2.5 bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl hover:bg-gray-100 dark:hover:bg-[#333] transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                    <Upload className="w-4 h-4" /> Header
+                  </button>
+                </div>
+              </Field>
+              <Field label="Footer Logo">
+                <div className="flex gap-2">
+                  <input className={inputCls} value={settings.footer_logo} onChange={e => set('footer_logo', e.target.value)} placeholder="/logo.png" />
+                  <input type="file" id="footer-logo-upload" className="hidden" accept="image/*" onChange={handleFooterLogoUpload} />
+                  <button onClick={() => document.getElementById('footer-logo-upload')?.click()} className="px-4 py-2.5 bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl hover:bg-gray-100 dark:hover:bg-[#333] transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+                    <Upload className="w-4 h-4" /> Footer
                   </button>
                 </div>
               </Field>

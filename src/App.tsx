@@ -45,6 +45,7 @@ import { StartupIdeaDetail } from './components/StartupIdeaDetail';
 import { StartupIdeaLegalSection } from './components/StartupIdeaLegalSection';
 import { InvestorMeetingsManagement } from './components/InvestorMeetingsManagement';
 import { InvestorOpportunitiesManagement } from './components/InvestorOpportunitiesManagement';
+import { KYCReviewPage } from './components/KYCReview';
 
 
 
@@ -146,7 +147,8 @@ export default function App() {
     'startup-ideas-terms': '/startup-ideas/terms',
     'startup-ideas-privacy': '/startup-ideas/privacy',
     'investor-meetings': '/investor-meetings',
-    'investor-opportunities': '/investor-opportunities'
+    'investor-opportunities': '/investor-opportunities',
+    'kyc-review': '/kyc-review'
   };
 
   const getPageFromUrl = () => {
@@ -167,6 +169,7 @@ export default function App() {
   const [selectedDisputeId, setSelectedDisputeId] = useState<string | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedStartupIdeaId, setSelectedStartupIdeaId] = useState<string | null>(null);
+  const [selectedVerifyUserId, setSelectedVerifyUserId] = useState<string | null>(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(() => {
     const path = window.location.pathname;
@@ -190,6 +193,7 @@ export default function App() {
     setSelectedDisputeId(null);
     setSelectedOrderId(null);
     setSelectedStartupIdeaId(null);
+    setSelectedVerifyUserId(null);
     setShowAddUser(false);
 
     // Update URL
@@ -228,17 +232,21 @@ export default function App() {
       return <StartupIdeaDetail ideaId={selectedStartupIdeaId} onBack={() => setSelectedStartupIdeaId(null)} />;
     }
 
+    if (selectedVerifyUserId) {
+      return <KYCReviewPage userId={selectedVerifyUserId} onBack={() => setSelectedVerifyUserId(null)} />;
+    }
+
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard />;
 
       // Users & Verification
       case 'users':
-        return <UsersList onSelectUser={setSelectedUserId} onAddUser={() => setShowAddUser(true)} />;
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} />;
       case 'verification':
-        return <UsersList viewType="verification" onSelectUser={setSelectedUserId} onAddUser={() => setShowAddUser(true)} />;
+        return <UsersList viewType="verification" onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} />;
       case 'suspended':
-        return <UsersList viewType="suspended" onSelectUser={setSelectedUserId} onAddUser={() => setShowAddUser(true)} />;
+        return <UsersList viewType="suspended" onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} />;
 
       // Projects
       case 'projects':

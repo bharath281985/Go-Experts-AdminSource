@@ -26,11 +26,12 @@ import { KYCReviewModal } from './KYCReviewModal';
 
 interface UsersListProps {
   onSelectUser: (userId: string) => void;
+  onVerifyUser?: (userId: string) => void;
   onAddUser?: () => void;
   viewType?: 'all' | 'verification' | 'suspended';
 }
 
-export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersListProps) {
+export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'all' }: UsersListProps) {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,8 +42,6 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [kycModalOpen, setKycModalOpen] = useState(false);
-  const [selectedUserForKYC, setSelectedUserForKYC] = useState<any>(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -76,8 +75,7 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
   };
 
   const handleOpenKYC = (user: any) => {
-    setSelectedUserForKYC(user);
-    setKycModalOpen(true);
+    onVerifyUser?.(user._id);
   };
 
   const handleSuspendUser = async (userId: string, currentlySuspended: boolean) => {
@@ -686,14 +684,6 @@ export function UsersList({ onSelectUser, onAddUser, viewType = 'all' }: UsersLi
           </motion.div>
         )}
       </AnimatePresence>
-      {/* KYC Review Modal */}
-      <KYCReviewModal
-        isOpen={kycModalOpen}
-        onClose={() => setKycModalOpen(false)}
-        user={selectedUserForKYC}
-        onVerify={handleVerifyUser}
-        onReject={handleRejectUser}
-      />
     </div>
   );
 }
