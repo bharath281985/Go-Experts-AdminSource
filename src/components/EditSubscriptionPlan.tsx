@@ -44,12 +44,113 @@ function Field({ label, icon: Icon, children }: { label: string; icon?: any; chi
   );
 }
 
+function MultiSelectDropdown({ options, selected, onChange, placeholder }: { options: { value: string, label: string }[], selected: string[], onChange: (val: string[]) => void, placeholder: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggle = (val: string) => {
+    if (selected.includes(val)) {
+      if (selected.length > 1) onChange(selected.filter(v => v !== val));
+    } else {
+      onChange([...selected, val]);
+    }
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626]/50 focus-within:ring-4 focus-within:ring-[#F24C20]/10 focus-within:border-[#F24C20] cursor-pointer flex justify-between items-center text-sm text-gray-900 dark:text-white transition-all shadow-sm"
+      >
+        <span className="truncate pr-4 font-medium">
+          {selected.length > 0
+            ? selected.map(s => options.find(o => o.value === s)?.label).filter(Boolean).join(', ')
+            : placeholder}
+        </span>
+        <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute z-50 w-full mt-2 bg-white dark:bg-[#262626] border border-gray-200 dark:border-[#333] rounded-xl shadow-2xl max-h-60 overflow-y-auto"
+          >
+            {options.map(opt => (
+              <div
+                key={opt.value}
+                onClick={() => toggle(opt.value)}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#333] cursor-pointer transition-colors border-b border-gray-100 dark:border-[#333]/50 last:border-0"
+              >
+                <div className={`w-5 h-5 rounded border shadow-sm ${selected.includes(opt.value) ? 'bg-[#F24C20] border-[#F24C20] flex items-center justify-center' : 'border-gray-300 dark:border-gray-500 bg-white dark:bg-[#1a1a1a]'}`}>
+                  {selected.includes(opt.value) && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                </div>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{opt.label}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [plan, setPlan] = useState<any>(null);
   const [features, setFeatures] = useState<string[]>(['']);
   const [isPaid, setIsPaid] = useState(true);
+  const [targetRoles, setTargetRoles] = useState<string[]>([]);
+  const [categoryGroups, setCategoryGroups] = useState<string[]>([]);
+
+  const isFreelancer = targetRoles.includes('freelancer');
+  const isClient = targetRoles.includes('client');
+  const isInvestor = targetRoles.includes('investor');
+  const isStartup = targetRoles.includes('startup_creator');
+  const isCombo = targetRoles.includes('both') || targetRoles.length > 1;
+
+  const showProjects = isFreelancer || isClient || isCombo;
+  const projectLabel = isCombo ? "Projects (Post/Apply)" : isFreelancer ? "Project Applications" : "Post Projects";
+  const projectDesc = isFreelancer ? "Proposals allowed per cycle." : "Projects they can post.";
+
+  const showTasks = isFreelancer || isClient || isCombo;
+  const taskLabel = isCombo ? "Tasks (Post/Gig)" : isFreelancer ? "Active Gigs Slots" : "Post Tasks Limit";
+
+  const showChat = true;
+  const chatLabel = isCombo ? "Direct Messages" : isInvestor ? "Contact Founders" : isStartup ? "Contact Investors" : isFreelancer ? "Contact Clients" : "Contact Freelancers";
+
+  const showDb = isClient || isInvestor || isCombo;
+  const dbLabel = isInvestor ? "Founder DB Access" : isClient ? "Freelancer Library Hits" : "Database Access";
+
+  const showProjectVisits = isFreelancer || isCombo;
+  const projectVisitLabel = isCombo ? "Project View Unlocks" : "Project Details Access";
+
+  const showPortfolioVisits = isClient || isCombo;
+  const portfolioLabel = isCombo ? "Profile Unlocks" : "Freelancer Contact Unlocks";
+
+  const showBoosts = false; // Retired per user request
+  const boostLabel = isFreelancer ? "Proposal Boosts" : "Advanced Filters Usage";
+
+  const showPostIdeas = isFreelancer || isClient || isStartup || isCombo;
+  const postIdeaLabel = isCombo ? "Startup Submissions" : "Submit Startup Ideas";
+
+  const showExploreIdeas = isFreelancer || isClient || isInvestor || isCombo;
+  const exploreIdeaLabel = isCombo ? "Idea Unlocks" : isInvestor ? "Unlock Founder Contacts" : "Explore Startup Pitches";
 
   useEffect(() => {
     fetchPlanDetails();
@@ -64,6 +165,8 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
         setPlan(p);
         setFeatures(p.features && p.features.length > 0 ? p.features : ['']);
         setIsPaid(p.price > 0);
+        setTargetRoles(Array.isArray(p.target_role) ? p.target_role : p.target_role ? [p.target_role] : []);
+        setCategoryGroups(Array.isArray(p.group) ? p.group : p.group ? [p.group] : []);
       }
     } catch (err: any) {
       toast.error('Failed to fetch plan details');
@@ -104,12 +207,12 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
       startup_idea_post_limit: Number(formData.get('startup_idea_post_limit')),
       startup_idea_explore_limit: Number(formData.get('startup_idea_explore_limit')),
       billing_cycle: formData.get('billing_cycle'),
-      target_role: formData.get('target_role'),
+      target_role: targetRoles,
       badge: formData.get('badge'),
       cta: formData.get('cta'),
       description: formData.get('description'),
       featured: formData.get('featured') === 'on',
-      group: formData.get('group'),
+      group: categoryGroups,
       icon: formData.get('icon'),
       color_theme: formData.get('color_theme'),
       features: features.filter(f => f.trim())
@@ -183,22 +286,32 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
               {/* Row 2: Roles & Groups */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Field label="Target Role" icon={Users}>
-                  <select name="target_role" defaultValue={plan?.target_role} className={selectCls}>
-                    <option value="client">Client</option>
-                    <option value="freelancer">Freelancer</option>
-                    <option value="investor">Investor</option>
-                    <option value="startup_creator">Startup Creator</option>
-                    <option value="both">Both (Combo)</option>
-                  </select>
+                  <MultiSelectDropdown
+                    selected={targetRoles}
+                    onChange={setTargetRoles}
+                    placeholder="Select roles..."
+                    options={[
+                      { value: 'client', label: 'Client' },
+                      { value: 'freelancer', label: 'Freelancer' },
+                      { value: 'investor', label: 'Investor' },
+                      { value: 'startup_creator', label: 'Startup Creator' },
+                      { value: 'both', label: 'Both (Combo)' }
+                    ]}
+                  />
                 </Field>
                 <Field label="Category Group" icon={Rocket}>
-                  <select name="group" defaultValue={plan?.group} className={selectCls}>
-                    <option>Freelancer Plans</option>
-                    <option>Client Plans</option>
-                    <option>Start-Up Idea Creator Plans</option>
-                    <option>Investor Plans</option>
-                    <option>Combo Plan</option>
-                  </select>
+                  <MultiSelectDropdown
+                    selected={categoryGroups}
+                    onChange={setCategoryGroups}
+                    placeholder="Select groups..."
+                    options={[
+                      { value: 'Freelancer Plans', label: 'Freelancer Plans' },
+                      { value: 'Client Plans', label: 'Client Plans' },
+                      { value: 'Start-Up Idea Creator Plans', label: 'Start-Up Idea Creator Plans' },
+                      { value: 'Investor Plans', label: 'Investor Plans' },
+                      { value: 'Combo Plan', label: 'Combo Plan' }
+                    ]}
+                  />
                 </Field>
               </div>
 
@@ -232,71 +345,70 @@ export function EditSubscriptionPlan({ planId, onBack }: EditSubscriptionPlanPro
                 </div>
                 
                 {/* Dynamically Labeled Fields based on user requirements */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                  <Field 
-                    label={(plan?.target_role?.includes('freelancer') ? 'Apply to Projects' : 
-                           plan?.target_role?.includes('investor') ? 'Contact Limit' : 
-                           plan?.target_role?.includes('startup_creator') ? 'Idea Posts' : 
-                           'Post Projects Limit') + "*"} 
-                    icon={Briefcase}
-                  >
-                    <input name="project_post_limit" type="number" defaultValue={plan?.project_post_limit} placeholder="e.g. 36 (0=unlimited)" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Main activity quota for this tier.</p>
-                  </Field>
-                  <Field 
-                    label={(plan?.target_role?.includes('freelancer') ? 'Gig Slots' : 
-                           plan?.target_role?.includes('investor') ? 'Investment Hits' : 
-                           plan?.target_role?.includes('startup_creator') ? 'Task Posts' : 
-                           'Post Tasks Limit') + "*"} 
-                    icon={LayoutDashboard}
-                  >
-                    <input name="task_post_limit" type="number" defaultValue={plan?.task_post_limit} placeholder="e.g. 10" className={inputCls} required />
-                  </Field>
-                  <Field 
-                    label={(plan?.target_role?.includes('freelancer') ? 'Chat with Clients' : 'Chat with Freelancers') + "*"} 
-                    icon={MessageCircle}
-                  >
-                    <input name="chat_limit" type="number" defaultValue={plan?.chat_limit} placeholder="e.g. 50" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Unique contacts allowed in this cycle.</p>
-                  </Field>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Field 
-                    label={plan?.target_role?.includes('freelancer') ? 'Client Database Hits' : 'Freelancer Database Access'} 
-                    icon={Database}
-                  >
-                    <input name="database_access_limit" type="number" defaultValue={plan?.database_access_limit} placeholder="e.g. 99 (0=No Access)" className={inputCls} />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing users in the library.</p>
-                  </Field>
-                  <Field 
-                    label={plan?.target_role?.includes('freelancer') ? 'Boost Hits' : 'Advanced Tool Hits'} 
-                    icon={Rocket}
-                  >
-                    <input name="interest_click_limit" type="number" defaultValue={plan?.interest_click_limit} placeholder="e.g. 10 (Premium Filters)" className={inputCls} />
-                  </Field>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                  {showProjects && (
+                    <Field label={projectLabel + "*"} icon={Briefcase}>
+                      <input name="project_post_limit" type="number" defaultValue={plan?.project_post_limit} placeholder="e.g. 36 (0=unlimited)" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">{projectDesc}</p>
+                    </Field>
+                  )}
+                  {showTasks && (
+                    <Field label={taskLabel + "*"} icon={LayoutDashboard}>
+                      <input name="task_post_limit" type="number" defaultValue={plan?.task_post_limit} placeholder="e.g. 10" className={inputCls} required />
+                    </Field>
+                  )}
+                  {showChat && (
+                    <Field label={chatLabel + "*"} icon={MessageCircle}>
+                      <input name="chat_limit" type="number" defaultValue={plan?.chat_limit} placeholder="e.g. 50" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">Unique contacts allowed in this cycle.</p>
+                    </Field>
+                  )}
+                  {showDb && (
+                    <Field label={dbLabel} icon={Database}>
+                      <input name="database_access_limit" type="number" defaultValue={plan?.database_access_limit} placeholder="e.g. 99 (0=No Access)" className={inputCls} />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing users in the library.</p>
+                    </Field>
+                  )}
+                  {showBoosts && (
+                    <Field label={boostLabel} icon={Rocket}>
+                      <input name="interest_click_limit" type="number" defaultValue={plan?.interest_click_limit} placeholder="e.g. 10 (Premium Filters)" className={inputCls} />
+                    </Field>
+                  )}
+                  {showProjectVisits && (
+                    <Field label={projectVisitLabel} icon={Eye}>
+                      <input name="project_visit_limit" type="number" defaultValue={plan?.project_visit_limit} placeholder="e.g. 199 (Page view limit)" className={inputCls} />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">How many full pages can they browse?</p>
+                    </Field>
+                  )}
+                  {showPortfolioVisits && (
+                    <Field label={portfolioLabel} icon={Eye}>
+                      <input name="portfolio_visit_limit" type="number" defaultValue={plan?.portfolio_visit_limit} placeholder="e.g. 5 (Locked info views)" className={inputCls} />
+                    </Field>
+                  )}
+                  {showPostIdeas && (
+                    <Field label={postIdeaLabel + "*"} icon={Rocket}>
+                      <input name="startup_idea_post_limit" type="number" defaultValue={plan?.startup_idea_post_limit} placeholder="0 = Unlimited" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they submit?</p>
+                    </Field>
+                  )}
+                  {showExploreIdeas && (
+                    <Field label={exploreIdeaLabel + "*"} icon={Eye}>
+                      <input name="startup_idea_explore_limit" type="number" defaultValue={plan?.startup_idea_explore_limit} placeholder="0 = Unlimited" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they unlock?</p>
+                    </Field>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Field label={plan?.target_role?.includes('freelancer') ? 'Project Detail Visits' : 'Expert Profile Visits'} icon={Eye}>
-                    <input name="project_visit_limit" type="number" defaultValue={plan?.project_visit_limit} placeholder="e.g. 199 (Page view limit)" className={inputCls} />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">How many full pages can they browse?</p>
-                  </Field>
-                  <Field label={plan?.target_role?.includes('freelancer') ? 'Portfolio Exposure Rank' : 'Identity Hidden Reveal'} icon={Eye}>
-                    <input name="portfolio_visit_limit" type="number" defaultValue={plan?.portfolio_visit_limit} placeholder="e.g. 5 (Locked info views)" className={inputCls} />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Field label="Startup Idea Post Limit*" icon={Rocket}>
-                    <input name="startup_idea_post_limit" type="number" defaultValue={plan?.startup_idea_post_limit || 0} placeholder="0 = Unlimited" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they submit?</p>
-                  </Field>
-                  <Field label="Explore Ideas Limit*" icon={Eye}>
-                    <input name="startup_idea_explore_limit" type="number" defaultValue={plan?.startup_idea_explore_limit || 0} placeholder="0 = Unlimited" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they unlock?</p>
-                  </Field>
-                </div>
+                {/* Hidden Fields for clean Payload */}
+                {!showProjects && <input type="hidden" name="project_post_limit" value={plan?.project_post_limit ?? 0} />}
+                {!showTasks && <input type="hidden" name="task_post_limit" value={plan?.task_post_limit ?? 0} />}
+                {!showChat && <input type="hidden" name="chat_limit" value={plan?.chat_limit ?? 0} />}
+                {!showDb && <input type="hidden" name="database_access_limit" value={plan?.database_access_limit ?? 0} />}
+                {!showBoosts && <input type="hidden" name="interest_click_limit" value={plan?.interest_click_limit ?? 0} />}
+                {!showProjectVisits && <input type="hidden" name="project_visit_limit" value={plan?.project_visit_limit ?? 0} />}
+                {!showPortfolioVisits && <input type="hidden" name="portfolio_visit_limit" value={plan?.portfolio_visit_limit ?? 0} />}
+                {!showPostIdeas && <input type="hidden" name="startup_idea_post_limit" value={plan?.startup_idea_post_limit ?? 0} />}
+                {!showExploreIdeas && <input type="hidden" name="startup_idea_explore_limit" value={plan?.startup_idea_explore_limit ?? 0} />}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

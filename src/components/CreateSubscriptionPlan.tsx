@@ -114,6 +114,40 @@ export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptio
   const [targetRoles, setTargetRoles] = useState<string[]>(['client']);
   const [categoryGroups, setCategoryGroups] = useState<string[]>(['Freelancer Plans']);
 
+  const isFreelancer = targetRoles.includes('freelancer');
+  const isClient = targetRoles.includes('client');
+  const isInvestor = targetRoles.includes('investor');
+  const isStartup = targetRoles.includes('startup_creator');
+  const isCombo = targetRoles.includes('both') || targetRoles.length > 1;
+
+  const showProjects = isFreelancer || isClient || isCombo;
+  const projectLabel = isCombo ? "Projects (Post/Apply)" : isFreelancer ? "Project Applications" : "Post Projects";
+  const projectDesc = isFreelancer ? "Proposals allowed per cycle." : "Projects they can post.";
+
+  const showTasks = isFreelancer || isClient || isCombo;
+  const taskLabel = isCombo ? "Tasks (Post/Gig)" : isFreelancer ? "Active Gigs Slots" : "Post Tasks Limit";
+
+  const showChat = true;
+  const chatLabel = isCombo ? "Direct Messages" : isInvestor ? "Contact Founders" : isStartup ? "Contact Investors" : isFreelancer ? "Contact Clients" : "Contact Freelancers";
+
+  const showDb = isClient || isInvestor || isCombo;
+  const dbLabel = isInvestor ? "Founder DB Access" : isClient ? "Freelancer Library Hits" : "Database Access";
+
+  const showProjectVisits = isFreelancer || isCombo;
+  const projectVisitLabel = isCombo ? "Project View Unlocks" : "Project Details Access";
+
+  const showPortfolioVisits = isClient || isCombo;
+  const portfolioLabel = isCombo ? "Profile Unlocks" : "Freelancer Contact Unlocks";
+
+  const showBoosts = false; // Retired per user request
+  const boostLabel = isFreelancer ? "Proposal Boosts" : "Advanced Filters Usage";
+
+  const showPostIdeas = isFreelancer || isClient || isStartup || isCombo;
+  const postIdeaLabel = isCombo ? "Startup Submissions" : "Submit Startup Ideas";
+
+  const showExploreIdeas = isFreelancer || isClient || isInvestor || isCombo;
+  const exploreIdeaLabel = isCombo ? "Idea Unlocks" : isInvestor ? "Unlock Founder Contacts" : "Explore Startup Pitches";
+
   const addFeature = () => setFeatures([...features, '']);
   const removeFeature = (index: number) => {
     if (features.length > 1) {
@@ -278,62 +312,70 @@ export function CreateSubscriptionPlan({ onBack, onNavigate }: CreateSubscriptio
                 </div>
 
                 {/* Dynamically Labeled Fields based on user requirements */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                  <Field
-                    label={(targetRoles.includes('freelancer') ? 'Apply to Projects' : 'Post Projects Limit') + "*"}
-                    icon={Briefcase}
-                  >
-                    <input name="project_post_limit" type="number" defaultValue={36} placeholder="e.g. 36 (0=unlimited)" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Main activity quota for this tier.</p>
-                  </Field>
-                  <Field
-                    label={(targetRoles.includes('freelancer') ? 'Gig Slots' : 'Post Tasks Limit') + "*"}
-                    icon={LayoutDashboard}
-                  >
-                    <input name="task_post_limit" type="number" defaultValue={36} placeholder="e.g. 10" className={inputCls} required />
-                  </Field>
-                  <Field label="Direct Chat Credits*" icon={MessageCircle}>
-                    <input name="chat_limit" type="number" defaultValue={10} placeholder="e.g. 50" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Unique contacts allowed in this cycle.</p>
-                  </Field>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                  {showProjects && (
+                    <Field label={projectLabel + "*"} icon={Briefcase}>
+                      <input name="project_post_limit" type="number" defaultValue={36} placeholder="e.g. 36 (0=unlimited)" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">{projectDesc}</p>
+                    </Field>
+                  )}
+                  {showTasks && (
+                    <Field label={taskLabel + "*"} icon={LayoutDashboard}>
+                      <input name="task_post_limit" type="number" defaultValue={36} placeholder="e.g. 10" className={inputCls} required />
+                    </Field>
+                  )}
+                  {showChat && (
+                    <Field label={chatLabel + "*"} icon={MessageCircle}>
+                      <input name="chat_limit" type="number" defaultValue={10} placeholder="e.g. 50" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">Unique contacts allowed in this cycle.</p>
+                    </Field>
+                  )}
+                  {showDb && (
+                    <Field label={dbLabel} icon={Database}>
+                      <input name="database_access_limit" type="number" defaultValue={50} placeholder="e.g. 99 (0=No Access)" className={inputCls} />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing users in the library.</p>
+                    </Field>
+                  )}
+                  {showBoosts && (
+                    <Field label={boostLabel} icon={Rocket}>
+                      <input name="interest_click_limit" type="number" defaultValue={0} placeholder="e.g. 10 (Premium Filters)" className={inputCls} />
+                    </Field>
+                  )}
+                  {showProjectVisits && (
+                    <Field label={projectVisitLabel} icon={Eye}>
+                      <input name="project_visit_limit" type="number" defaultValue={99} placeholder="e.g. 199 (Page view limit)" className={inputCls} />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">How many full pages can they browse?</p>
+                    </Field>
+                  )}
+                  {showPortfolioVisits && (
+                    <Field label={portfolioLabel} icon={Eye}>
+                      <input name="portfolio_visit_limit" type="number" defaultValue={0} placeholder="e.g. 5 (Locked info views)" className={inputCls} />
+                    </Field>
+                  )}
+                  {showPostIdeas && (
+                    <Field label={postIdeaLabel + "*"} icon={Rocket}>
+                      <input name="startup_idea_post_limit" type="number" defaultValue={0} placeholder="0 = Unlimited" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they submit?</p>
+                    </Field>
+                  )}
+                  {showExploreIdeas && (
+                    <Field label={exploreIdeaLabel + "*"} icon={Eye}>
+                      <input name="startup_idea_explore_limit" type="number" defaultValue={0} placeholder="0 = Unlimited" className={inputCls} required />
+                      <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they unlock?</p>
+                    </Field>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Field
-                    label={targetRoles.includes('freelancer') ? 'Client Database Hits' : 'Freelancer Database Access'}
-                    icon={Database}
-                  >
-                    <input name="database_access_limit" type="number" defaultValue={50} placeholder="e.g. 99 (0=No Access)" className={inputCls} />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">Limits for searching/viewing users in the library.</p>
-                  </Field>
-                  <Field
-                    label={targetRoles.includes('freelancer') ? 'Boost Hits' : 'Advanced Tool Hits'}
-                    icon={Rocket}
-                  >
-                    <input name="interest_click_limit" type="number" defaultValue={0} placeholder="e.g. 10 (Premium Filters)" className={inputCls} />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Field label={targetRoles.includes('freelancer') ? 'Project Detail Visits' : 'Expert Profile Visits'} icon={Eye}>
-                    <input name="project_visit_limit" type="number" defaultValue={99} placeholder="e.g. 199 (Page view limit)" className={inputCls} />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">How many full pages can they browse?</p>
-                  </Field>
-                  <Field label={targetRoles.includes('freelancer') ? 'Portfolio Exposure Rank' : 'View Portfolio Of Freelancer'} icon={Eye}>
-                    <input name="portfolio_visit_limit" type="number" defaultValue={0} placeholder="e.g. 5 (Locked info views)" className={inputCls} />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Field label="Startup Idea Post Limit*" icon={Rocket}>
-                    <input name="startup_idea_post_limit" type="number" defaultValue={0} placeholder="0 = Unlimited" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they submit?</p>
-                  </Field>
-                  <Field label="Explore Ideas Limit*" icon={Eye}>
-                    <input name="startup_idea_explore_limit" type="number" defaultValue={0} placeholder="0 = Unlimited" className={inputCls} required />
-                    <p className="text-[10px] text-gray-400 mt-1 italic">How many ideas can they unlock?</p>
-                  </Field>
-                </div>
+                {/* Hidden Fields for clean Payload */}
+                {!showProjects && <input type="hidden" name="project_post_limit" value={0} />}
+                {!showTasks && <input type="hidden" name="task_post_limit" value={0} />}
+                {!showChat && <input type="hidden" name="chat_limit" value={0} />}
+                {!showDb && <input type="hidden" name="database_access_limit" value={0} />}
+                {!showBoosts && <input type="hidden" name="interest_click_limit" value={0} />}
+                {!showProjectVisits && <input type="hidden" name="project_visit_limit" value={0} />}
+                {!showPortfolioVisits && <input type="hidden" name="portfolio_visit_limit" value={0} />}
+                {!showPostIdeas && <input type="hidden" name="startup_idea_post_limit" value={0} />}
+                {!showExploreIdeas && <input type="hidden" name="startup_idea_explore_limit" value={0} />}
               </div>
 
               {/* Row 4: UX & Badge (Recommended for Marketing) */}
