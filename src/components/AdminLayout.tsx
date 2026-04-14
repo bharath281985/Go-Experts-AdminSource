@@ -46,6 +46,8 @@ interface AdminLayoutProps {
   onToggleDarkMode: () => void;
   currentPage: string;
   onNavigate: (page: string) => void;
+  onLogout: () => void;
+  adminUser?: { full_name?: string; email?: string; roles?: string[] } | null;
 }
 
 interface MenuItem {
@@ -55,11 +57,12 @@ interface MenuItem {
   submenu?: { id: string; label: string; icon: React.ReactNode }[];
 }
 
-export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage, onNavigate }: AdminLayoutProps) {
+export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage, onNavigate, onLogout, adminUser }: AdminLayoutProps) {
   const { settings } = useSiteSettings();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['users', 'projects', 'gigs', 'transactions', 'subscriptions', 'disputes', 'content', 'taxonomies', 'startup-ideas']);
   const [notificationCount] = useState(5);
+  const [showAdminCard, setShowAdminCard] = useState(false);
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const logoUrl = settings.site_logo ? (settings.site_logo.startsWith('http') ? settings.site_logo : `${apiUrl}${settings.site_logo}`) : logoFallback;
@@ -251,13 +254,55 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
               )}
             </button>
 
-            <div className="flex items-center gap-2 pl-3 border-l dark:border-[#262626]">
+            {/* Admin Avatar with hover card */}
+            <div
+              className="relative flex items-center gap-2 pl-3 border-l dark:border-[#262626] cursor-pointer"
+              onMouseEnter={() => setShowAdminCard(true)}
+              onMouseLeave={() => setShowAdminCard(false)}
+            >
               <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${adminUser?.full_name || 'Admin'}`}
                 alt="Admin"
-                className="w-8 h-8 rounded-full"
+                className="w-8 h-8 rounded-full border-2 border-[#F24C20]/40"
               />
-              <span className="hidden sm:block text-sm font-medium">Admin</span>
+              <span className="hidden sm:block text-sm font-medium truncate max-w-[120px]">
+                {adminUser?.full_name || 'Admin'}
+              </span>
+
+              {/* Hover Dropdown Card */}
+              <AnimatePresence>
+                {showAdminCard && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-64 bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl z-[999] p-4"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <img
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${adminUser?.full_name || 'Admin'}`}
+                        alt="Admin"
+                        className="w-12 h-12 rounded-full border-2 border-[#F24C20]/40"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-white font-bold text-sm truncate">{adminUser?.full_name || 'Administrator'}</p>
+                        <p className="text-gray-400 text-xs truncate">{adminUser?.email || ''}</p>
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-[#F24C20]/10 text-[#F24C20] text-[10px] font-bold rounded-full uppercase tracking-wider">Admin</span>
+                      </div>
+                    </div>
+                    <div className="border-t border-[#333] pt-3">
+                      <button
+                        onClick={onLogout}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -343,10 +388,12 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
               ))}
 
               <button
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mt-4 transition-colors ${darkMode
+                onClick={onLogout}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg mt-4 transition-colors ${
+                  darkMode
                   ? 'hover:bg-red-900/20 text-red-400'
                   : 'hover:bg-red-50 text-red-600'
-                  }`}
+                }`}
               >
                 <LogOut className="w-5 h-5" />
                 <span className="text-sm font-medium">Logout</span>

@@ -103,6 +103,20 @@ export default function App() {
     setIsAuthorized(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsAuthorized(false);
+    window.history.replaceState({}, '', '/');
+  };
+
+  const getAdminUser = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch { return null; }
+  };
+
   // URL Mapping Configuration
   const PAGE_URLS: Record<string, string> = {
     'dashboard': '/',
@@ -391,6 +405,8 @@ export default function App() {
           onToggleDarkMode={() => setDarkMode(!darkMode)}
           currentPage={currentPage}
           onNavigate={handleNavigate}
+          onLogout={handleLogout}
+          adminUser={getAdminUser()}
         >
           {renderPage()}
         </AdminLayout>

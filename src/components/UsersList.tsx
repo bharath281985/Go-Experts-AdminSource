@@ -349,8 +349,6 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">User</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Role</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Password</th>
-                {/* <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Rating</th> */}
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Orders</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Email Varification</th>
@@ -426,17 +424,6 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                          role.charAt(0).toUpperCase() + role.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded select-all">
-                        {user.show_password || '••••••'}
-                      </span>
-                    </td>
-                    {/* <td className="px-6 py-4">
-                      <div className="flex items-center gap-1">
-                        <span className="text-yellow-500">★</span>
-                        <span className="font-medium">{user.rating || '0.0'}</span>
-                      </div>
-                    </td> */}
                     <td className="px-6 py-4">
                       <span className="font-medium">{user.total_orders || 0}</span>
                     </td>
