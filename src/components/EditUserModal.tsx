@@ -289,8 +289,9 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
                                                 </label>
                                                 <textarea
                                                     value={bio}
-                                                    onChange={(e) => setBio(e.target.value)}
+                                                    onChange={(e) => setBio(e.target.value.slice(0, 500))}
                                                     rows={3}
+                                                    maxLength={500}
                                                     placeholder="Short bio..."
                                                     style={{
                                                         width: '100%',
@@ -305,6 +306,9 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
                                                     }}
                                                     className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
                                                 />
+                                                <div style={{ marginTop: '6px', fontSize: '12px', color: '#9ca3af', textAlign: 'right' }}>
+                                                    {bio.length}/500 characters
+                                                </div>
                                             </div>
                                         </div>
                                     </section>

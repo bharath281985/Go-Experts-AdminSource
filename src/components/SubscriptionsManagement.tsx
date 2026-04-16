@@ -19,7 +19,7 @@ import {
   Briefcase,
   Rocket,
   Building2,
-  Layers
+  Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
@@ -47,11 +47,11 @@ interface SubscriptionsManagementProps {
 }
 
 const GROUPS = [
+  { id: 'Free Trial Plan', label: 'Free Trial', icon: Shield },
   { id: 'Freelancer Plans', label: 'Freelancer', icon: Briefcase },
   { id: 'Client Plans', label: 'Client', icon: Building2 },
   { id: 'Start-Up Idea Creator Plans', label: 'Startup Creator', icon: Rocket },
   { id: 'Investor Plans', label: 'Investor', icon: Users },
-  { id: 'Combo Plan', label: 'Combo / All Access', icon: Layers },
 ];
 
 export function SubscriptionsManagement({ onNavigate, onEditPlan }: SubscriptionsManagementProps) {
@@ -104,11 +104,14 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
     }
   };
 
+  const isPlanInGroup = (plan: SubscriptionPlan, groupId: string) => {
+    const groups = Array.isArray(plan.group) ? plan.group : [plan.group].filter(Boolean);
+    if (groups.includes(groupId)) return true;
+    return groupId === 'Free Trial Plan' && plan.price === 0 && /trial|free/i.test(plan.name);
+  };
+
   const filteredPlans = plans.filter(plan => {
-    if (Array.isArray(plan.group)) {
-      return plan.group.includes(activeTab);
-    }
-    return plan.group === activeTab;
+    return isPlanInGroup(plan, activeTab);
   });
 
   return (
@@ -140,8 +143,7 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
           const Icon = group.icon;
           const isActive = activeTab === group.id;
           const count = plans.filter(p => {
-            if (Array.isArray(p.group)) return p.group.includes(group.id);
-            return p.group === group.id;
+            return isPlanInGroup(p, group.id);
           }).length;
 
           return (
@@ -213,7 +215,7 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                 <th className="px-6 py-4 text-left text-sm font-semibold">Plan Name</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Duration</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Price</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Point/Visits</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold">Unlocks</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Billing</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
                 <th className="px-6 py-4 text-center text-sm font-semibold">Actions</th>
@@ -277,7 +279,9 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                     <div className="flex items-center gap-2">
                       <div className="text-sm">
                         {/* <div className="font-medium text-[#F24C20]">{plan.points_granted} Points</div> */}
-                        <div className="text-[10px] text-gray-500">{plan.project_visit_limit} P / {plan.portfolio_visit_limit} F visits</div>
+                        <div className="text-[10px] text-gray-500">
+                          {plan.project_visit_limit} project unlocks / {plan.portfolio_visit_limit} freelancer profile unlocks
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -392,7 +396,13 @@ export function SubscriptionsManagement({ onNavigate, onEditPlan }: Subscription
                   <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
                     <span className="text-xs">✓</span>
                   </div>
-                  <p className="text-sm font-medium">{plan.project_visit_limit} Detail Visits</p>
+                  <p className="text-sm font-medium">{plan.project_visit_limit} Project Detail Unlocks</p>
+                </li>
+                <li className="flex items-start gap-2 text-blue-600 dark:text-blue-400">
+                  <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                    <span className="text-xs">âœ“</span>
+                  </div>
+                  <p className="text-sm font-medium">{plan.portfolio_visit_limit} Freelancer Profile Unlocks</p>
                 </li>
               </ul>
             </div>
