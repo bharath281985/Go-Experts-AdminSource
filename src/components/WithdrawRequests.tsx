@@ -253,13 +253,13 @@ export function WithdrawRequests() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
             onClick={() => setShowConfirmModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 16 }}
               onClick={(e) => e.stopPropagation()}
               className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 max-w-md w-full border border-gray-200 dark:border-[#262626]"
             >
@@ -310,7 +310,7 @@ export function WithdrawRequests() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-8 max-w-lg w-full border border-gray-200 dark:border-[#262626]"
+              className="w-full max-w-4xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-[#262626] dark:bg-[#161616]"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-[#044071] dark:text-white">Payment Details</h3>
