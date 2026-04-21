@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     X, User, Mail, Phone, MapPin, FileText,
-    Shield, Coins, AlertTriangle, Loader2, CheckCircle, Save
+    Shield, Coins, AlertTriangle, Loader2, CheckCircle, Save, Key
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
@@ -106,6 +106,18 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
             toast.error(err.response?.data?.message || 'Failed to update user');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!userId || !window.confirm('Send a password reset email to this user?')) return;
+        try {
+            const response = await api.post(`/admin/users/${userId}/reset-password`);
+            if (response.data.success) {
+                toast.success('Password reset email sent successfully');
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to send reset email');
         }
     };
 
@@ -232,6 +244,26 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
                                                     className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
                                                 />
                                                 {errors.email && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>{errors.email}</p>}
+                                                <button
+                                                    type="button"
+                                                    onClick={handleResetPassword}
+                                                    style={{
+                                                        marginTop: '8px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        fontSize: '12px',
+                                                        color: '#0369a1',
+                                                        background: 'transparent',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        padding: 0,
+                                                        fontWeight: 500
+                                                    }}
+                                                    className="hover:underline"
+                                                >
+                                                    <Key size={12} /> Send Password Reset Email
+                                                </button>
                                             </div>
 
                                             {/* Phone */}
@@ -289,9 +321,8 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
                                                 </label>
                                                 <textarea
                                                     value={bio}
-                                                    onChange={(e) => setBio(e.target.value.slice(0, 500))}
+                                                    onChange={(e) => setBio(e.target.value)}
                                                     rows={3}
-                                                    maxLength={500}
                                                     placeholder="Short bio..."
                                                     style={{
                                                         width: '100%',
@@ -306,9 +337,6 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
                                                     }}
                                                     className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
                                                 />
-                                                <div style={{ marginTop: '6px', fontSize: '12px', color: '#9ca3af', textAlign: 'right' }}>
-                                                    {bio.length}/500 characters
-                                                </div>
                                             </div>
                                         </div>
                                     </section>

@@ -41,6 +41,8 @@ type Settings = {
   startup_nda_template: string;
   subscription_highlights: { label: string; enabled: boolean }[];
   subscription_groups: { name: string; label: string; icon: string; description: string }[];
+  referral_reward_amount: number;
+  min_withdrawal_amount: number;
 };
 
 const defaultSettings: Settings = {
@@ -69,7 +71,9 @@ const defaultSettings: Settings = {
     { name: 'Start-Up Idea Creator Plans', label: 'Startup Creator', icon: 'Rocket', description: 'Perfect for founders who want to publish ideas, attract investors, and grow with subscription-based access.' },
     { name: 'Investor Plans', label: 'Investor', icon: 'Users', description: 'Created for investors who want streamlined access to quality startup ideas.' },
     { name: 'Combo Plan', label: 'Combo / All Access', icon: 'Layers', description: 'Full access to all platform features for multi-role users.' }
-  ]
+  ],
+  referral_reward_amount: 50,
+  min_withdrawal_amount: 500
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -352,8 +356,13 @@ export function GlobalSettings({ onNavigate }: GlobalSettingsProps) {
                   <option>Asia/Kolkata</option><option>America/New_York</option><option>Europe/London</option><option>Asia/Dubai</option>
                 </select>
               </Field>
-              <Field label="Commission Rate (%)">
-                <input className={inputCls} type="number" min={0} max={100} value={settings.commission_rate} onChange={e => set('commission_rate', Number(e.target.value))} />
+              <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                <Field label="Referral Reward (₹)">
+                   <input className={inputCls} type="number" min={0} value={settings.referral_reward_amount} onChange={e => set('referral_reward_amount', Number(e.target.value))} />
+                </Field>
+              </div>
+              <Field label="Min Withdrawal (₹)">
+                 <input className={inputCls} type="number" min={0} value={settings.min_withdrawal_amount} onChange={e => set('min_withdrawal_amount', Number(e.target.value))} />
               </Field>
               <Toggle field="maintenance_mode" label="Maintenance Mode" />
             </div>

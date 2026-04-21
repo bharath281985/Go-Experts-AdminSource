@@ -18,7 +18,8 @@ import {
   Database,
   UserCheck,
   ShieldAlert,
-  X
+  X,
+  Key
 } from 'lucide-react';
 import api from '../lib/api';
 import { EditUserModal } from './EditUserModal';
@@ -112,6 +113,18 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to send reminder');
+    }
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    if (!window.confirm('Send a password reset email to this user?')) return;
+    try {
+      const response = await api.post(`/admin/users/${userId}/reset-password`);
+      if (response.data.success) {
+        toast.success('Password reset email sent to user');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to send reset email');
     }
   };
 
@@ -549,6 +562,15 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                           title="Remind to Complete Profile"
                         >
                           <Loader2 className="w-4 h-4" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleResetPassword(user._id)}
+                          className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/20 rounded-lg transition-colors text-cyan-600"
+                          title="Reset Password"
+                        >
+                          <Key className="w-4 h-4" />
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.1 }}

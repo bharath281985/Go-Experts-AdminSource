@@ -49,7 +49,22 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         try {
             const res = await api.get('/cms/settings');
             if (res.data.success && res.data.settings) {
-                setSettings(res.data.settings);
+                const s = res.data.settings;
+                setSettings(s);
+
+                // Update Title & Favicon dynamically
+                document.title = `${s.site_name || 'Go Experts'} Admin Panel`;
+                
+                if (s.site_favicon) {
+                    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+                    if (!link) {
+                        link = document.createElement('link');
+                        link.rel = 'icon';
+                        document.head.appendChild(link);
+                    }
+                    const base = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+                    link.href = s.site_favicon.startsWith('http') ? s.site_favicon : `${base}${s.site_favicon.startsWith('/') ? s.site_favicon : '/' + s.site_favicon}`;
+                }
             }
         } catch (err) {
             console.error('Failed to fetch site settings:', err);

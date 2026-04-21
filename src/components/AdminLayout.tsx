@@ -125,18 +125,14 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
         { id: 'subscriptions', label: 'Plans & Management', icon: <Crown className="w-4 h-4" /> },
       ]
     },
-    /* {
+    {
       id: 'transactions',
       label: 'Transactions',
       icon: <Wallet className="w-5 h-5" />,
       submenu: [
-        { id: 'payments', label: 'Payments Overview', icon: <DollarSign className="w-4 h-4" /> },
         { id: 'withdraw-requests', label: 'Withdrawal Requests', icon: <Wallet className="w-4 h-4" /> },
-        { id: 'commission', label: 'Commission Settings', icon: <Percent className="w-4 h-4" /> },
-        { id: 'refunds', label: 'Refunds/Chargebacks', icon: <RotateCcw className="w-4 h-4" /> },
-        { id: 'payment-methods', label: 'Payment Gateways', icon: <Grid3x3 className="w-4 h-4" /> }
       ]
-    }, */
+    },
     {
       id: 'disputes',
       label: 'Disputes',
