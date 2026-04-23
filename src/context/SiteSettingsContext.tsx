@@ -63,7 +63,17 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
                         document.head.appendChild(link);
                     }
                     const base = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+                    link.type = 'image/png';
                     link.href = s.site_favicon.startsWith('http') ? s.site_favicon : `${base}${s.site_favicon.startsWith('/') ? s.site_favicon : '/' + s.site_favicon}`;
+                } else {
+                    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+                    if (!link) {
+                        link = document.createElement('link');
+                        link.rel = 'icon';
+                        document.head.appendChild(link);
+                    }
+                    link.removeAttribute('type');
+                    link.href = 'data:,';
                 }
             }
         } catch (err) {

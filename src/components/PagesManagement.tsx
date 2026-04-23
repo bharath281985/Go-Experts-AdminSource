@@ -3,10 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Edit, Trash2, Eye, FileText, CheckCircle, X, Search } from 'lucide-react';
 import api from '../lib/api';
 import { toast } from 'sonner';
-// @ts-ignore
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-// @ts-ignore
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { AdminRichTextEditor } from './common/AdminRichTextEditor';
 
 interface StaticPage {
   _id: string;
@@ -159,40 +156,6 @@ export function PagesManagement() {
 
   return (
     <div className="space-y-6">
-      {/* CKEditor Dark Mode Overrides */}
-      <style>{`
-        .ck-editor__main .ck-content {
-          min-height: 350px;
-          background-color: transparent !important;
-          color: inherit !important;
-        }
-        .dark .ck-editor__main .ck-content {
-          background-color: #262626 !important;
-          color: #fff !important;
-          border-color: #333 !important;
-        }
-        .dark .ck.ck-editor__top .ck-sticky-panel .ck-toolbar {
-          background-color: #1a1a1a !important;
-          border-color: #333 !important;
-        }
-        .dark .ck.ck-button {
-          color: #ccc !important;
-        }
-        .dark .ck.ck-button:hover {
-          background-color: #333 !important;
-        }
-        .dark .ck.ck-button.ck-on {
-          background-color: #444 !important;
-          color: #fff !important;
-        }
-        .dark .ck.ck-toolbar__separator {
-          background-color: #333 !important;
-        }
-        .dark .ck.ck-placeholder {
-          color: #666 !important;
-        }
-      `}</style>
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#044071] dark:text-white mb-1">Pages Management</h1>
@@ -518,24 +481,13 @@ export function PagesManagement() {
 
               <div className="col-span-2">
                 <label className="block text-sm font-medium mb-1">Main Page Content (Top Hero Area)</label>
-                <div className="ck-editor-container min-h-[350px]">
-                  <CKEditor
-                    editor={ClassicEditor}
-                    data={form.content || ''}
-                    onChange={(_event: any, editor: any) => {
-                      const data = editor.getData();
-                      setForm({ ...form, content: data });
-                    }}
-                    config={{
-                      placeholder: 'Start writing your page content here...',
-                      toolbar: [
-                        'heading', '|', 
-                        'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|',
-                        'undo', 'redo'
-                      ]
-                    }}
-                  />
-                </div>
+                <AdminRichTextEditor
+                  value={form.content || ''}
+                  onChange={(content) => setForm({ ...form, content })}
+                  placeholder="Start writing your page content here..."
+                  minHeight={350}
+                  toolbarPreset="full"
+                />
               </div>
             </div>
             <div className="flex gap-3 mt-4">

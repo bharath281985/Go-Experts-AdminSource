@@ -3,10 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Edit, Trash2, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Search, MessageCircle, CheckCircle } from 'lucide-react';
 import api from '../lib/api';
 import { toast } from 'sonner';
-// @ts-ignore
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-// @ts-ignore
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { AdminRichTextEditor } from './common/AdminRichTextEditor';
 
 interface FAQ {
     _id: string;
@@ -161,20 +158,13 @@ export function FAQsManagement() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1 italic">Answer *</label>
-                                <div className="ck-editor-container">
-                                  <CKEditor
-                                    editor={ClassicEditor}
-                                    data={form.answer}
-                                    onChange={(_event: any, editor: any) => {
-                                      const data = editor.getData();
-                                      setForm({ ...form, answer: data });
-                                    }}
-                                    config={{
-                                      placeholder: 'Detailed answer goes here...',
-                                      toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo']
-                                    }}
-                                  />
-                                </div>
+                                <AdminRichTextEditor
+                                  value={form.answer}
+                                  onChange={(answer) => setForm({ ...form, answer })}
+                                  placeholder="Detailed answer goes here..."
+                                  minHeight={220}
+                                  toolbarPreset="compact"
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -279,7 +269,10 @@ export function FAQsManagement() {
                                         exit={{ height: 0, opacity: 0 }}
                                         className="px-5 pb-5 border-t border-gray-100 dark:border-[#262626]"
                                     >
-                                        <p className="text-gray-600 dark:text-gray-400 pt-4 leading-relaxed">{faq.answer}</p>
+                                        <div
+                                          className="prose max-w-none pt-4 leading-relaxed text-gray-600 dark:prose-invert dark:text-gray-400"
+                                          dangerouslySetInnerHTML={{ __html: faq.answer }}
+                                        />
                                     </motion.div>
                                 )}
                             </AnimatePresence>

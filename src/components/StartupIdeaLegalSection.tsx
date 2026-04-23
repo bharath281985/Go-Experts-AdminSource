@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-// @ts-ignore
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-// @ts-ignore
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { Save, AlertCircle, CheckCircle2, Loader2, Info, Plus, Trash2, Edit, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, MessageCircle, Search, HelpCircle } from 'lucide-react';
+import { Save, AlertCircle, Loader2, Info, Plus, Trash2, Edit, ChevronDown, ToggleLeft, ToggleRight, MessageCircle, Search, HelpCircle } from 'lucide-react';
 import api from '../lib/api';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
+import { AdminRichTextEditor } from './common/AdminRichTextEditor';
 
 interface FAQ {
   _id: string;
@@ -158,14 +155,14 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
   if (type === 'faq') {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between rounded-[2rem] border border-[#262626] bg-[#111111] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-50 rounded-2xl">
+            <div className="rounded-2xl border border-[#F24C20]/20 bg-[#F24C20]/10 p-3">
               <HelpCircle className="w-8 h-8 text-[#F24C20]" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-              <p className="text-gray-500 text-sm">Manage Q&A for the Startup Ideas ecosystem.</p>
+              <h2 className="text-2xl font-bold text-white">{title}</h2>
+              <p className="text-sm text-slate-400">Manage Q&A for the Startup Ideas ecosystem.</p>
             </div>
           </div>
           {!showFaqForm && (
@@ -187,11 +184,11 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white border border-gray-200 rounded-3xl p-8 space-y-6 shadow-xl"
+              className="rounded-[2rem] border border-[#262626] bg-[#111111] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.3)]"
             >
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <h3 className="text-xl font-black text-gray-900">{editingFaq ? 'Edit FAQ' : 'Create New FAQ'}</h3>
-                <button onClick={() => { setShowFaqForm(false); setEditingFaq(null); }} className="text-gray-400 hover:text-gray-900 transition-colors">
+              <div className="flex items-center justify-between border-b border-[#262626] pb-4">
+                <h3 className="text-xl font-black text-white">{editingFaq ? 'Edit FAQ' : 'Create New FAQ'}</h3>
+                <button onClick={() => { setShowFaqForm(false); setEditingFaq(null); }} className="text-slate-400 transition-colors hover:text-white">
                   Close
                 </button>
               </div>
@@ -199,36 +196,36 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-3 space-y-4">
                   <div>
-                    <label className="block text-sm font-bold mb-2 text-gray-500 uppercase tracking-wider">Question *</label>
+                    <label className="mb-2 block text-sm font-bold uppercase tracking-wider text-slate-400">Question *</label>
                     <input
                       type="text"
                       value={faqForm.question}
                       onChange={e => setFaqForm({ ...faqForm, question: e.target.value })}
-                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F24C20] transition-all"
+                      className="w-full rounded-2xl border border-[#303030] bg-[#181818] px-5 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
                       placeholder="e.g. How does the startup credit system work?"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold mb-2 text-gray-400 uppercase tracking-wider">Answer (Plain Text) *</label>
-                    <textarea
+                    <label className="mb-2 block text-sm font-bold uppercase tracking-wider text-slate-400">Answer *</label>
+                    <AdminRichTextEditor
                       value={faqForm.answer}
-                      onChange={e => setFaqForm({ ...faqForm, answer: e.target.value })}
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F24C20] transition-all min-height-[200px]"
+                      onChange={(answer) => setFaqForm({ ...faqForm, answer })}
                       placeholder="Enter the detailed answer here..."
-                      rows={6}
+                      minHeight={220}
+                      toolbarPreset="compact"
                     />
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-bold mb-2 text-gray-500 uppercase tracking-wider">Sort Order</label>
+                    <label className="mb-2 block text-sm font-bold uppercase tracking-wider text-slate-400">Sort Order</label>
                     <input
                       type="number"
                       value={faqForm.sort_order}
                       onChange={e => setFaqForm({ ...faqForm, sort_order: parseInt(e.target.value) || 0 })}
-                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
+                      className="w-full rounded-2xl border border-[#303030] bg-[#181818] px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
                     />
-                    <p className="text-[10px] text-gray-400 mt-2">Determines display sequence on the website.</p>
+                    <p className="mt-2 text-[10px] text-slate-500">Determines display sequence on the website.</p>
                   </div>
                   <div className="pt-4 space-y-3">
                     <button
@@ -241,7 +238,7 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
                     </button>
                     <button
                       onClick={() => { setShowFaqForm(false); setEditingFaq(null); }}
-                      className="w-full text-gray-500 hover:text-gray-900 px-6 py-4 rounded-2xl border border-gray-200 font-bold transition-all hover:bg-gray-50"
+                      className="w-full rounded-2xl border border-[#303030] px-6 py-4 font-bold text-slate-300 transition-all hover:bg-[#181818] hover:text-white"
                     >
                       Cancel
                     </button>
@@ -254,15 +251,15 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
 
         {/* Search Bar */}
         <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#F24C20]">
-            <Search className="w-5 h-5 text-gray-400" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-6 transition-colors group-focus-within:text-[#F24C20]">
+            <Search className="h-5 w-5 text-slate-500" />
           </div>
           <input
             type="text"
             placeholder="Search through FAQs..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 rounded-2xl border border-gray-100 bg-white text-gray-900 focus:outline-none focus:ring-4 focus:ring-[#F24C20]/5 focus:border-[#F24C20]/30 transition-all text-base placeholder:text-gray-400 shadow-sm"
+            className="w-full rounded-2xl border border-[#262626] bg-[#111111] py-4 pl-14 pr-6 text-base text-white placeholder:text-slate-500 shadow-[0_16px_50px_rgba(0,0,0,0.22)] transition-all focus:border-[#F24C20]/40 focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10"
           />
         </div>
 
@@ -271,13 +268,13 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }}
-              className="text-center py-24 bg-white rounded-[3rem] border border-gray-200 border-dashed"
+              className="rounded-[2rem] border border-dashed border-[#2f2f2f] bg-[#111111] py-24 text-center"
             >
-              <div className="p-6 bg-gray-50 rounded-full w-fit mx-auto mb-6">
-                <MessageCircle className="w-12 h-12 text-gray-300" />
+              <div className="mx-auto mb-6 w-fit rounded-full bg-[#181818] p-6">
+                <MessageCircle className="h-12 w-12 text-slate-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{search ? 'No matches found' : 'Everything is empty'}</h3>
-              <p className="text-gray-500 max-w-xs mx-auto">
+              <h3 className="mb-2 text-xl font-bold text-white">{search ? 'No matches found' : 'Everything is empty'}</h3>
+              <p className="mx-auto max-w-xs text-slate-400">
                 {search ? `We couldn't find any FAQ covering "${search}"` : 'Start building your knowledge base by clicking Add FAQ'}
               </p>
             </motion.div>
@@ -289,21 +286,21 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`bg-white border ${expandedFaqId === faq._id ? 'border-[#F24C20]/30' : 'border-gray-100'} rounded-[2rem] overflow-hidden hover:border-[#F24C20]/20 transition-all duration-300 shadow-sm`}
+                className={`overflow-hidden rounded-[2rem] border bg-[#111111] transition-all duration-300 ${expandedFaqId === faq._id ? 'border-[#F24C20]/30 shadow-[0_24px_80px_rgba(242,76,32,0.08)]' : 'border-[#262626] shadow-[0_18px_60px_rgba(0,0,0,0.22)] hover:border-[#F24C20]/20'}`}
               >
                 <div 
                   className="flex items-center gap-6 p-5 cursor-pointer"
                   onClick={() => setExpandedFaqId(expandedFaqId === faq._id ? null : faq._id)}
                 >
-                  <div className="flex flex-col items-center justify-center w-14 h-14 bg-gray-50 rounded-2xl border border-gray-100 group-hover:bg-white transition-colors">
-                    <span className="text-[10px] uppercase font-bold text-gray-400">Order</span>
-                    <span className="text-lg font-bold text-gray-900">{faq.sort_order}</span>
+                  <div className="flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-[#303030] bg-[#181818] transition-colors">
+                    <span className="text-[10px] font-bold uppercase text-slate-500">Order</span>
+                    <span className="text-lg font-bold text-white">{faq.sort_order}</span>
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 text-lg leading-snug truncate-2-lines">{faq.question}</h3>
+                    <h3 className="truncate-2-lines text-lg font-bold leading-snug text-white">{faq.question}</h3>
                     <div className="flex items-center gap-3 mt-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${faq.is_active ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${faq.is_active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                         {faq.is_active ? 'Published' : 'Hidden'}
                       </span>
                     </div>
@@ -313,23 +310,23 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
                     <button 
                       onClick={() => handleToggleFaq(faq._id)} 
                       title={faq.is_active ? 'Hide from website' : 'Publish to website'}
-                      className={`p-2.5 rounded-xl transition-all ${faq.is_active ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-100'}`}
+                      className={`rounded-xl p-2.5 transition-all ${faq.is_active ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-slate-500 hover:bg-[#1d1d1d]'}`}
                     >
                       {faq.is_active ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
                     </button>
                     <button 
                       onClick={() => handleEditFaq(faq)} 
-                      className="p-2.5 text-gray-400 hover:text-[#F24C20] hover:bg-orange-50 rounded-xl transition-all"
+                      className="rounded-xl p-2.5 text-slate-500 transition-all hover:bg-[#F24C20]/10 hover:text-[#F24C20]"
                     >
                       <Edit className="w-5 h-5" />
                     </button>
                     <button 
                       onClick={() => handleDeleteFaq(faq._id)} 
-                      className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                      className="rounded-xl p-2.5 text-slate-500 transition-all hover:bg-red-500/10 hover:text-red-400"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
-                    <div className={`p-1 text-gray-300 transition-transform duration-300 ${expandedFaqId === faq._id ? 'rotate-180 text-gray-900' : ''}`}>
+                    <div className={`p-1 text-slate-600 transition-transform duration-300 ${expandedFaqId === faq._id ? 'rotate-180 text-white' : ''}`}>
                       <ChevronDown className="w-5 h-5" />
                     </div>
                   </div>
@@ -341,13 +338,14 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="px-6 pb-8 pt-2 border-t border-gray-100 bg-gray-50/30"
+                      className="border-t border-[#262626] bg-[#0d0d0d] px-6 pb-8 pt-2"
                     >
-                      <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200/50">
-                        <label className="text-[10px] font-black uppercase text-gray-400 mb-3 block">Answer</label>
-                        <p className="text-gray-600 leading-relaxed whitespace-pre-wrap font-medium">
-                          {faq.answer}
-                        </p>
+                      <div className="rounded-2xl border border-[#262626] bg-[#161616] p-6">
+                        <label className="mb-3 block text-[10px] font-black uppercase text-slate-500">Answer</label>
+                        <div
+                          className="prose max-w-none font-medium text-slate-200 prose-headings:text-white prose-p:text-slate-300 prose-strong:text-white prose-li:text-slate-300"
+                          dangerouslySetInnerHTML={{ __html: faq.answer }}
+                        />
                       </div>
                     </motion.div>
                   )}
@@ -367,12 +365,12 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-500/10 rounded-2xl">
-            <AlertCircle className="w-8 h-8 text-blue-400" />
+          <div className="p-3 rounded-2xl border border-[#F24C20]/20 bg-[#F24C20]/10">
+            <AlertCircle className="w-8 h-8 text-[#F24C20]" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-gray-900">{title}</h2>
-            <p className="text-gray-500 text-sm">Manage the specific documentation for the innovation ecosystem.</p>
+            <h2 className="text-3xl font-black text-white">{title}</h2>
+            <p className="text-sm text-slate-400">Manage the specific documentation for the innovation ecosystem.</p>
           </div>
         </div>
         <button
@@ -385,31 +383,26 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
         </button>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-[2.5rem] p-10">
-        <div className="flex items-start gap-4 p-5 bg-blue-50 border border-blue-100 rounded-2xl mb-10">
-          <Info className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />
+      <div className="rounded-[2rem] border border-[#262626] bg-[#111111] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <div className="mb-6 flex items-start gap-4 rounded-2xl border border-[#1d3b53] bg-[#0f1c29] p-5">
+          <Info className="mt-0.5 h-6 w-6 shrink-0 text-[#59b7ff]" />
           <div>
-            <h4 className="font-bold text-blue-600">Content & Legal Guidelines</h4>
-            <p className="text-sm text-gray-500 mt-1">
+            <h4 className="font-bold text-[#8fd1ff]">Content & Legal Guidelines</h4>
+            <p className="mt-1 text-sm leading-7 text-slate-300">
               Drafting the {type} is critical for user trust. Ensure all clauses are clear, up-to-date, and visually formatted for readability. This content is specifically gated for the Startup Ideas marketplace.
             </p>
           </div>
         </div>
 
-        <div className="prose-editor light-editor">
-          <CKEditor
-            editor={ClassicEditor}
-            data={pageData?.content || ''}
-            config={{
-              placeholder: `Start drafting the ${title} here...`,
-              toolbar: [
-                'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'
-              ]
+        <div className="prose-editor startup-legal-editor">
+          <AdminRichTextEditor
+            value={pageData?.content || ''}
+            onChange={(content) => {
+              setPageData(prev => (prev ? { ...prev, content } : null));
             }}
-            onChange={(_event: any, editor: any) => {
-              const data = editor.getData();
-              setPageData(prev => prev ? { ...prev, content: data } : null);
-            }}
+            placeholder={`Start drafting the ${title} here...`}
+            minHeight={600}
+            toolbarPreset="full"
           />
         </div>
       </div>
@@ -420,33 +413,58 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
 };
 
 const editorStyles = `
-  .light-editor .ck-editor__main .ck-content {
-    background-color: #f9fafb !important;
-    color: #111827 !important;
-    border-bottom-left-radius: 2rem !important;
-    border-bottom-right-radius: 2rem !important;
+  .startup-legal-editor .admin-rich-text-editor {
+    border-radius: 1.75rem !important;
+    border: 1px solid #262626 !important;
+    background: linear-gradient(180deg, #141414 0%, #101010 100%) !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35) !important;
+    overflow: hidden !important;
+  }
+  .startup-legal-editor .ck.ck-editor {
+    background: #111111 !important;
+    border-radius: 1.75rem !important;
+  }
+  .startup-legal-editor .ck.ck-toolbar {
+    background: #181818 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #2c2c2c !important;
+    border-top-left-radius: 1.75rem !important;
+    border-top-right-radius: 1.75rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+  .startup-legal-editor .ck.ck-editor__main {
+    background: #111111 !important;
+  }
+  .startup-legal-editor .ck.ck-button,
+  .startup-legal-editor .ck.ck-toolbar .ck.ck-toolbar__separator {
+    color: #cbd5e1 !important;
+  }
+  .startup-legal-editor .ck.ck-button:hover {
+    background-color: #242424 !important;
+  }
+  .startup-legal-editor .ck.ck-button.ck-on {
+    background-color: rgba(242, 76, 32, 0.18) !important;
+    color: #ffffff !important;
+  }
+  .startup-legal-editor .ck-editor__main .ck-content,
+  .startup-legal-editor .admin-rich-text-editor .ck.ck-content {
+    display: block !important;
+    width: 100% !important;
+    background: #111111 !important;
+    color: #f8fafc !important;
+    border: 0 !important;
+    border-bottom-left-radius: 1.75rem !important;
+    border-bottom-right-radius: 1.75rem !important;
     min-height: 600px;
-    border: 1px solid #e5e7eb !important;
-    padding: 3rem !important;
-    font-size: 1.1rem !important;
-    line-height: 1.8 !important;
+    padding: 2.5rem 3rem !important;
+    font-size: 1.05rem !important;
+    line-height: 1.9 !important;
   }
-  .light-editor .ck-toolbar {
-    background-color: #ffffff !important;
-    border: 1px solid #e5e7eb !important;
-    border-top-left-radius: 2rem !important;
-    border-top-right-radius: 2rem !important;
-    padding: 0.5rem 1rem !important;
+  .startup-legal-editor .ck.ck-placeholder::before {
+    color: #64748b !important;
   }
-  .light-editor .ck-button {
-    color: #4b5563 !important;
-  }
-  .light-editor .ck-button:hover {
-    background-color: #f3f4f6 !important;
-  }
-  .light-editor .ck-button.ck-on {
-    background-color: #F24C20 !important;
-    color: white !important;
+  .startup-legal-editor .ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
+    box-shadow: inset 0 0 0 1px rgba(242, 76, 32, 0.35) !important;
   }
   .prose-editor ul, .prose-editor ol {
       padding-left: 1.5rem;
