@@ -23,8 +23,6 @@ import {
   Menu,
   ChevronDown,
   ChevronRight,
-  UserCheck,
-  UserX,
   ClipboardList,
   AlertCircle,
   ShoppingBag,
@@ -78,9 +76,7 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
       label: 'User Management ',
       icon: <Users className="w-5 h-5" />,
       submenu: [
-        { id: 'users', label: 'Users/Customers', icon: <Users className="w-4 h-4" /> },
-        { id: 'verification', label: 'KYC Verifications', icon: <UserCheck className="w-4 h-4" /> },
-        { id: 'suspended', label: 'Suspended Users', icon: <UserX className="w-4 h-4" /> },
+        { id: 'users', label: 'Users/Customers', icon: <Users className="w-4 h-4" /> }
       ]
     },
     {

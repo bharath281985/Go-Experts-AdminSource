@@ -22,11 +22,13 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
 
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
     const [location, setLocation] = useState('');
     const [bio, setBio] = useState('');
     const [roleOption, setRoleOption] = useState<RoleOption>('freelancer');
-    const [totalPoints, setTotalPoints] = useState(0);
+    const [whatsappCountryCode, setWhatsappCountryCode] = useState('+91');
+    const [whatsappNumber, setWhatsappNumber] = useState('');
+    const [businessCountryCode, setBusinessCountryCode] = useState('+91');
+    const [businessNumber, setBusinessNumber] = useState('');
     const [isVerified, setIsVerified] = useState(false);
     const [isSuspended, setIsSuspended] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,7 +47,10 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
                 setUser(u);
                 setFullName(u.full_name || '');
                 setEmail(u.email || '');
-                setPhone(u.phone_number || '');
+                setWhatsappCountryCode(u.whatsapp_country_code || '+91');
+                setWhatsappNumber(u.whatsapp_number || '');
+                setBusinessCountryCode(u.business_or_alternative_country_code || '+91');
+                setBusinessNumber(u.business_or_alternative_number || '');
                 setLocation(u.location || '');
                 setBio(u.bio || '');
                 setTotalPoints(u.total_points ?? 0);
@@ -88,7 +93,10 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
             const payload = {
                 full_name: fullName.trim(),
                 email: email.trim().toLowerCase(),
-                phone_number: phone,
+                whatsapp_country_code: whatsappCountryCode,
+                whatsapp_number: whatsappNumber,
+                business_or_alternative_country_code: businessCountryCode,
+                business_or_alternative_number: businessNumber,
                 location,
                 bio,
                 roles: getRolesArray(roleOption),
@@ -266,29 +274,102 @@ export function EditUserModal({ userId, onClose, onUserUpdated }: EditUserModalP
                                                 </button>
                                             </div>
 
-                                            {/* Phone */}
-                                            <div>
-                                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px' }} className="text-gray-700 dark:text-gray-300">
-                                                    Phone Number
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={phone}
-                                                    onChange={(e) => setPhone(e.target.value)}
-                                                    placeholder="+91 98765 43210"
-                                                    style={{
-                                                        width: '100%',
-                                                        padding: '10px 14px',
-                                                        borderRadius: '10px',
-                                                        border: '1.5px solid #e5e7eb',
-                                                        fontSize: '14px',
-                                                        outline: 'none',
-                                                        background: 'transparent',
-                                                        boxSizing: 'border-box',
-                                                    }}
-                                                    className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
-                                                />
-                                            </div>
+
+                                             {/* WhatsApp Number */}
+                                             <div style={{ display: 'flex', gap: '10px' }}>
+                                                 <div style={{ width: '80px' }}>
+                                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px' }} className="text-gray-700 dark:text-gray-300">
+                                                         Code
+                                                     </label>
+                                                     <input
+                                                         type="text"
+                                                         value={whatsappCountryCode}
+                                                         onChange={(e) => setWhatsappCountryCode(e.target.value)}
+                                                         placeholder="+91"
+                                                         style={{
+                                                             width: '100%',
+                                                             padding: '10px 14px',
+                                                             borderRadius: '10px',
+                                                             border: '1.5px solid #e5e7eb',
+                                                             fontSize: '14px',
+                                                             outline: 'none',
+                                                             background: 'transparent',
+                                                             boxSizing: 'border-box',
+                                                         }}
+                                                         className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
+                                                     />
+                                                 </div>
+                                                 <div style={{ flex: 1 }}>
+                                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px' }} className="text-gray-700 dark:text-gray-300">
+                                                         WhatsApp Number
+                                                     </label>
+                                                     <input
+                                                         type="text"
+                                                         value={whatsappNumber}
+                                                         onChange={(e) => setWhatsappNumber(e.target.value)}
+                                                         placeholder="9876543210"
+                                                         style={{
+                                                             width: '100%',
+                                                             padding: '10px 14px',
+                                                             borderRadius: '10px',
+                                                             border: '1.5px solid #e5e7eb',
+                                                             fontSize: '14px',
+                                                             outline: 'none',
+                                                             background: 'transparent',
+                                                             boxSizing: 'border-box',
+                                                         }}
+                                                         className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
+                                                     />
+                                                 </div>
+                                             </div>
+
+                                             {/* Business / Alternative Number */}
+                                             <div style={{ display: 'flex', gap: '10px' }}>
+                                                 <div style={{ width: '80px' }}>
+                                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px' }} className="text-gray-700 dark:text-gray-300">
+                                                         Code
+                                                     </label>
+                                                     <input
+                                                         type="text"
+                                                         value={businessCountryCode}
+                                                         onChange={(e) => setBusinessCountryCode(e.target.value)}
+                                                         placeholder="+91"
+                                                         style={{
+                                                             width: '100%',
+                                                             padding: '10px 14px',
+                                                             borderRadius: '10px',
+                                                             border: '1.5px solid #e5e7eb',
+                                                             fontSize: '14px',
+                                                             outline: 'none',
+                                                             background: 'transparent',
+                                                             boxSizing: 'border-box',
+                                                         }}
+                                                         className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
+                                                     />
+                                                 </div>
+                                                 <div style={{ flex: 1 }}>
+                                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px' }} className="text-gray-700 dark:text-gray-300">
+                                                         Business / Alternative
+                                                     </label>
+                                                     <input
+                                                         type="text"
+                                                         value={businessNumber}
+                                                         onChange={(e) => setBusinessNumber(e.target.value)}
+                                                         placeholder="9876543210"
+                                                         style={{
+                                                             width: '100%',
+                                                             padding: '10px 14px',
+                                                             borderRadius: '10px',
+                                                             border: '1.5px solid #e5e7eb',
+                                                             fontSize: '14px',
+                                                             outline: 'none',
+                                                             background: 'transparent',
+                                                             boxSizing: 'border-box',
+                                                         }}
+                                                         className="dark:border-gray-700 focus:border-[#F24C20] dark:text-white"
+                                                     />
+                                                 </div>
+                                             </div>
 
                                             {/* Location */}
                                             <div>

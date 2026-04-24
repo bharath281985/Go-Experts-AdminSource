@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import {
@@ -10,7 +11,6 @@ import {
   Ban,
   Mail,
   Trash2,
-  Pencil,
   ChevronLeft,
   ChevronRight,
   User,
@@ -19,11 +19,14 @@ import {
   UserCheck,
   ShieldAlert,
   X,
-  Key
+  PlusCircle,
+  Pencil,
+  Key,
+  Phone
 } from 'lucide-react';
 import api from '../lib/api';
-import { EditUserModal } from './EditUserModal';
 import { KYCReviewModal } from './KYCReviewModal';
+import { EditUserModal } from './EditUserModal';
 
 interface UsersListProps {
   onSelectUser: (userId: string) => void;
@@ -32,29 +35,115 @@ interface UsersListProps {
   viewType?: 'all' | 'verification' | 'suspended';
 }
 
+type UserFilterStatus =
+  | 'all'
+  | 'new'
+  | 'active'
+  | 'kyc_not_verified'
+  | 'suspended'
+  | 'blocked'
+  | 'deleted'
+  | 'paid';
+
+type UserFilterRole = 'all' | 'freelancer' | 'client' | 'startup_creator' | 'investor';
+
 export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'all' }: UsersListProps) {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'suspended' | 'pending'>(
-    viewType === 'suspended' ? 'suspended' : viewType === 'verification' ? 'pending' : 'all'
+  const [filterStatus, setFilterStatus] = useState<UserFilterStatus>(
+    viewType === 'suspended' ? 'suspended' : viewType === 'verification' ? 'kyc_not_verified' : 'all'
   );
-  const [filterRole, setFilterRole] = useState<'all' | 'client' | 'freelancer' | 'investor' | 'startup_creator' | 'both'>('all');
+  const [filterRole, setFilterRole] = useState<UserFilterRole>('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [summaryCounts, setSummaryCounts] = useState({
+    all: 0,
+    new: 0,
+    active: 0,
+    kyc_not_verified: 0,
+    suspended: 0,
+    blocked: 0,
+    deleted: 0,
+    paid: 0
+  });
+  const [confirmAction, setConfirmAction] = useState<null | {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    confirmTone?: 'red' | 'orange' | 'blue';
+    onConfirm: () => Promise<void> | void;
+  }>(null);
+  const [textAction, setTextAction] = useState<null | {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    placeholder: string;
+    initialValue?: string;
+    onConfirm: (value: string) => Promise<void> | void;
+  }>(null);
+  const [textActionValue, setTextActionValue] = useState('');
+  const [walletAction, setWalletAction] = useState<null | {
+    userId: string;
+    userName: string;
+    currentBalance: number;
+  }>(null);
+  const [walletAmount, setWalletAmount] = useState('');
+  const [walletType, setWalletType] = useState<'credit' | 'deduct'>('credit');
+  const [walletSubmitting, setWalletSubmitting] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const itemsPerPage = 10;
+
+  const itemsPerPage = 30;
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage, filterStatus, filterRole]);
 
-  const fetchUsers = async () => {
+  useEffect(() => {
+    setFilterRole('all');
+    setSearchQuery('');
+    setCurrentPage(1);
+    setSelectedUsers([]);
+  }, [viewType]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setCurrentPage(1);
+      fetchUsers(1, searchQuery);
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [searchQuery]);
+
+  const fetchUsers = async (pageOverride?: number, searchOverride?: string) => {
     try {
       setLoading(true);
-      const response = await api.get('/admin/users');
+      const response = await api.get('/admin/users', {
+        params: {
+          page: pageOverride ?? currentPage,
+          limit: itemsPerPage,
+          search: (searchOverride ?? searchQuery).trim(),
+          status: filterStatus,
+          role: filterRole
+        }
+      });
+
       if (response.data.success) {
         setUsers(response.data.users);
+        setTotalUsers(response.data.total || 0);
+        setTotalPages(response.data.totalPages || 1);
+        setSummaryCounts(response.data.summary || {
+          all: 0,
+          new: 0,
+          active: 0,
+          kyc_not_verified: 0,
+          suspended: 0,
+          blocked: 0,
+          deleted: 0,
+          paid: 0
+        });
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -91,9 +180,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     }
   };
 
-  const handleRejectUser = async (userId: string) => {
-    const reason = window.prompt('Please enter the reason for rejection:');
-    if (reason === null) return; // Cancelled
+  const submitRejectUser = async (userId: string, reason: string) => {
     try {
       const response = await api.put(`/admin/users/${userId}/reject`, { reason });
       if (response.data.success) {
@@ -116,21 +203,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     }
   };
 
-  const handleResetPassword = async (userId: string) => {
-    if (!window.confirm('Send a password reset email to this user?')) return;
-    try {
-      const response = await api.post(`/admin/users/${userId}/reset-password`);
-      if (response.data.success) {
-        toast.success('Password reset email sent to user');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send reset email');
-    }
-  };
-
-  const handleSendEmail = async (userId: string, userName: string) => {
-    const message = window.prompt(`Send an email to ${userName}:`);
-    if (!message) return;
+  const submitSendEmail = async (userId: string, userName: string, message: string) => {
     try {
       const response = await api.post(`/admin/users/${userId}/send-email`, {
         subject: 'Message from Admin',
@@ -144,8 +217,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     }
   };
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${userName}"? This cannot be undone.`)) return;
+  const submitDeleteUser = async (userId: string) => {
     try {
       const response = await api.delete(`/admin/users/${userId}`);
       if (response.data.success) {
@@ -161,40 +233,181 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     setUsers(prev => prev.map(u => u._id === updatedUser._id ? updatedUser : u));
   };
 
-  const filteredUsers = users.filter(user => {
-    const name = user.full_name || '';
-    const email = user.email || '';
-    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.toLowerCase().includes(searchQuery.toLowerCase());
+  const getUserAvatar = (user: any) => {
+    const profileImage = user?.profile_image;
+    if (!profileImage) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.full_name || 'U')}&background=random`;
+    }
 
-    const isSuspended = user.is_suspended || false;
-    const isEmailVerified = user.is_email_verified || false;
-    const isKycVerified = user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified;
-    const isPendingKyc = user.kyc_status === 'pending' || (user.kyc && user.kyc_status === 'unverified');
+    if (profileImage.startsWith('http')) {
+      return profileImage;
+    }
 
-    // Filter by Status: All, Active (not suspended & verified), Suspended, Pending (unverified or kyc pending)
-    const matchesStatus = filterStatus === 'all' ||
-      (filterStatus === 'suspended' && isSuspended) ||
-      (filterStatus === 'active' && !isSuspended && isEmailVerified && isKycVerified) ||
-      (filterStatus === 'pending' && (!isEmailVerified || user.kyc_status === 'pending' || (user.kyc && user.kyc_status === 'unverified')));
+    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+    const cleanPath = String(profileImage).replace(/^\/+/, '').replace(/\\/g, '/');
+    return `${baseUrl}/${cleanPath}`;
+  };
 
-    const isFreelancer = user.roles?.includes('freelancer');
-    const isClient = user.roles?.includes('client');
-    const isInvestor = user.roles?.includes('investor');
-    const isStartupCreator = user.roles?.includes('startup_creator');
+  const getUserPrimaryRole = (user: any): Exclude<UserFilterRole, 'all'> | 'unknown' => {
+    if (user.roles?.includes('startup_creator')) return 'startup_creator';
+    if (user.roles?.includes('investor')) return 'investor';
+    if (user.roles?.includes('freelancer')) return 'freelancer';
+    if (user.roles?.includes('client')) return 'client';
+    return 'unknown';
+  };
 
-    const roleKey = isFreelancer && isClient ? 'both' : 
-                    isInvestor ? 'investor' : 
-                    isStartupCreator ? 'startup_creator' :
-                    isFreelancer ? 'freelancer' : 'client';
-    const matchesRole = filterRole === 'all' || roleKey === filterRole;
+  const getUserDerivedState = (user: any) => {
+    const isSuspended = Boolean(user.is_suspended);
+    const isBlocked = Boolean(user.is_blocked || user.blocked || user.status === 'blocked');
+    const isDeleted = Boolean(user.is_deleted || user.deleted_at || user.status === 'deleted');
+    const isEmailVerified = Boolean(user.is_email_verified);
+    const isKycVerified = user.kyc_status === 'fully_verified' || Boolean(user.kyc_details?.is_verified);
+    const isKycNotVerified = !isKycVerified;
+    const isPaidUser = Boolean(
+      user.subscription_details?.plan_type === 'premium' ||
+      user.subscription_details?.plan_name ||
+      user.active_subscription ||
+      user.is_paid_user ||
+      user.total_paid_amount > 0
+    );
+    const createdAt = new Date(user.created_at || user.createdAt || 0);
+    const daysSinceCreated = Number.isNaN(createdAt.getTime())
+      ? Number.MAX_SAFE_INTEGER
+      : Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+    const isNewUser = daysSinceCreated <= 7;
+    const isActive = !isSuspended && !isBlocked && !isDeleted && isEmailVerified;
 
-    return matchesSearch && matchesStatus && matchesRole;
-  });
+    return {
+      isSuspended,
+      isBlocked,
+      isDeleted,
+      isEmailVerified,
+      isKycVerified,
+      isKycNotVerified,
+      isPaidUser,
+      isNewUser,
+      isActive
+    };
+  };
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  const getActionVisibility = (user: any, currentFilter: UserFilterStatus) => {
+    const state = getUserDerivedState(user);
+    const hasKycSubmission = Boolean(user.kyc_details?.pancard || user.kyc_details?.pan_card || user.kyc_details?.aadhar_card || user.kyc_status === 'pending');
+    const canQuickVerify = hasKycSubmission && !state.isKycVerified;
+
+    const baseActions = {
+      view: true,
+      email: currentFilter !== 'deleted',
+      reviewKyc: false,
+      quickVerify: false,
+      suspendToggle: false,
+      reject: false,
+      remind: false,
+      delete: currentFilter === 'all' || currentFilter === 'deleted'
+    };
+
+    switch (currentFilter) {
+      case 'new':
+        return {
+          ...baseActions,
+          email: true,
+          remind: true
+        };
+      case 'active':
+        return {
+          ...baseActions,
+          suspendToggle: true
+        };
+      case 'kyc_not_verified':
+        return {
+          ...baseActions,
+          reviewKyc: hasKycSubmission,
+          quickVerify: canQuickVerify,
+          reject: hasKycSubmission,
+          remind: true
+        };
+      case 'suspended':
+        return {
+          ...baseActions,
+          suspendToggle: true
+        };
+      case 'blocked':
+        return {
+          ...baseActions,
+          suspendToggle: true
+        };
+      case 'deleted':
+        return {
+          ...baseActions,
+          email: false,
+          reviewKyc: false,
+          quickVerify: false,
+          suspendToggle: false,
+          reject: false,
+          remind: false,
+          delete: false
+        };
+      case 'paid':
+        return {
+          ...baseActions,
+          suspendToggle: true
+        };
+      case 'all':
+      default:
+        return {
+          ...baseActions,
+          reviewKyc: hasKycSubmission,
+          quickVerify: canQuickVerify,
+          suspendToggle: !state.isDeleted && !state.isBlocked,
+          reject: hasKycSubmission && !state.isDeleted,
+          remind: !state.isDeleted,
+          delete: true
+        };
+    }
+  };
+
+  const submitWalletCredit = async () => {
+    if (!walletAction) return;
+
+    const baseAmount = Number(walletAmount);
+    if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
+      toast.error('Enter a valid wallet amount');
+      return;
+    }
+
+    const finalAmount = walletType === 'credit' ? baseAmount : -baseAmount;
+
+    try {
+      setWalletSubmitting(true);
+      const response = await api.put(`/admin/users/${walletAction.userId}/wallet`, {
+        amount: finalAmount,
+        type: walletType === 'credit' ? 'bonus' : 'withdrawal',
+        description: `Wallet ${walletType === 'credit' ? 'credited' : 'deducted'} by admin`
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message || 'Wallet balance updated');
+        setUsers(prev =>
+          prev.map(user =>
+            user._id === walletAction.userId
+              ? { ...user, wallet_balance: response.data.balance }
+              : user
+          )
+        );
+        setWalletAction(null);
+        setWalletAmount('');
+        setWalletType('credit');
+        fetchUsers();
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update wallet');
+    } finally {
+      setWalletSubmitting(false);
+    }
+  };
+
+  const startIndex = totalUsers === 0 ? 0 : (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = users;
 
   const toggleUserSelection = (userId: string) => {
     setSelectedUsers(prev =>
@@ -203,10 +416,6 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
   };
 
   const handleBulkAction = async (action: 'delete' | 'verify' | 'suspend' | 'activate' | 'seed_profile') => {
-    if (action === 'delete') {
-      if (!window.confirm(`Are you sure you want to delete ${selectedUsers.length} users? This cannot be undone.`)) return;
-    }
-
     try {
       setLoading(true);
       const response = await api.post('/admin/users/bulk', {
@@ -228,13 +437,13 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
 
   return (
     <div className="space-y-6">
-      {/* Edit User Modal */}
+
       <EditUserModal
         userId={editingUserId}
         onClose={() => setEditingUserId(null)}
         onUserUpdated={handleUserUpdated}
       />
-      {/* Header */}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Users Management</h1>
@@ -253,10 +462,8 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
         </motion.button>
       </div>
 
-      {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
           <div className="md:col-span-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -270,78 +477,146 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
             </div>
           </div>
 
-          {/* Status Filter */}
           <div>
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => {
+                setCurrentPage(1);
+                setFilterStatus(e.target.value as any);
+              }}
+              style={{ backgroundColor: '#000000', color: '#ffffff', colorScheme: 'dark' }}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
+              <option value="all" className="bg-black text-white">All Status</option>
+              <option value="new" className="bg-black text-white">New Users</option>
+              <option value="active" className="bg-black text-white">Active Users</option>
+              <option value="kyc_not_verified" className="bg-black text-white">KYC Not Verified</option>
+              <option value="suspended" className="bg-black text-white">Suspended</option>
+              <option value="blocked" className="bg-black text-white">Blocked</option>
+              <option value="deleted" className="bg-black text-white">Deleted</option>
+              <option value="paid" className="bg-black text-white">Subscription / Paid Users</option>
             </select>
           </div>
 
-          {/* Role Filter */}
           <div>
             <select
               value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value as any)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => {
+                setCurrentPage(1);
+                setFilterRole(e.target.value as any);
+              }}
+              style={{ backgroundColor: '#000000', color: '#ffffff', colorScheme: 'dark' }}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Roles</option>
-              <option value="client">Client</option>
-              <option value="freelancer">Freelancer</option>
-              <option value="investor">Investor</option>
-              <option value="startup_creator">Startup Creator</option>
-              <option value="both">Both</option>
+              <option value="all" className="bg-black text-white">All Roles</option>
+              <option value="client" className="bg-black text-white">Client</option>
+              <option value="freelancer" className="bg-black text-white">Freelancer</option>
+              <option value="investor" className="bg-black text-white">Investor</option>
+              <option value="startup_creator" className="bg-black text-white">Startup Idea Creator</option>
             </select>
           </div>
         </div>
 
-        {/* Quick Filter Chips */}
         <div className="flex flex-wrap gap-2 mt-4">
           <button
-            onClick={() => setFilterStatus('all')}
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('all');
+            }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'all'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
-            All Users ({users.length})
+            All Users ({summaryCounts.all})
           </button>
           <button
-            onClick={() => setFilterStatus('active')}
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('new');
+            }}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'new'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+          >
+            New Users ({summaryCounts.new})
+          </button>
+          <button
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('active');
+            }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'active'
               ? 'bg-green-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
-            Active ({users.filter(u => !u.is_suspended && u.is_email_verified).length})
+            Active Users ({summaryCounts.active})
           </button>
           <button
-            onClick={() => setFilterStatus('suspended')}
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('kyc_not_verified');
+            }}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'kyc_not_verified'
+              ? 'bg-yellow-500 text-black'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+          >
+            KYC Not Verified ({summaryCounts.kyc_not_verified})
+          </button>
+          <button
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('suspended');
+            }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'suspended'
               ? 'bg-red-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
-            Suspended ({users.filter(u => u.is_suspended).length})
+            Suspended Users ({summaryCounts.suspended})
           </button>
           <button
-            onClick={() => setFilterStatus('pending')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'pending'
-              ? 'bg-orange-600 text-white'
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('blocked');
+            }}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'blocked'
+              ? 'bg-yellow-500 text-black'
               : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
-            Pending Verification ({users.filter(u => !u.is_email_verified).length})
+            Blocked Users ({summaryCounts.blocked})
+          </button>
+          <button
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('deleted');
+            }}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'deleted'
+              ? 'bg-red-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+          >
+            Deleted Users ({summaryCounts.deleted})
+          </button>
+          <button
+            onClick={() => {
+              setCurrentPage(1);
+              setFilterStatus('paid');
+            }}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'paid'
+              ? 'bg-yellow-500 text-black'
+              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+          >
+            Subscription / Paid Users ({summaryCounts.paid})
           </button>
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -362,8 +637,6 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">User</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Role</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Orders</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Email Varification</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">KYC Status</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Joined</th>
@@ -385,12 +658,8 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                   </td>
                 </tr>
               ) : (paginatedUsers.map((user, index) => {
-                const role = user.roles?.includes('freelancer') && user.roles?.includes('client') ? 'both' :
-                  user.roles?.includes('investor') ? 'investor' :
-                  user.roles?.includes('startup_creator') ? 'startup_creator' :
-                  user.roles?.includes('freelancer') ? 'freelancer' : 'client';
-                const status = user.is_suspended ? 'suspended' : user.is_email_verified ? 'active' : 'pending';
-                const avatar = user.profile_image ? (user.profile_image.startsWith('http') ? user.profile_image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${user.profile_image}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'U')}&background=random`;
+                const role = getUserPrimaryRole(user);
+                const avatar = getUserAvatar(user);
 
                 return (
                   <motion.tr
@@ -415,10 +684,17 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                           src={avatar}
                           alt={user.full_name}
                           className="w-10 h-10 rounded-full object-cover"
+                          onError={(event) => {
+                            event.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'U')}&background=random`;
+                          }}
                         />
                         <div>
                           <div className="font-medium text-gray-900 dark:text-white">{user.full_name}</div>
                           <div className="text-sm text-gray-600 dark:text-gray-400">{user.email}</div>
+                          <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                            <Phone className="w-3 h-3" />
+                            {user.whatsapp_number ? `${user.whatsapp_country_code || ''} ${user.whatsapp_number}` : user.phone_number || 'No phone'}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -428,28 +704,15 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                           ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
                           : role === 'client'
                             ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
-                            : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                            : role === 'investor'
+                              ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                              : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                           }`}
                       >
-                        {role === 'both' ? 'Freelancer & Client' : 
-                         role === 'investor' ? 'Venture Investor' :
-                         role === 'startup_creator' ? 'Startup Founder' :
-                         role.charAt(0).toUpperCase() + role.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="font-medium">{user.total_orders || 0}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${status === 'active'
-                          ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                          : status === 'suspended'
-                            ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                            : 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
-                          }`}
-                      >
-                        {status === 'pending' ? 'Pending' : status.charAt(0).toUpperCase() + status.slice(1)}
+                        {role === 'investor' ? 'Investor' :
+                          role === 'startup_creator' ? 'Startup Idea Creator' :
+                            role === 'unknown' ? 'Unknown' :
+                              role.charAt(0).toUpperCase() + role.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -463,53 +726,63 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                       )}
                     </td>
                     <td className="px-6 py-4">
-                       {user.kyc_status === 'fully_verified' ? (
-                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 w-fit">
-                            <ShieldAlert className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
-                         </div>
-                       ) : user.kyc_status === 'pending' || (user.kyc_details?.pancard) ? (
-                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 w-fit animate-pulse">
-                            <Database className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Review Required</span>
-                         </div>
-                       ) : (
-                         <span className="text-[10px] text-gray-400 italic font-medium uppercase tracking-tighter">Unverified</span>
-                       )}
+                      {getUserDerivedState(user).isKycVerified ? (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 w-fit">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 w-fit">
+                          <X className="w-3.5 h-3.5" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Not Verified</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(user.created_at).toLocaleDateString()}
+                      {new Date(user.created_at || user.createdAt).toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-3">
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => onSelectUser(user._id)}
-                          className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                          title="View Profile"
+                          onClick={() => {
+                            setWalletAction({
+                              userId: user._id,
+                              userName: user.full_name,
+                              currentBalance: Number(user.wallet_balance ?? user.wallet?.balance ?? 0)
+                            });
+                            setWalletAmount('');
+                            setWalletType('credit');
+                          }}
+                          className="p-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+                          title="Add Wallet Balance"
                         >
-                          <Eye className="w-4 h-4 text-blue-600" />
+                          <PlusCircle className="w-4 h-4 text-emerald-600" />
                         </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleOpenKYC(user)}
-                          className={`p-2 rounded-lg transition-colors ${user.kyc_details?.pancard ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-600' : 'hover:bg-gray-100'}`}
-                          title="Review KYC Documents"
-                        >
-                          <ShieldAlert className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setEditingUserId(user._id)}
-                          className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
-                          title="Edit User"
-                        >
-                          <Pencil className="w-4 h-4 text-indigo-600" />
-                        </motion.button>
-                        {!user.kyc_details?.is_verified && (
+                        {getActionVisibility(user, filterStatus).view && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => onSelectUser(user._id)}
+                            className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            title="View Profile"
+                          >
+                            <Eye className="w-4 h-4 text-blue-600" />
+                          </motion.button>
+                        )}
+                        {getActionVisibility(user, filterStatus).reviewKyc && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleOpenKYC(user)}
+                            className={`p-2 rounded-lg transition-colors ${user.kyc_details?.pancard || user.kyc_details?.pan_card ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-600' : 'hover:bg-gray-100'}`}
+                            title="Review KYC Documents"
+                          >
+                            <ShieldAlert className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                        {getActionVisibility(user, filterStatus).quickVerify && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -520,67 +793,92 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                             <CheckCircle className="w-4 h-4 text-green-600" />
                           </motion.button>
                         )}
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleSendEmail(user._id, user.full_name)}
-                          className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
-                          title="Send Message"
-                        >
-                          <Mail className="w-4 h-4 text-orange-600" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleSuspendUser(user._id, user.is_suspended)}
-                          className={`p-2 rounded-lg transition-colors ${user.is_suspended
+                        {getActionVisibility(user, filterStatus).email && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => {
+                              setTextAction({
+                                title: `Send message to ${user.full_name}`,
+                                message: 'Write the email message you want to send to this user.',
+                                confirmLabel: 'Send Message',
+                                placeholder: 'Type your message here...',
+                                onConfirm: (value) => submitSendEmail(user._id, user.full_name, value)
+                              });
+                              setTextActionValue('');
+                            }}
+                            className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                            title="Send Message"
+                          >
+                            <Mail className="w-4 h-4 text-orange-600" />
+                          </motion.button>
+                        )}
+                        {getActionVisibility(user, filterStatus).suspendToggle && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleSuspendUser(user._id, user.is_suspended)}
+                            className={`p-2 rounded-lg transition-colors ${user.is_suspended
                               ? 'hover:bg-green-100 dark:hover:bg-green-900/20'
                               : 'hover:bg-red-100 dark:hover:bg-red-900/20'
-                            }`}
-                          title={user.is_suspended ? 'Activate User' : 'Suspend User'}
-                        >
-                          {user.is_suspended ? (
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Ban className="w-4 h-4 text-red-600" />
-                          )}
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleRejectUser(user._id)}
-                          className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors text-orange-600"
-                          title="Reject Profile"
-                        >
-                          <Ban className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleRemindComplete(user._id)}
-                          className="p-2 hover:bg-yellow-100 dark:hover:bg-yellow-900/20 rounded-lg transition-colors text-yellow-600"
-                          title="Remind to Complete Profile"
-                        >
-                          <Loader2 className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleResetPassword(user._id)}
-                          className="p-2 hover:bg-cyan-100 dark:hover:bg-cyan-900/20 rounded-lg transition-colors text-cyan-600"
-                          title="Reset Password"
-                        >
-                          <Key className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDeleteUser(user._id, user.full_name)}
-                          className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                          title="Delete User"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </motion.button>
+                              }`}
+                            title={user.is_suspended ? 'Activate User' : 'Suspend User'}
+                          >
+                            {user.is_suspended ? (
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Ban className="w-4 h-4 text-red-600" />
+                            )}
+                          </motion.button>
+                        )}
+                        {getActionVisibility(user, filterStatus).reject && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => {
+                              setTextAction({
+                                title: `Reject ${user.full_name}`,
+                                message: 'Enter the reason that should be sent with the rejection email.',
+                                confirmLabel: 'Reject User',
+                                placeholder: 'Enter rejection reason...',
+                                onConfirm: (value) => submitRejectUser(user._id, value)
+                              });
+                              setTextActionValue('');
+                            }}
+                            className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors text-orange-600"
+                            title="Reject Profile"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                        {getActionVisibility(user, filterStatus).remind && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleRemindComplete(user._id)}
+                            className="p-2 hover:bg-yellow-100 dark:hover:bg-yellow-900/20 rounded-lg transition-colors text-yellow-600"
+                            title="Remind to Complete Profile"
+                          >
+                            <Loader2 className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                        {getActionVisibility(user, filterStatus).delete && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setConfirmAction({
+                              title: 'Delete User',
+                              message: `Are you sure you want to delete "${user.full_name}"? This cannot be undone.`,
+                              confirmLabel: 'Delete User',
+                              confirmTone: 'red',
+                              onConfirm: () => submitDeleteUser(user._id)
+                            })}
+                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </motion.button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -590,10 +888,11 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of {filteredUsers.length} users
+            {totalUsers === 0
+              ? 'Showing 0 users'
+              : `Showing ${startIndex + 1} to ${Math.min(startIndex + users.length, totalUsers)} of ${totalUsers} users`}
           </div>
           <div className="flex items-center gap-2">
             <motion.button
@@ -632,7 +931,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
         </div>
       </div>
 
-      {/* Bulk Action Bar */}
+
       <AnimatePresence>
         {selectedUsers.length > 0 && (
           <motion.div
@@ -677,7 +976,13 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 <Database className="w-4 h-4 text-purple-400" /> Seed Profiles
               </button>
               <button
-                onClick={() => handleBulkAction('delete')}
+                onClick={() => setConfirmAction({
+                  title: 'Delete Selected Users',
+                  message: `Are you sure you want to delete ${selectedUsers.length} selected users? This cannot be undone.`,
+                  confirmLabel: 'Delete Selected',
+                  confirmTone: 'red',
+                  onConfirm: () => handleBulkAction('delete')
+                })}
                 className="flex items-center gap-2 px-4 py-2 hover:bg-red-500/10 text-red-400 rounded-xl transition-all text-sm font-medium"
               >
                 <Trash2 className="w-4 h-4" /> Delete
@@ -693,6 +998,209 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Global Modals Portal */}
+      {typeof document !== 'undefined' && createPortal(
+        <>
+          <AnimatePresence>
+            {confirmAction && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+                style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+              >
+                <motion.div
+                  initial={{ scale: 0.96, opacity: 0, y: 16 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.96, opacity: 0, y: 16 }}
+                  className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1a2232] p-6 shadow-2xl"
+                >
+                  <h3 className="text-lg font-bold text-white">{confirmAction.title}</h3>
+                  <p className="mt-2 text-sm text-gray-300">{confirmAction.message}</p>
+                  <div className="mt-6 flex justify-end gap-3">
+                    <button
+                      onClick={() => setConfirmAction(null)}
+                      className="px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await confirmAction.onConfirm();
+                        setConfirmAction(null);
+                      }}
+                      className={`px-4 py-2 rounded-xl font-medium text-white ${confirmAction.confirmTone === 'red'
+                        ? 'bg-red-600 hover:bg-red-500'
+                        : confirmAction.confirmTone === 'orange'
+                          ? 'bg-orange-600 hover:bg-orange-500'
+                          : 'bg-blue-600 hover:bg-blue-500'
+                        }`}
+                    >
+                      {confirmAction.confirmLabel}
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {walletAction && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+                style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+              >
+                <motion.div
+                  initial={{ scale: 0.96, opacity: 0, y: 16 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.96, opacity: 0, y: 16 }}
+                  className=" max-w-[320px] rounded-2xl border border-white/10 bg-dark p-6 shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-white">Adjust Wallet Balance</h3>
+                    <button
+                      onClick={() => {
+                        setWalletAction(null);
+                        setWalletAmount('');
+                        setWalletType('credit');
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+
+                  <p className="mb-4 text-sm text-gray-400">
+                    Update balance for <span className="text-white font-medium">{walletAction.userName}</span>
+                  </p>
+
+                  <div className="mb-5 p-3 rounded-xl bg-black/40 border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Current Balance</span>
+                      <span className="text-xl font-bold text-emerald-500">₹{walletAction.currentBalance.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Transaction Type</label>
+                      <div className="flex p-1 bg-black/40 rounded-xl border border-white/5">
+                        <button
+                          onClick={() => setWalletType('credit')}
+                          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${walletType === 'credit' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        >
+                          Credit (+)
+                        </button>
+                        <button
+                          onClick={() => setWalletType('deduct')}
+                          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${walletType === 'deduct' ? 'bg-red-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        >
+                          Deduct (-)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Amount (₹)</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500/70 font-bold">₹</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={walletAmount}
+                          onChange={(e) => setWalletAmount(e.target.value)}
+                          placeholder="Enter amount..."
+                          className="w-full rounded-xl border border-white/10 bg-black/40 pl-8 pr-4 py-3 text-lg font-bold text-emerald-500 outline-none focus:border-emerald-500 placeholder:text-white/60"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      onClick={() => {
+                        setWalletAction(null);
+                        setWalletAmount('');
+                        setWalletType('credit');
+                      }}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 text-sm font-medium transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitWalletCredit}
+                      disabled={walletSubmitting}
+                      className={`flex-1 rounded-xl px-4 py-2.5 font-bold text-white transition-all disabled:opacity-50 ${walletType === 'credit' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20 shadow-lg' : 'bg-red-600 hover:bg-red-500 shadow-red-900/20 shadow-lg'}`}
+                    >
+                      {walletSubmitting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : `${walletType === 'credit' ? 'Add' : 'Deduct'} Amount`}
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {textAction && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+                style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
+              >
+                <motion.div
+                  initial={{ scale: 0.96, opacity: 0, y: 16 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.96, opacity: 0, y: 16 }}
+                  className=" max-w-lg rounded-2xl border border-white/10 bg-[#1a2232] p-6 shadow-2xl"
+                >
+                  <h3 className="text-lg font-bold text-white">{textAction.title}</h3>
+                  <p className="mt-2 text-sm text-gray-300">{textAction.message}</p>
+                  <textarea
+                    value={textActionValue}
+                    onChange={(e) => setTextActionValue(e.target.value)}
+                    placeholder={textAction.placeholder}
+                    rows={5}
+                    className="mt-4 w-full rounded-xl border border-white/10 bg-[#0f1725] px-4 py-3 text-sm text-white outline-none focus:border-[#F24C20]"
+                  />
+                  <div className="mt-6 flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        setTextAction(null);
+                        setTextActionValue('');
+                      }}
+                      className="px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!textActionValue.trim()) {
+                          toast.error('Please enter a message');
+                          return;
+                        }
+                        await textAction.onConfirm(textActionValue.trim());
+                        setTextAction(null);
+                        setTextActionValue('');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-[#F24C20] hover:bg-[#d43a12] font-medium text-white"
+                    >
+                      {textAction.confirmLabel}
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>,
+        document.body
+      )}
     </div>
   );
 }
