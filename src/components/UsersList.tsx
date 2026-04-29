@@ -102,6 +102,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
   }, [currentPage, filterStatus, filterRole]);
 
   useEffect(() => {
+    setFilterStatus(viewType === 'suspended' ? 'suspended' : viewType === 'verification' ? 'kyc_not_verified' : 'all');
     setFilterRole('all');
     setSearchQuery('');
     setCurrentPage(1);
@@ -173,6 +174,10 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
       const response = await api.put(`/admin/users/${userId}/suspend`);
       if (response.data.success) {
         toast.success(currentlySuspended ? 'User activated successfully' : 'User suspended successfully');
+        if (!currentlySuspended) {
+          setFilterStatus('suspended');
+          setCurrentPage(1);
+        }
         fetchUsers();
       }
     } catch (error: any) {
@@ -184,7 +189,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     try {
       const response = await api.put(`/admin/users/${userId}/reject`, { reason });
       if (response.data.success) {
-        toast.success('Profile rejection email sent');
+        toast.success('User rejected. Profile view is no longer shown.');
         fetchUsers();
       }
     } catch (error: any) {
@@ -221,7 +226,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     try {
       const response = await api.delete(`/admin/users/${userId}`);
       if (response.data.success) {
-        toast.success('User deleted successfully');
+        toast.success('User permanently deleted');
         fetchUsers();
       }
     } catch (error: any) {
@@ -258,7 +263,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
 
   const getUserDerivedState = (user: any) => {
     const isSuspended = Boolean(user.is_suspended);
-    const isBlocked = Boolean(user.is_blocked || user.blocked || user.status === 'blocked');
+    const isBlocked = Boolean(user.is_suspended || user.is_blocked || user.blocked || user.status === 'blocked' || user.kyc_status === 'rejected');
     const isDeleted = Boolean(user.is_deleted || user.deleted_at || user.status === 'deleted');
     const isEmailVerified = Boolean(user.is_email_verified);
     const isKycVerified = user.kyc_status === 'fully_verified' || Boolean(user.kyc_details?.is_verified);
@@ -294,10 +299,11 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     const state = getUserDerivedState(user);
     const hasKycSubmission = Boolean(user.kyc_details?.pancard || user.kyc_details?.pan_card || user.kyc_details?.aadhar_card || user.kyc_status === 'pending');
     const canQuickVerify = hasKycSubmission && !state.isKycVerified;
+    const isRejected = user.kyc_status === 'rejected';
 
     const baseActions = {
-      view: true,
-      email: currentFilter !== 'deleted',
+      view: !isRejected,
+      email: currentFilter !== 'deleted' && !isRejected,
       reviewKyc: false,
       quickVerify: false,
       suspendToggle: false,
@@ -321,10 +327,10 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
       case 'kyc_not_verified':
         return {
           ...baseActions,
-          reviewKyc: hasKycSubmission,
+          reviewKyc: !isRejected,
           quickVerify: canQuickVerify,
-          reject: hasKycSubmission,
-          remind: true
+          reject: !isRejected,
+          remind: !isRejected
         };
       case 'suspended':
         return {
@@ -334,7 +340,9 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
       case 'blocked':
         return {
           ...baseActions,
-          suspendToggle: true
+          view: true,
+          suspendToggle: true,
+          delete: true
         };
       case 'deleted':
         return {
@@ -356,11 +364,11 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
       default:
         return {
           ...baseActions,
-          reviewKyc: hasKycSubmission,
+          reviewKyc: !isRejected && (hasKycSubmission || state.isKycNotVerified),
           quickVerify: canQuickVerify,
           suspendToggle: !state.isDeleted && !state.isBlocked,
-          reject: hasKycSubmission && !state.isDeleted,
-          remind: !state.isDeleted,
+          reject: !isRejected && hasKycSubmission && !state.isDeleted,
+          remind: !isRejected && !state.isDeleted,
           delete: true
         };
     }
@@ -569,18 +577,6 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           <button
             onClick={() => {
               setCurrentPage(1);
-              setFilterStatus('suspended');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'suspended'
-              ? 'bg-red-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Suspended Users ({summaryCounts.suspended})
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage(1);
               setFilterStatus('blocked');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'blocked'
@@ -731,11 +727,20 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                           <ShieldAlert className="w-3.5 h-3.5" />
                           <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
                         </div>
+                      ) : user.kyc_status === 'rejected' ? (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 w-fit">
+                          <Ban className="w-3.5 h-3.5" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Rejected</span>
+                        </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 w-fit">
+                        <button
+                          onClick={() => handleOpenKYC(user)}
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 w-fit hover:bg-red-500/20 transition-colors"
+                          title="Open verification details"
+                        >
                           <X className="w-3.5 h-3.5" />
                           <span className="text-[10px] font-bold uppercase tracking-wider">Not Verified</span>
-                        </div>
+                        </button>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
@@ -771,6 +776,15 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                             <Eye className="w-4 h-4 text-blue-600" />
                           </motion.button>
                         )}
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => setEditingUserId(user._id)}
+                          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                          title="Edit User"
+                        >
+                          <Pencil className="w-4 h-4 text-slate-500" />
+                        </motion.button>
                         {getActionVisibility(user, filterStatus).reviewKyc && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
@@ -822,7 +836,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                               ? 'hover:bg-green-100 dark:hover:bg-green-900/20'
                               : 'hover:bg-red-100 dark:hover:bg-red-900/20'
                               }`}
-                            title={user.is_suspended ? 'Activate User' : 'Suspend User'}
+                            title={user.is_suspended ? 'Restore Access' : 'Blocked User'}
                           >
                             {user.is_suspended ? (
                               <CheckCircle className="w-4 h-4 text-green-600" />
@@ -960,14 +974,16 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
               <button
                 onClick={() => handleBulkAction('suspend')}
                 className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-xl transition-all text-sm font-medium"
+                title="Mark selected users as Blocked"
               >
-                <Ban className="w-4 h-4 text-orange-400" /> Suspend
+                <Ban className="w-4 h-4 text-orange-400" /> Blocked User
               </button>
               <button
                 onClick={() => handleBulkAction('activate')}
                 className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-xl transition-all text-sm font-medium"
+                title="Restore access for selected users"
               >
-                <CheckCircle className="w-4 h-4 text-blue-400" /> Activate
+                <CheckCircle className="w-4 h-4 text-blue-400" /> Restore Access
               </button>
               <button
                 onClick={() => handleBulkAction('seed_profile')}
@@ -1007,21 +1023,21 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+                className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
                 style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
               >
                 <motion.div
                   initial={{ scale: 0.96, opacity: 0, y: 16 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.96, opacity: 0, y: 16 }}
-                  className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1a2232] p-6 shadow-2xl"
+                  className="w-full max-w-md rounded-3xl border border-[#27272a] bg-[#09090b] p-8 shadow-2xl"
                 >
-                  <h3 className="text-lg font-bold text-white">{confirmAction.title}</h3>
-                  <p className="mt-2 text-sm text-gray-300">{confirmAction.message}</p>
-                  <div className="mt-6 flex justify-end gap-3">
+                  <h3 className="text-xl font-bold text-white">{confirmAction.title}</h3>
+                  <p className="mt-3 text-sm text-gray-400 leading-relaxed">{confirmAction.message}</p>
+                  <div className="mt-8 flex justify-end gap-3">
                     <button
                       onClick={() => setConfirmAction(null)}
-                      className="px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5"
+                      className="px-6 py-3 rounded-xl border border-[#27272a] text-gray-400 font-semibold hover:bg-[#18181b] hover:text-white transition-all"
                     >
                       Cancel
                     </button>
@@ -1030,11 +1046,11 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                         await confirmAction.onConfirm();
                         setConfirmAction(null);
                       }}
-                      className={`px-4 py-2 rounded-xl font-medium text-white ${confirmAction.confirmTone === 'red'
-                        ? 'bg-red-600 hover:bg-red-500'
+                      className={`px-6 py-3 rounded-xl font-bold text-white transition-all shadow-lg ${confirmAction.confirmTone === 'red'
+                        ? 'bg-red-600 hover:bg-red-500 shadow-red-900/20'
                         : confirmAction.confirmTone === 'orange'
-                          ? 'bg-orange-600 hover:bg-orange-500'
-                          : 'bg-blue-600 hover:bg-blue-500'
+                          ? 'bg-orange-600 hover:bg-orange-500 shadow-orange-900/20'
+                          : 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20'
                         }`}
                     >
                       {confirmAction.confirmLabel}
@@ -1051,94 +1067,115 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+                className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
                 style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
               >
                 <motion.div
-                  initial={{ scale: 0.96, opacity: 0, y: 16 }}
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.96, opacity: 0, y: 16 }}
-                  className=" max-w-[320px] rounded-2xl border border-white/10 bg-dark p-6 shadow-2xl"
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-[#27272a] bg-[#09090b] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.6)]"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-white">Adjust Wallet Balance</h3>
-                    <button
-                      onClick={() => {
-                        setWalletAction(null);
-                        setWalletAmount('');
-                        setWalletType('credit');
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <X className="w-5 h-5 text-gray-500" />
-                    </button>
-                  </div>
+                  <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#F24C20]/10 to-transparent" />
 
-                  <p className="mb-4 text-sm text-gray-400">
-                    Update balance for <span className="text-white font-medium">{walletAction.userName}</span>
-                  </p>
-
-                  <div className="mb-5 p-3 rounded-xl bg-black/40 border border-white/5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Current Balance</span>
-                      <span className="text-xl font-bold text-emerald-500">₹{walletAction.currentBalance.toLocaleString()}</span>
+                  <div className="relative">
+                    <div className="mb-8 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F24C20]/15 text-[#F24C20] ring-1 ring-[#F24C20]/20">
+                          <PlusCircle className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold tracking-tight text-white">Adjust Balance</h3>
+                          <p className="text-sm font-semibold text-gray-500">{walletAction.userName}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setWalletAction(null);
+                          setWalletAmount('');
+                          setWalletType('credit');
+                        }}
+                        className="group flex h-10 w-10 items-center justify-center rounded-xl border border-[#27272a] bg-[#18181b] text-gray-400 transition-all hover:bg-[#27272a] hover:text-white"
+                      >
+                        <X className="h-5 w-5 transition-transform group-hover:rotate-90" />
+                      </button>
                     </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Transaction Type</label>
-                      <div className="flex p-1 bg-black/40 rounded-xl border border-white/5">
-                        <button
-                          onClick={() => setWalletType('credit')}
-                          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${walletType === 'credit' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                        >
-                          Credit (+)
-                        </button>
-                        <button
-                          onClick={() => setWalletType('deduct')}
-                          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${walletType === 'deduct' ? 'bg-red-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                        >
-                          Deduct (-)
-                        </button>
+                    <div className="mb-8 rounded-3xl bg-white/[0.03] p-6 border border-white/10">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Current Balance</p>
+                          <p className="mt-1 text-3xl font-bold text-white">₹{walletAction.currentBalance.toLocaleString()}</p>
+                        </div>
+                        <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 p-2 text-emerald-500 border border-emerald-500/20">
+                          <Database className="h-full w-full" />
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Amount (₹)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500/70 font-bold">₹</span>
-                        <input
-                          type="number"
-                          min="1"
-                          value={walletAmount}
-                          onChange={(e) => setWalletAmount(e.target.value)}
-                          placeholder="Enter amount..."
-                          className="w-full rounded-xl border border-white/10 bg-black/40 pl-8 pr-4 py-3 text-lg font-bold text-emerald-500 outline-none focus:border-emerald-500 placeholder:text-white/60"
-                        />
+                    <div className="space-y-6">
+                      <div>
+                        <label className="mb-3 block text-[11px] font-black uppercase tracking-widest text-gray-500">Transaction Type</label>
+                        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-black p-1.5 border border-[#27272a]">
+                          <button
+                            onClick={() => setWalletType('credit')}
+                            className={`flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all duration-300 ${walletType === 'credit' ? 'bg-[#F24C20] text-white shadow-lg shadow-[#F24C20]/30' : 'text-gray-500 hover:text-gray-300 hover:bg-[#18181b]'}`}
+                          >
+                            <PlusCircle className="h-4 w-4" />
+                            Credit
+                          </button>
+                          <button
+                            onClick={() => setWalletType('deduct')}
+                            className={`flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all duration-300 ${walletType === 'deduct' ? 'bg-red-600 text-white shadow-lg shadow-red-900/30' : 'text-gray-500 hover:text-gray-300 hover:bg-[#18181b]'}`}
+                          >
+                            <Ban className="h-4 w-4" />
+                            Deduct
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-3 block text-[11px] font-black uppercase tracking-widest text-gray-500">Amount to {walletType === 'credit' ? 'Add' : 'Remove'}</label>
+                        <div className="group relative">
+                          <input
+                            type="number"
+                            min="1"
+                            value={walletAmount}
+                            onChange={(e) => setWalletAmount(e.target.value)}
+                            placeholder="0.00"
+                            style={{ scrollbarWidth: 'none' }}
+                            className="h-16 w-full rounded-2xl border border-[#27272a] bg-black px-6 text-xl font-bold text-white transition-all placeholder:text-gray-700 focus:bg-[#18181b] focus:border-[#F24C20] outline-none"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="mt-6 flex gap-3">
-                    <button
-                      onClick={() => {
-                        setWalletAction(null);
-                        setWalletAmount('');
-                        setWalletType('credit');
-                      }}
-                      className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 text-sm font-medium transition-all"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={submitWalletCredit}
-                      disabled={walletSubmitting}
-                      className={`flex-1 rounded-xl px-4 py-2.5 font-bold text-white transition-all disabled:opacity-50 ${walletType === 'credit' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20 shadow-lg' : 'bg-red-600 hover:bg-red-500 shadow-red-900/20 shadow-lg'}`}
-                    >
-                      {walletSubmitting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : `${walletType === 'credit' ? 'Add' : 'Deduct'} Amount`}
-                    </button>
+                    <div className="mt-10 flex gap-3">
+                      <button
+                        onClick={() => {
+                          setWalletAction(null);
+                          setWalletAmount('');
+                          setWalletType('credit');
+                        }}
+                        className="flex-1 rounded-2xl border border-[#27272a] bg-[#18181b] py-4 text-sm font-bold text-gray-400 transition-all hover:bg-[#27272a] hover:text-white"
+                      >
+                        Discard
+                      </button>
+                      <button
+                        onClick={submitWalletCredit}
+                        disabled={walletSubmitting || !walletAmount}
+                        className={`flex-[1.5] flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold text-white transition-all duration-300 disabled:opacity-30 ${walletType === 'credit' ? 'bg-[#F24C20] hover:bg-[#ff5d33] shadow-lg shadow-[#F24C20]/40' : 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-900/40'}`}
+                      >
+                        {walletSubmitting ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <>
+                            {walletType === 'credit' ? 'Add Credits' : 'Deduct Credits'}
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               </motion.div>
@@ -1151,31 +1188,31 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+                className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
                 style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
               >
                 <motion.div
                   initial={{ scale: 0.96, opacity: 0, y: 16 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.96, opacity: 0, y: 16 }}
-                  className=" max-w-lg rounded-2xl border border-white/10 bg-[#1a2232] p-6 shadow-2xl"
+                  className="w-full max-w-lg rounded-3xl border border-[#27272a] bg-[#09090b] p-8 shadow-2xl"
                 >
-                  <h3 className="text-lg font-bold text-white">{textAction.title}</h3>
-                  <p className="mt-2 text-sm text-gray-300">{textAction.message}</p>
+                  <h3 className="text-xl font-bold text-white">{textAction.title}</h3>
+                  <p className="mt-3 text-sm text-gray-400 leading-relaxed">{textAction.message}</p>
                   <textarea
                     value={textActionValue}
                     onChange={(e) => setTextActionValue(e.target.value)}
                     placeholder={textAction.placeholder}
                     rows={5}
-                    className="mt-4 w-full rounded-xl border border-white/10 bg-[#0f1725] px-4 py-3 text-sm text-white outline-none focus:border-[#F24C20]"
+                    className="mt-6 w-full rounded-2xl border border-[#27272a] bg-black px-6 py-4 text-sm text-white outline-none focus:border-[#F24C20] focus:bg-[#18181b] transition-all resize-none"
                   />
-                  <div className="mt-6 flex justify-end gap-3">
+                  <div className="mt-8 flex justify-end gap-3">
                     <button
                       onClick={() => {
                         setTextAction(null);
                         setTextActionValue('');
                       }}
-                      className="px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5"
+                      className="px-6 py-3 rounded-xl border border-[#27272a] text-gray-400 font-semibold hover:bg-[#18181b] hover:text-white transition-all"
                     >
                       Cancel
                     </button>
@@ -1189,7 +1226,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                         setTextAction(null);
                         setTextActionValue('');
                       }}
-                      className="px-4 py-2 rounded-xl bg-[#F24C20] hover:bg-[#d43a12] font-medium text-white"
+                      className="px-6 py-3 rounded-xl bg-[#F24C20] hover:bg-[#d43a12] font-bold text-white shadow-lg shadow-[#F24C20]/20 transition-all"
                     >
                       {textAction.confirmLabel}
                     </button>

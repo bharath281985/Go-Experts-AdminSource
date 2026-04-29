@@ -1,5 +1,9 @@
-import { motion } from 'motion/react';
-import { ChevronLeft, FileText, CheckCircle, Ban, Loader2, ExternalLink, ShieldCheck, User, Briefcase, Landmark, Rocket, ShieldAlert } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  ChevronLeft, FileText, CheckCircle, Ban, Loader2, ExternalLink,
+  ShieldCheck, User, Briefcase, Landmark, Rocket, ShieldAlert,
+  Fingerprint, Database, Globe, Scale, Cpu, Zap, Activity, Eye, X, Download
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import api from '../lib/api';
@@ -16,10 +20,14 @@ const getFileUrl = (path: string) => {
   return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
+const isImage = (url: string) => /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(url);
+const isPdf = (url: string) => url.toLowerCase().includes('.pdf');
+
 export function KYCReviewPage({ userId, onBack }: KYCReviewPageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     fetchUser(userId);
@@ -62,9 +70,9 @@ export function KYCReviewPage({ userId, onBack }: KYCReviewPageProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 gap-4">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-8 h-8 text-[#F24C20] animate-spin" />
-        <p className="text-gray-500 font-medium">Loading KYC Details...</p>
+        <p className="text-gray-400 text-sm font-medium">Loading user data...</p>
       </div>
     );
   }
@@ -75,254 +83,381 @@ export function KYCReviewPage({ userId, onBack }: KYCReviewPageProps) {
   const role = kyc.role ||
     (user.roles?.includes('investor') ? 'investor' :
       user.roles?.includes('freelancer') ? 'freelancer' :
-        user.roles?.includes('client') ? 'client' :
-          'startup_creator');
+        user.roles?.includes('client') ? 'client' : 'startup_creator');
+
+  const isVerified = user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-[#1a1a1a] rounded-[2.5rem] w-full max-w-5xl mx-auto overflow-hidden border border-gray-200 dark:border-white/10 shadow-2xl flex flex-col"
-    >
-      {/* Header */}
-      <div className="p-8 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.02]">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-3 hover:bg-white dark:hover:bg-white/10 rounded-2xl shadow-sm border border-gray-200 dark:border-white/5 transition-all">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div className="w-12 h-12 rounded-2xl bg-[#F24C20]/10 flex items-center justify-center">
-            <ShieldCheck className="w-6 h-6 text-[#F24C20]" />
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-4 border border-zinc-800">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all duration-200"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-white">KYC Review</h1>
+              <p className="text-xs text-zinc-500">
+                {user.full_name} • {userId.slice(-8).toUpperCase()}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-[#044071] dark:text-white uppercase tracking-tighter italic">KYC Review Center</h3>
-            <p className="text-sm text-gray-500 font-bold uppercase tracking-widest text-[10px]">Verifying {role?.replace('_', ' ')}: {user.full_name}</p>
+          <div className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isVerified
+            ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+            : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+            }`}>
+            {isVerified ? 'Verified' : 'Pending Review'}
           </div>
         </div>
-        <div className="flex gap-2">
-          <StatusChip label="Verification Status" active={user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Main Content - 2 columns */}
+          <div className="lg:col-span-2 space-y-6">
+
+
+
+
+            {/* User Information */}
+            <div className="bg-zinc-900/30 rounded-2xl border border-zinc-800 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <User className="w-4 h-4 text-blue-500" />
+                <h3 className="text-sm font-semibold text-white">User Information</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <InfoRow label="Full Name" value={user.full_name} />
+                <InfoRow label="Email" value={user.email} />
+                <InfoRow label="Phone" value={user.phone} />
+                <InfoRow label="Role" value={role?.replace('_', ' ')} highlight />
+              </div>
+            </div>
+
+            {/* Identity Documents */}
+            <div className="bg-zinc-900/30 rounded-2xl border border-zinc-800 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Fingerprint className="w-4 h-4 text-[#F24C20]" />
+                <h3 className="text-sm font-semibold text-white">Identity Documents</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DocumentCard
+                  title="PAN Card"
+                  label="Tax Identification"
+                  path={kyc.id_proof?.pan_card || user.kyc_details?.pan_card || user.kyc_details?.pancard}
+                  onPreview={(url) => setPreviewDoc({ url, title: 'PAN Card' })}
+                />
+                <DocumentCard
+                  title="Aadhaar Card"
+                  label="National ID"
+                  path={kyc.id_proof?.aadhar_card || user.kyc_details?.aadhar_card}
+                  onPreview={(url) => setPreviewDoc({ url, title: 'Aadhaar Card' })}
+                />
+                <DocumentCard
+                  title="Educational Documents"
+                  label="Academic Records"
+                  isArray
+                  count={user.documents?.educational?.length || 0}
+                  onPreview={(url) => setPreviewDoc({ url, title: 'Educational Document' })}
+                />
+                <DocumentCard
+                  title="Experience Letter"
+                  label="Professional Reference"
+                  path={user.documents?.experience_letter}
+                  onPreview={(url) => setPreviewDoc({ url, title: 'Experience Letter' })}
+                />
+              </div>
+            </div>
+
+            {/* Compliance Status */}
+            <div className="bg-zinc-900/30 rounded-2xl border border-zinc-800 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <ShieldCheck className="w-4 h-4 text-purple-500" />
+                <h3 className="text-sm font-semibold text-white">Compliance Status</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <StatusNode label="NDA Signed" active={kyc.compliance?.nda_accepted} />
+                <StatusNode label="Fraud Declaration" active={kyc.compliance?.fraud_declaration} />
+                <StatusNode label="IP Declaration" active={kyc.compliance?.ip_declaration} />
+              </div>
+            </div>
+
+
+          </div>
+
+          {/* Sidebar - 1 column */}
+          <div className="space-y-6">
+
+            {/* Venture/Business Details */}
+            {(kyc.startup_details?.startup_name || kyc.business_verification?.cin_number || kyc.financial_investor?.investor_type) && (
+              <div className="bg-zinc-900/30 rounded-2xl border border-zinc-800 p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Briefcase className="w-4 h-4 text-emerald-500" />
+                  <h3 className="text-sm font-semibold text-white">Business Details</h3>
+                </div>
+                <div className="space-y-3">
+                  {kyc.startup_details?.startup_name && <InfoRow label="Entity Name" value={kyc.startup_details.startup_name} />}
+                  {kyc.business_verification?.cin_number && <InfoRow label="CIN Number" value={kyc.business_verification.cin_number} />}
+                  {kyc.financial_investor?.investor_type && <InfoRow label="Investor Type" value={kyc.financial_investor.investor_type} />}
+                </div>
+              </div>
+            )}
+
+            {/* Additional Documents */}
+            {(kyc.financial_investor?.bank_details?.cancelled_cheque ||
+              kyc.startup_details?.pitch_deck ||
+              kyc.financial_investor?.linkedin_profile ||
+              kyc.business_verification?.inc_certificate) && (
+                <div className="bg-zinc-900/30 rounded-2xl border border-zinc-800 p-6">
+                  <div className="flex items-center gap-2 mb-6">
+                    <FileText className="w-4 h-4 text-cyan-500" />
+                    <h3 className="text-sm font-semibold text-white">Additional Documents</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {kyc.financial_investor?.bank_details?.cancelled_cheque && (
+                      <DocumentCard
+                        compact
+                        title="Cancelled Cheque"
+                        path={kyc.financial_investor.bank_details.cancelled_cheque}
+                        onPreview={(url) => setPreviewDoc({ url, title: 'Cancelled Cheque' })}
+                      />
+                    )}
+                    {kyc.startup_details?.pitch_deck && (
+                      <DocumentCard
+                        compact
+                        title="Pitch Deck"
+                        path={kyc.startup_details.pitch_deck}
+                        onPreview={(url) => setPreviewDoc({ url, title: 'Pitch Deck' })}
+                      />
+                    )}
+                    {kyc.financial_investor?.linkedin_profile && (
+                      <DocumentCard
+                        compact
+                        title="LinkedIn Profile"
+                        path={kyc.financial_investor.linkedin_profile}
+                        onPreview={(url) => setPreviewDoc({ url, title: 'LinkedIn Profile' })}
+                      />
+                    )}
+                    {kyc.business_verification?.inc_certificate && (
+                      <DocumentCard
+                        compact
+                        title="Incorporation Certificate"
+                        path={kyc.business_verification.inc_certificate}
+                        onPreview={(url) => setPreviewDoc({ url, title: 'Incorporation Certificate' })}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {/* Action Buttons */}
+            <div className="bg-zinc-900/30 rounded-2xl border border-zinc-800 p-6 space-y-3">
+              <button
+                onClick={() => handleAction('verify')}
+                disabled={isProcessing || isVerified}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20"
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                Approve KYC
+              </button>
+
+              <button
+                onClick={async () => {
+                  setIsProcessing(true);
+                  try {
+                    const response = await api.put(`/admin/users/${userId}/suspend`);
+                    if (response.data.success) {
+                      toast.success(user.is_suspended ? 'Account Activated' : 'Account Blocked');
+                      fetchUser(userId);
+                    }
+                  } catch (err: any) {
+                    toast.error(err.response?.data?.message || 'Operation failed');
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }}
+                disabled={isProcessing}
+                title={!user.is_suspended ? "Restrict user access to the platform" : "Restore user access to the platform"}
+                className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 border ${
+                  !user.is_suspended 
+                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500 hover:text-white' 
+                  : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white'
+                }`}
+              >
+                <Ban className="w-4 h-4" />
+                {!user.is_suspended ? 'Blocked User' : 'Restore Access'}
+              </button>
+
+              <button
+                onClick={() => handleAction('reject')}
+                disabled={isProcessing}
+                className="w-full bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-red-500 py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 border border-red-500/20"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                Reject KYC
+              </button>
+
+              <div className="pt-4 mt-4 border-t border-zinc-800">
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('PERMANENT DELETE: Are you absolutely sure? This user will be removed from the database.')) return;
+                    setIsProcessing(true);
+                    try {
+                      const response = await api.delete(`/admin/users/${userId}`);
+                      if (response.data.success) {
+                        toast.success('User Permanently Deleted');
+                        onBack();
+                      }
+                    } catch (err: any) {
+                      toast.error(err.response?.data?.message || 'Deletion failed');
+                    } finally {
+                      setIsProcessing(false);
+                    }
+                  }}
+                  disabled={isProcessing}
+                  className="w-full bg-black hover:bg-zinc-950 text-red-800 hover:text-red-600 py-2 rounded-lg text-xs font-bold transition-all border border-red-900/30 flex items-center justify-center gap-2"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Delete Permanently
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Document Preview Modal */}
+        <AnimatePresence>
+          {previewDoc && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setPreviewDoc(null)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative  max-w-5xl h-[85vh] bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden flex flex-col shadow-2xl"
+              >
+                <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900">
+                  <h3 className="font-medium text-white">{previewDoc.title}</h3>
+                  <div className="flex gap-2">
+                    <a
+                      href={previewDoc.url}
+                      download
+                      className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all"
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
+                    <button
+                      onClick={() => setPreviewDoc(null)}
+                      className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 bg-black p-4 overflow-auto flex items-center justify-center">
+                  {isPdf(previewDoc.url) ? (
+                    <iframe
+                      src={`${previewDoc.url}#toolbar=0`}
+                      className="w-full h-full border-0 rounded-lg"
+                      title="PDF Preview"
+                    />
+                  ) : (
+                    <img
+                      src={previewDoc.url}
+                      alt="Document Preview"
+                      className="max-w-full max-h-full object-contain rounded-lg"
+                    />
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
-
-      {/* Content */}
-      <div className="flex-1 p-8 space-y-10">
-
-        {/* --- SECTION 1: IDENTITY & ID --- */}
-        <section>
-          <div className="flex items-center gap-2 mb-6 text-[#F24C20]">
-            <User className="w-5 h-5" />
-            <h4 className="font-black uppercase tracking-[0.2em] text-[10px]">Government Identity</h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DocumentCard
-              title="PAN Card"
-              path={kyc.id_proof?.pan_card || user.kyc_details?.pan_card || user.kyc_details?.pancard}
-              onView={() => window.open(getFileUrl(kyc.id_proof?.pan_card || user.kyc_details?.pan_card || user.kyc_details?.pancard), '_blank')}
-            />
-            <DocumentCard
-              title="Aadhaar / ID Card"
-              path={kyc.id_proof?.aadhar_card || user.kyc_details?.aadhar_card}
-              onView={() => window.open(getFileUrl(kyc.id_proof?.aadhar_card || user.kyc_details?.aadhar_card), '_blank')}
-            />
-            <DocumentCard
-              title="Educational Doc"
-              isArray={true}
-              count={user.documents?.educational?.length || 0}
-              onView={() => user.documents?.educational?.[0] && window.open(getFileUrl(user.documents.educational[0]), '_blank')}
-            />
-            <DocumentCard
-              title="Exp. Letter"
-              path={user.documents?.experience_letter}
-              onView={() => window.open(getFileUrl(user.documents?.experience_letter), '_blank')}
-            />
-            <DocumentCard
-              title="Address Proof"
-              path={kyc.address_proof?.document_url}
-              onView={() => window.open(getFileUrl(kyc.address_proof?.document_url), '_blank')}
-            />
-            <DocumentCard
-              title="Passport / DL"
-              path={kyc.id_proof?.passport || kyc.id_proof?.driving_license}
-              onView={() => window.open(getFileUrl(kyc.id_proof?.passport || kyc.id_proof?.driving_license), '_blank')}
-            />
-          </div>
-        </section>
-
-        {/* --- SECTION 2: ROLE SPECIFIC DATA --- */}
-        {role === 'investor' ? (
-          <section>
-            <div className="flex items-center gap-2 mb-6 text-blue-500">
-              <Landmark className="w-5 h-5" />
-              <h4 className="font-black uppercase tracking-[0.2em] text-[10px]">Investor Financials</h4>
-            </div>
-            <div className="bg-gray-50 dark:bg-white/[0.02] p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 space-y-4 mb-4">
-              <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-2">
-                <span className="text-[10px] font-bold text-gray-500 uppercase">Investor Type</span>
-                <span className="text-sm font-black text-[#044071] dark:text-blue-400 uppercase">{kyc.financial_investor?.investor_type?.replace('_', ' ')}</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-2">
-                <span className="text-[10px] font-bold text-gray-500 uppercase">Ticket Size</span>
-                <span className="text-sm font-black text-[#044071] dark:text-blue-400">{kyc.financial_investor?.ticket_size_range}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-gray-500 uppercase">Bank Acc</span>
-                <span className="text-sm font-black text-[#044071] dark:text-blue-400">{kyc.financial_investor?.bank_details?.account_number}</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DocumentCard
-                title="Cancelled Cheque"
-                path={kyc.financial_investor?.bank_details?.cancelled_cheque}
-                onView={() => window.open(getFileUrl(kyc.financial_investor?.bank_details?.cancelled_cheque), '_blank')}
-              />
-              <DocumentCard
-                title="Portfolio / LinkedIn"
-                path={kyc.financial_investor?.linkedin_profile}
-                onView={() => window.open(kyc.financial_investor?.linkedin_profile, '_blank')}
-              />
-            </div>
-          </section>
-        ) : (
-          <section>
-            <div className="flex items-center gap-2 mb-6 text-emerald-500">
-              <Rocket className="w-5 h-5" />
-              <h4 className="font-black uppercase tracking-[0.2em] text-[10px]">Startup Infrastructure</h4>
-            </div>
-            <div className="bg-gray-50 dark:bg-white/[0.02] p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 space-y-4 mb-4">
-              <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-2">
-                <span className="text-[10px] font-bold text-gray-500 uppercase">Entity Name</span>
-                <span className="text-sm font-black text-emerald-500 uppercase">{kyc.startup_details?.startup_name}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-gray-500 uppercase">CIN Number</span>
-                <span className="text-sm font-black text-emerald-500">{kyc.business_verification?.cin_number}</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DocumentCard
-                title="Pitch Deck"
-                path={kyc.startup_details?.pitch_deck}
-                onView={() => window.open(getFileUrl(kyc.startup_details?.pitch_deck), '_blank')}
-              />
-              <DocumentCard
-                title="Inc. Certificate"
-                path={kyc.business_verification?.inc_certificate}
-                onView={() => window.open(getFileUrl(kyc.business_verification?.inc_certificate), '_blank')}
-              />
-            </div>
-          </section>
-        )}
-
-        {/* --- SECTION 3: COMPLIANCE --- */}
-        <section>
-          <div className="flex items-center gap-2 mb-6 text-purple-500">
-            <ShieldAlert className="w-5 h-5" />
-            <h4 className="font-black uppercase tracking-[0.2em] text-[10px]">Compliance & Declarations</h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <StatusChip label="NDA" active={kyc.compliance?.nda_accepted} />
-            <StatusChip label="Anti-Fraud" active={kyc.compliance?.fraud_declaration} />
-            <StatusChip label="IP Decl." active={kyc.compliance?.ip_declaration} />
-          </div>
-        </section>
-
-        {/* Status Warning */}
-        {user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified ? (
-          <div className="p-6 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
-              <CheckCircle className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm text-emerald-500 font-black uppercase italic tracking-tighter">Already Verified</p>
-              <p className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-widest mt-0.5">Account has passed architecture review.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="p-6 rounded-[2rem] bg-orange-500/10 border border-orange-500/20 flex items-center gap-4 text-orange-600">
-            <ShieldAlert className="w-10 h-10" />
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.1em]">Verification Notice</p>
-              <p className="text-xs font-bold leading-relaxed mt-1 italic">Compare documents with user: <span className="bg-orange-500 text-white px-2 py-0.5 rounded ml-1 not-italic">{user.full_name}</span></p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer Actions */}
-      <div className="p-8 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex gap-4">
-        <button
-          onClick={() => handleAction('reject')}
-          disabled={isProcessing}
-          className="flex-1 px-6 py-4 rounded-2xl border-2 border-red-500/10 text-red-500 font-black text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          <Ban className="w-5 h-5" />
-          Reject Profile
-        </button>
-        <button
-          onClick={() => handleAction('verify')}
-          disabled={isProcessing || user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified}
-          className="flex-1 px-6 py-4 rounded-2xl bg-[#F24C20] text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-[#d43a12] transition-all shadow-xl shadow-[#F24C20]/20 flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-          Approve Verified Status
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
-function StatusChip({ label, active }: { label: string, active: boolean }) {
-  return (
-    <div className={`px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest text-center transition-all ${active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/5 border-red-500/10 text-red-500/40'
-      }`}>
-      {label}: {active ? 'YES' : 'NO'}
     </div>
   );
 }
 
-function DocumentCard({ title, path, onView, isArray = false, count = 0 }: any) {
+// Helper Components
+function DocumentCard({ title, label, path, onPreview, isArray = false, count = 0, compact = false }: any) {
   const hasDoc = isArray ? count > 0 : !!path;
+  const url = hasDoc && !isArray ? getFileUrl(path) : '';
 
   return (
-    <div className={`p-4 rounded-[1.5rem] border-2 transition-all group ${hasDoc ? 'bg-white dark:bg-white/[0.03] border-gray-100 dark:border-white/5 shadow-sm hover:border-[#F24C20]/30' :
-        'bg-gray-50 dark:bg-white/[0.01] border-dashed border-gray-200 dark:border-white/[0.05] opacity-60'
+    <div className={`p-4 rounded-xl border transition-all ${hasDoc
+      ? 'bg-zinc-800/30 border-zinc-700 hover:border-[#F24C20]/50 cursor-pointer'
+      : 'bg-zinc-800/10 border-zinc-800 opacity-50'
       }`}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{title}</span>
-        {hasDoc && (
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        )}
+        <span className="text-xs font-medium text-zinc-400">{title}</span>
+        {hasDoc && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
       </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${hasDoc ? 'bg-[#F24C20]/10 text-[#F24C20] group-hover:scale-110' : 'bg-gray-200 dark:bg-white/5 text-gray-400'
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hasDoc ? 'bg-zinc-800' : 'bg-zinc-800/30'
             }`}>
-            <FileText className="w-5 h-5" />
+            {hasDoc && !isArray && isImage(url) ? (
+              <img src={url} className="w-full h-full rounded-lg object-cover" alt="Thumbnail" />
+            ) : (
+              <FileText className={`w-5 h-5 ${hasDoc ? 'text-[#F24C20]' : 'text-zinc-700'}`} />
+            )}
           </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-black truncate max-w-[100px] uppercase tracking-tighter">
-              {isArray ? `${count} DOCS` : hasDoc ? 'ENCRYPTED_FILE' : 'MISSING'}
+          <div>
+            <p className="text-sm font-medium text-white">
+              {hasDoc ? (isArray ? `${count} Document(s)` : 'Available') : 'Not Available'}
             </p>
-            <p className="text-[9px] font-bold text-gray-500 uppercase">
-              {hasDoc ? 'SECURE_REVIEW' : 'NOT_UPLOADED'}
-            </p>
+            {!compact && label && (
+              <p className="text-xs text-zinc-500">{label}</p>
+            )}
           </div>
         </div>
         {hasDoc && (
-          <div className="flex flex-col items-end gap-2">
-            {path && /\.(jpg|jpeg|png|webp|gif)$/i.test(path) && (
-              <div className="w-16 h-16 rounded-xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm">
-                <img src={getFileUrl(path)} className="w-full h-full object-cover" alt="preview" />
-              </div>
-            )}
-            <button
-              onClick={onView}
-              className="p-2 hover:bg-[#F24C20] hover:text-white rounded-xl text-neutral-400 transition-all border border-gray-100 dark:border-white/5 shadow-sm"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={() => onPreview(url)}
+            className="p-2 rounded-lg bg-zinc-800 hover:bg-[#F24C20] text-zinc-400 hover:text-white transition-all"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function StatusNode({ label, active }: { label: string; active: boolean }) {
+  return (
+    <div className={`p-3 rounded-xl text-center border transition-all ${active
+      ? 'bg-emerald-500/10 border-emerald-500/20'
+      : 'bg-red-500/5 border-red-500/10'
+      }`}>
+      <p className={`text-xs font-medium ${active ? 'text-emerald-500' : 'text-red-500/50'}`}>
+        {label}
+      </p>
+      <p className={`text-sm font-semibold mt-1 ${active ? 'text-emerald-500' : 'text-red-500/50'}`}>
+        {active ? 'Signed' : 'Pending'}
+      </p>
+    </div>
+  );
+}
+
+function InfoRow({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="flex justify-between items-center p-3 rounded-lg bg-zinc-800/20 border border-zinc-800">
+      <span className="text-xs text-zinc-500">{label}</span>
+      <span className={`text-sm font-medium ${highlight ? 'text-[#F24C20]' : 'text-white'}`}>
+        {value || '—'}
+      </span>
     </div>
   );
 }

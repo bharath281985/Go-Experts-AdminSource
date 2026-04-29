@@ -92,12 +92,12 @@ export function ProjectDetails({ projectId, onBack }: ProjectDetailsProps) {
             <div className="flex items-center gap-3 mb-4">
               <h1 className="text-2xl font-bold">{project.title}</h1>
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${isApproved
-                  ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                  : project.status === 'flagged'
-                    ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
-                    : isPending
-                      ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400'
-                      : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                : project.status === 'flagged'
+                  ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
+                  : isPending
+                    ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400'
+                    : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                 }`}>
                 {project.status === 'flagged' ? 'Flagged for Review' : isPending ? 'Pending Review' : isApproved ? 'Approved & Live' : 'Rejected'}
               </span>
@@ -169,8 +169,8 @@ export function ProjectDetails({ projectId, onBack }: ProjectDetailsProps) {
             whileTap={{ scale: 0.95 }}
             onClick={() => handleUpdateStatus('live')}
             className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${isApproved
-                ? 'bg-green-100 text-green-700 opacity-50 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20'
+              ? 'bg-green-100 text-green-700 opacity-50 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20'
               }`}
             disabled={isApproved}
           >
@@ -183,8 +183,8 @@ export function ProjectDetails({ projectId, onBack }: ProjectDetailsProps) {
             whileTap={{ scale: 0.95 }}
             onClick={() => handleUpdateStatus('rejected')}
             className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${isRejected
-                ? 'bg-red-100 text-red-700 opacity-50 cursor-not-allowed'
-                : 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20'
+              ? 'bg-red-100 text-red-700 opacity-50 cursor-not-allowed'
+              : 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20'
               }`}
             disabled={isRejected}
           >
@@ -197,8 +197,8 @@ export function ProjectDetails({ projectId, onBack }: ProjectDetailsProps) {
             whileTap={{ scale: 0.95 }}
             onClick={() => handleUpdateStatus('flagged')}
             className={`px-8 py-3 rounded-xl font-medium flex items-center gap-2 transition-all ${project.status === 'flagged'
-                ? 'bg-orange-100 text-orange-700 opacity-50 cursor-not-allowed'
-                : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+              ? 'bg-orange-100 text-orange-700 opacity-50 cursor-not-allowed'
+              : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
               }`}
             disabled={project.status === 'flagged'}
           >

@@ -2,7 +2,9 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
+import { io } from 'socket.io-client';
+import confetti from 'canvas-confetti';
 import { AdminLayout } from './components/AdminLayout';
 import { Dashboard } from './components/Dashboard';
 import { UsersList } from './components/UsersList';
@@ -184,6 +186,7 @@ export default function App() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedStartupIdeaId, setSelectedStartupIdeaId] = useState<string | null>(null);
   const [selectedVerifyUserId, setSelectedVerifyUserId] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showAddUser, setShowAddUser] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(() => {
     const path = window.location.pathname;
@@ -198,6 +201,66 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  // Handle Real-time Admin Notifications
+  useEffect(() => {
+    if (isAuthorized) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const socket = io(apiUrl);
+      
+      socket.on('connect', () => {
+        console.log('Admin connected to live notifications');
+      });
+
+      socket.on('admin_notification', (notification) => {
+        setUnreadCount(prev => prev + 1);
+        // Trigger Toast Notification
+        toast.info(notification.title, {
+          description: notification.message,
+          duration: 10000,
+          action: {
+            label: 'View',
+            onClick: () => {
+              if (notification.type === 'NEW_REGISTRATION') handleNavigate('users');
+              else if (notification.type === 'NEW_SUBSCRIPTION') handleNavigate('payments');
+            }
+          }
+        });
+        
+        // Celebration Blast for Paid Subscriptions
+        if (notification.type === 'NEW_SUBSCRIPTION') {
+          confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#F24C20', '#044071', '#ffffff']
+          });
+        }
+
+        // Audible Alert (optional but requested as "proper messaging")
+        try {
+          const context = new AudioContext();
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(440, context.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(880, context.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.1, context.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.3);
+          oscillator.connect(gain);
+          gain.connect(context.destination);
+          oscillator.start();
+          oscillator.stop(context.currentTime + 0.3);
+        } catch (e) {
+          console.warn('Audio alert failed:', e);
+        }
+      });
+
+      return () => {
+        socket.disconnect();
+      };
+    }
+  }, [isAuthorized]);
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
@@ -407,6 +470,8 @@ export default function App() {
           onNavigate={handleNavigate}
           onLogout={handleLogout}
           adminUser={getAdminUser()}
+          notificationCount={unreadCount}
+          onClearNotifications={() => setUnreadCount(0)}
         >
           {renderPage()}
         </AdminLayout>

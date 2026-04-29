@@ -29,6 +29,7 @@ export function EmailSettings({ onNavigate }: EmailSettingsProps) {
     email_from_name: '',
     email_reply_to: '',
     email_encryption: 'SSL',
+    admin_alert_email: '',
   });
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export function EmailSettings({ onNavigate }: EmailSettingsProps) {
           email_from_name: settingsData.settings.email_from_name || '',
           email_reply_to: settingsData.settings.email_reply_to || '',
           email_encryption: settingsData.settings.email_encryption || 'SSL',
+          admin_alert_email: settingsData.settings.admin_alert_email || '',
         });
       }
 
@@ -261,6 +263,29 @@ export function EmailSettings({ onNavigate }: EmailSettingsProps) {
                   <option>SSL</option>
                   <option>None</option>
                 </select>
+              </div>
+            </div>
+
+            <div className="pt-6 mt-6 border-t border-gray-100 dark:border-[#262626]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(242, 76, 32, 0.1)' }}>
+                  <AlertCircle className="w-5 h-5 text-[#F24C20]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#044071] dark:text-white">Admin Alert Destination</h3>
+                  <p className="text-xs text-gray-500">Email address where new registration & subscription alerts are sent</p>
+                </div>
+              </div>
+              <div className="max-w-md">
+                <label className="block text-sm font-medium mb-2">Recipient Email Address</label>
+                <input
+                  type="email"
+                  value={settings.admin_alert_email}
+                  onChange={(e) => setSettings({ ...settings, admin_alert_email: e.target.value })}
+                  placeholder="admin@goexperts.in"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
+                />
+                <p className="text-xs text-gray-400 mt-2 italic">If left empty, alerts will be sent to the default system email.</p>
               </div>
             </div>
           </div>

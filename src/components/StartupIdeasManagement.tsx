@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Rocket, 
-  Search, 
-  Filter, 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  TrendingUp, 
-  Users, 
+import {
+  Rocket,
+  Search,
+  Filter,
+  CheckCircle,
+  XCircle,
+  Eye,
+  TrendingUp,
+  Users,
   DollarSign,
   AlertCircle,
   MoreVertical,
@@ -59,8 +59,8 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
 
   const filteredIdeas = ideas.filter(idea => {
     const matchesFilter = filter === 'all' || idea.status === filter;
-    const matchesSearch = idea.title.toLowerCase().includes(search.toLowerCase()) || 
-                         idea.creator?.full_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = idea.title.toLowerCase().includes(search.toLowerCase()) ||
+      idea.creator?.full_name?.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -95,8 +95,8 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
       <div className="bg-white dark:bg-[#1a1a1a] p-4 rounded-xl border border-gray-100 dark:border-[#262626] flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search ideas or creators..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -105,7 +105,7 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
         </div>
         <div className="flex gap-2">
           {['all', 'pending', 'approved', 'rejected'].map(f => (
-            <button 
+            <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${filter === f ? 'bg-[#F24C20] text-white' : 'bg-gray-50 dark:bg-[#262626] text-gray-500 hover:bg-gray-100'}`}
@@ -132,9 +132,9 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-[#262626]">
             {loading ? (
-              [1,2,3].map(i => <tr key={i}><td colSpan={6} className="px-6 py-4 text-center animate-pulse text-gray-400">Loading ideas...</td></tr>)
+              [1, 2, 3].map(i => <tr key={i}><td colSpan={6} className="px-6 py-4 text-center animate-pulse text-gray-400">Loading ideas...</td></tr>)
             ) : filteredIdeas.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500">No ideas found matching your criteria</td></tr>
+              <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500">No ideas found matching your criteria</td></tr>
             ) : filteredIdeas.map(idea => (
               <tr key={idea._id} className="hover:bg-gray-50 dark:hover:bg-[#262626]/50 transition-colors">
                 <td className="px-6 py-4">
@@ -159,9 +159,9 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
                 </td>
                 <td className="px-6 py-4">
                   {idea.signedNDA ? (
-                    <a 
-                      href={`${api.defaults.baseURL?.replace('/api', '')}${idea.signedNDA}`} 
-                      target="_blank" 
+                    <a
+                      href={`${api.defaults.baseURL?.replace('/api', '')}${idea.signedNDA}`}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 text-blue-500 hover:text-blue-600 font-medium text-xs group"
                     >
@@ -175,11 +175,10 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                    idea.status === 'approved' ? 'bg-green-50 text-green-600' :
+                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${idea.status === 'approved' ? 'bg-green-50 text-green-600' :
                     idea.status === 'pending' ? 'bg-amber-50 text-amber-600' :
-                    'bg-red-50 text-red-600'
-                  }`}>
+                      'bg-red-50 text-red-600'
+                    }`}>
                     {idea.status}
                   </span>
                 </td>
@@ -193,14 +192,14 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
                   <div className="flex justify-end gap-2">
                     {idea.status === 'pending' && (
                       <>
-                        <button 
+                        <button
                           onClick={() => handleUpdateStatus(idea._id, 'approved')}
                           className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
                           title="Approve Idea"
                         >
                           <CheckCircle className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleUpdateStatus(idea._id, 'rejected')}
                           className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                           title="Reject Idea"
@@ -209,7 +208,7 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
                         </button>
                       </>
                     )}
-                    <button 
+                    <button
                       onClick={() => onSelectIdea(idea._id)}
                       className="p-2 bg-gray-50 dark:bg-[#262626] rounded-lg hover:bg-gray-100 transition-colors"
                       title="View Details"
@@ -235,7 +234,7 @@ function StatCard({ title, value, icon, color }: any) {
     purple: 'bg-purple-50 text-purple-600'
   };
   return (
-    <div className="bg-white dark:bg-[#1a1a1a] p-5 rounded-xl border border-gray-100 dark:border-[#262626] flex items-center gap-4">
+    <div className="bg-white dark:bg-[#1a1a1a] p-8 rounded-xl border border-gray-100 dark:border-[#262626] flex items-center gap-4">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colors[color]}`}>
         {icon}
       </div>

@@ -181,3 +181,79 @@
 html {
   font-size: var(--font-size);
 }
+
+.edit-user-panel {
+  background:
+    linear-gradient(180deg, rgba(242, 76, 32, 0.10) 0%, rgba(13, 18, 27, 0) 180px),
+    #0d121b !important;
+  border-left: 1px solid rgba(242, 76, 32, 0.22);
+  color: #f8fafc;
+}
+
+.edit-user-panel > div:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(13, 18, 27, 0.92);
+}
+
+.edit-user-panel h2,
+.edit-user-panel label,
+.edit-user-panel span {
+  color: #f8fafc !important;
+}
+
+.edit-user-panel p {
+  color: #94a3b8 !important;
+}
+
+.edit-user-panel section {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.edit-user-panel section > p:first-child {
+  margin-bottom: 10px !important;
+  color: #fb923c !important;
+  letter-spacing: 0.06em !important;
+}
+
+.edit-user-panel input,
+.edit-user-panel textarea {
+  min-height: 42px !important;
+  padding: 9px 12px !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background: rgba(2, 6, 23, 0.45) !important;
+  color: #f8fafc !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.edit-user-panel textarea {
+  min-height: 84px !important;
+}
+
+.edit-user-panel input::placeholder,
+.edit-user-panel textarea::placeholder {
+  color: #64748b !important;
+}
+
+.edit-user-panel input:focus,
+.edit-user-panel textarea:focus {
+  border-color: #F24C20 !important;
+  box-shadow: 0 0 0 3px rgba(242, 76, 32, 0.16);
+}
+
+.edit-user-panel button {
+  min-height: 38px;
+}
+
+.edit-user-panel > div:last-child {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(13, 18, 27, 0.96) !important;
+}
+
+.edit-user-panel > div:last-child button:first-child {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}

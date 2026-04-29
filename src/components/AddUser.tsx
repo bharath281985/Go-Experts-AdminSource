@@ -60,6 +60,10 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
     status: 'active',
     password: '',
     confirmPassword: '',
+    slug: '',
+    metaTitle: '',
+    metaKeywords: '',
+    metaDescription: '',
   });
 
   const availableSkills = [
@@ -148,16 +152,16 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
         onNavigate={onNavigate}
       />
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-[#044071] dark:text-white mb-2">Add New User</h1>
-          <p className="text-gray-600 dark:text-gray-400">Create a new user account on the platform</p>
+          <h1 className="text-4xl font-black text-white mb-2 uppercase tracking-tighter italic">Add New Identity</h1>
+          <p className="text-gray-500 font-medium uppercase tracking-widest text-[10px]">Deploying a new user account to the platform architecture</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onBack}
-          className="px-6 py-3 rounded-xl font-medium flex items-center gap-2 border border-gray-300 dark:border-[#262626] hover:bg-gray-50 dark:hover:bg-[#262626]"
+          className="px-6 py-3 rounded-2xl font-bold flex items-center gap-2 border border-[#27272a] bg-[#18181b] hover:bg-[#27272a] text-gray-400 hover:text-white transition-all"
         >
           <X className="w-5 h-5" />
           Cancel
@@ -168,127 +172,233 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6 flex items-center gap-3"
+          className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 mb-8 flex items-center gap-4"
         >
-          <CheckCircle className="w-5 h-5 text-green-600" />
-          <span className="text-green-800 dark:text-green-200 font-medium">User created successfully! Redirecting...</span>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
+            <CheckCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-emerald-500 font-black uppercase italic tracking-tighter">Identity Created</p>
+            <p className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-widest mt-0.5">Redirecting to system registry...</p>
+          </div>
         </motion.div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Image Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]"
-          >
-            <h3 className="text-lg font-bold text-[#044071] dark:text-white mb-4">Profile Image</h3>
-            <div className="flex flex-col items-center">
-              <div className="relative w-32 h-32 mb-4">
-                {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  <div className="w-full h-full rounded-full bg-gray-200 dark:bg-[#262626] flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-gray-400" />
-                  </div>
-                )}
-                <label className="absolute bottom-0 right-0 bg-[#F24C20] hover:bg-[#d43a12] text-white p-2 rounded-full cursor-pointer transition-colors">
-                  <Upload className="w-4 h-4" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
+          <div className="space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black rounded-[2.5rem] p-8 border border-[#27272a] shadow-xl"
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <Upload className="w-5 h-5 text-[#F24C20]" />
+                <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Profile Vision</h3>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                Click to upload profile photo
-                <br />
-                JPG, PNG or GIF (max. 5MB)
-              </p>
-            </div>
 
-            {/* Quick Toggles */}
-            <div className="mt-6 space-y-4">
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#262626]">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium">Verified Account</label>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, verified: !formData.verified })}
-                    className={`relative w-12 h-6 rounded-full transition-colors ${formData.verified ? 'bg-[#F24C20]' : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
-                  >
-                    <motion.div
-                      animate={{ x: formData.verified ? 24 : 2 }}
-                      className="absolute top-1 w-4 h-4 bg-white rounded-full"
+              <div className="flex flex-col items-center">
+                <div className="relative w-40 h-40 mb-6">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#F24C20] to-[#F24C20]/20 animate-pulse blur-2xl opacity-20" />
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="relative w-full h-full rounded-full object-cover border-2 border-[#27272a]" />
+                  ) : (
+                    <div className="relative w-full h-full rounded-full bg-[#09090b] border-2 border-dashed border-[#27272a] flex flex-col items-center justify-center gap-2 group hover:border-[#F24C20]/50 transition-all">
+                      <Upload className="w-8 h-8 text-gray-600 group-hover:text-[#F24C20]" />
+                    </div>
+                  )}
+                  <label className="absolute bottom-2 right-2 bg-[#F24C20] hover:bg-[#d43a12] text-white p-3 rounded-2xl cursor-pointer transition-all shadow-xl shadow-[#F24C20]/20 hover:scale-110">
+                    <Upload className="w-5 h-5" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
                     />
-                  </button>
+                  </label>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Mark account as verified</p>
+                <p className="text-[10px] text-gray-500 text-center font-bold uppercase tracking-widest leading-relaxed">
+                  Identity Visualization Upload
+                  <br />
+                  <span className="text-gray-700">Supported: JPG, PNG, GIF (5MB MAX)</span>
+                </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Account Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
-                >
-                  <option value="active">Active</option>
-                  <option value="suspended">Suspended</option>
-                  <option value="blocked">Blocked</option>
-                </select>
+              {/* Quick Toggles */}
+              <div className="mt-10 space-y-4">
+                <div className="p-6 rounded-3xl bg-[#09090b] border border-[#27272a]">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Verified Access</label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, verified: !formData.verified })}
+                      className={`relative w-14 h-7 rounded-full transition-all ${formData.verified ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-gray-800'
+                        }`}
+                    >
+                      <motion.div
+                        animate={{ x: formData.verified ? 30 : 4 }}
+                        className="absolute top-1.5 w-4 h-4 bg-white rounded-full shadow-sm"
+                      />
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">Bypass manual verification</p>
+                </div>
+
+                <div className="p-6 rounded-3xl bg-[#09090b] border border-[#27272a]">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Initial System Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-[#27272a] bg-black text-sm font-bold text-white focus:outline-none focus:border-[#F24C20] transition-all"
+                  >
+                    <option value="active">ACTIVE_PROTOCOL</option>
+                    <option value="suspended">SUSPENDED_ACCESS</option>
+                    <option value="blocked">BLOCKED_NODE</option>
+                  </select>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+
+            {/* SEO Section (Left Column) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-black rounded-[2.5rem] p-8 border border-[#27272a] shadow-xl"
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <CheckCircle className="w-5 h-5 text-purple-500" />
+                <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">SEO Specification</h3>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Profile Slug</label>
+                  <input
+                    type="text"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-[#27272a] bg-[#09090b] text-white text-xs font-bold focus:outline-none focus:border-[#F24C20] transition-all"
+                    placeholder="e.g. john-doe-expert"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Meta Title</label>
+                  <input
+                    type="text"
+                    value={formData.metaTitle}
+                    onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-[#27272a] bg-[#09090b] text-white text-xs font-bold focus:outline-none focus:border-[#F24C20] transition-all"
+                    placeholder="Hire John Doe on Go Experts"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Meta Keywords</label>
+                  <div 
+                    className="w-full min-h-[45px] p-2 rounded-xl border border-[#27272a] bg-[#09090b] flex flex-wrap gap-2 items-center cursor-text transition-all focus-within:border-[#F24C20]"
+                    onClick={() => document.getElementById('meta-kw-input')?.focus()}
+                  >
+                    {formData.metaKeywords.split(',').filter(Boolean).map((kw, i) => (
+                      <div key={i} className="bg-[#18181b] border border-[#27272a] text-[10px] font-bold text-gray-300 px-2 py-1 rounded-lg flex items-center gap-2">
+                        {kw}
+                        <X 
+                          size={10} 
+                          className="cursor-pointer hover:text-white" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const kws = formData.metaKeywords.split(',').filter(Boolean);
+                            kws.splice(i, 1);
+                            setFormData({ ...formData, metaKeywords: kws.join(',') });
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <input 
+                      id="meta-kw-input"
+                      type="text" 
+                      className="flex-1 min-w-[80px] bg-transparent border-none outline-none text-white text-xs font-bold"
+                      placeholder={!formData.metaKeywords ? "Type and press Enter..." : ""}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          const val = e.currentTarget.value.trim();
+                          if (val) {
+                            const kws = formData.metaKeywords.split(',').filter(Boolean);
+                            if (!kws.includes(val)) {
+                              setFormData({ ...formData, metaKeywords: formData.metaKeywords ? `${formData.metaKeywords},${val}` : val });
+                            }
+                            e.currentTarget.value = '';
+                          }
+                        } else if (e.key === 'Backspace' && !e.currentTarget.value && formData.metaKeywords) {
+                          const kws = formData.metaKeywords.split(',').filter(Boolean);
+                          kws.pop();
+                          setFormData({ ...formData, metaKeywords: kws.join(',') });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Meta Description</label>
+                  <textarea
+                    value={formData.metaDescription}
+                    onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl border border-[#27272a] bg-[#09090b] text-white text-xs font-bold focus:outline-none focus:border-[#F24C20] transition-all resize-none"
+                    placeholder="Short description for search engines..."
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </div>
 
           {/* Main Form */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="lg:col-span-2 bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#262626]"
+            className="lg:col-span-2 bg-black rounded-[2.5rem] p-8 border border-[#27272a] shadow-xl h-fit"
           >
-            <h3 className="text-lg font-bold text-[#044071] dark:text-white mb-6">User Information</h3>
+            <div className="flex items-center gap-3 mb-10">
+               <AlertCircle className="w-5 h-5 text-[#F24C20]" />
+               <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Deployment Specifications</h3>
+            </div>
 
-            <div className="space-y-4">
+            <div className="space-y-8">
               {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    First Name <span className="text-[#F24C20]">*</span>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">
+                    Identity Prefix <span className="text-[#F24C20]">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${errors.firstName ? 'border-red-500' : 'border-gray-200 dark:border-[#262626]'
-                      } bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]`}
-                    placeholder="John"
+                    className={`w-full px-6 py-4 rounded-2xl border ${errors.firstName ? 'border-red-500 bg-red-500/5' : 'border-[#27272a] bg-[#09090b]'
+                      } text-white font-bold placeholder:text-gray-700 focus:outline-none focus:border-[#F24C20] transition-all`}
+                    placeholder="First Name"
                   />
                   {errors.firstName && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {errors.firstName}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Last Name <span className="text-[#F24C20]">*</span>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">
+                    Identity Suffix <span className="text-[#F24C20]">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${errors.lastName ? 'border-red-500' : 'border-gray-200 dark:border-[#262626]'
-                      } bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]`}
-                    placeholder="Doe"
+                    className={`w-full px-6 py-4 rounded-2xl border ${errors.lastName ? 'border-red-500 bg-red-500/5' : 'border-[#27272a] bg-[#09090b]'
+                      } text-white font-bold placeholder:text-gray-700 focus:outline-none focus:border-[#F24C20] transition-all`}
+                    placeholder="Last Name"
                   />
                   {errors.lastName && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {errors.lastName}
                     </p>
                   )}
@@ -296,39 +406,39 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
               </div>
 
               {/* Email & Phone */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Email Address <span className="text-[#F24C20]">*</span>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">
+                    Communication Port <span className="text-[#F24C20]">*</span>
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-[#262626]'
-                      } bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]`}
-                    placeholder="john.doe@example.com"
+                    className={`w-full px-6 py-4 rounded-2xl border ${errors.email ? 'border-red-500 bg-red-500/5' : 'border-[#27272a] bg-[#09090b]'
+                      } text-white font-bold placeholder:text-gray-700 focus:outline-none focus:border-[#F24C20] transition-all`}
+                    placeholder="admin@experts.com"
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {errors.email}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Phone Number <span className="text-[#F24C20]">*</span>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">
+                    Secure Line <span className="text-[#F24C20]">*</span>
                   </label>
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${errors.phone ? 'border-red-500' : 'border-gray-200 dark:border-[#262626]'
-                      } bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]`}
-                    placeholder="+1 (555) 000-0000"
+                    className={`w-full px-6 py-4 rounded-2xl border ${errors.phone ? 'border-red-500 bg-red-500/5' : 'border-[#27272a] bg-[#09090b]'
+                      } text-white font-bold placeholder:text-gray-700 focus:outline-none focus:border-[#F24C20] transition-all`}
+                    placeholder="+91 00000 00000"
                   />
                   {errors.phone && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {errors.phone}
                     </p>
                   )}
@@ -337,36 +447,36 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  User Role <span className="text-[#F24C20]">*</span>
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">
+                  System Architecture Role <span className="text-[#F24C20]">*</span>
                 </label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
+                  className="w-full px-6 py-4 rounded-2xl border border-[#27272a] bg-[#09090b] text-white font-bold focus:outline-none focus:border-[#F24C20] transition-all"
                 >
-                  <option value="client">Client</option>
-                  <option value="freelancer">Freelancer</option>
-                  <option value="both">Both (Client & Freelancer)</option>
-                  <option value="admin">Admin</option>
+                  <option value="client">CLIENT_PORTAL</option>
+                  <option value="freelancer">FREELANCE_ENGINEER</option>
+                  <option value="both">HYBRID_SYSTEM</option>
+                  <option value="admin">ROOT_ADMIN</option>
                 </select>
               </div>
 
               {/* Location */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative">
-                  <label className="block text-sm font-medium mb-2">Location/City</label>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">Geographic Node</label>
                   <input
                     type="text"
                     value={formData.location}
                     onChange={(e) => handleLocationChange(e.target.value)}
                     onFocus={() => formData.location.length > 1 && suggestions.length > 0 && setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
-                    placeholder="e.g. Mumbai, Maharashtra"
+                    className="w-full px-6 py-4 rounded-2xl border border-[#27272a] bg-[#09090b] text-white font-bold placeholder:text-gray-700 focus:outline-none focus:border-[#F24C20] transition-all"
+                    placeholder="e.g. Mumbai, India"
                   />
                   {showSuggestions && (
-                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#262626] rounded-xl shadow-xl overflow-hidden">
+                    <div className="absolute z-50 w-full mt-2 bg-[#09090b] border border-[#27272a] rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
                       {suggestions.map((suggestion, index) => (
                         <button
                           key={index}
@@ -375,7 +485,7 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
                             setFormData(prev => ({ ...prev, location: suggestion }));
                             setShowSuggestions(false);
                           }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-[#262626] text-sm transition-colors"
+                          className="w-full px-6 py-3 text-left hover:bg-[#18181b] text-white text-xs font-bold transition-colors border-b border-[#27272a] last:border-0"
                         >
                           {suggestion}
                         </button>
@@ -384,18 +494,17 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Country</label>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">Country Code</label>
                   <select
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
+                    className="w-full px-6 py-4 rounded-2xl border border-[#27272a] bg-[#09090b] text-white font-bold focus:outline-none focus:border-[#F24C20] transition-all"
                   >
-                    <option value="">Select Country</option>
-                    <option value="US">United States</option>
-                    <option value="IN">India</option>
-                    <option value="UK">United Kingdom</option>
-                    <option value="CA">Canada</option>
-                    <option value="AU">Australia</option>
+                    <option value="">SELECT_REGION</option>
+                    <option value="IN">INDIA</option>
+                    <option value="US">UNITED_STATES</option>
+                    <option value="UK">UNITED_KINGDOM</option>
+                    <option value="AE">UAE</option>
                   </select>
                 </div>
               </div>
@@ -403,8 +512,8 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
               {/* Skills (for Freelancers) */}
               {(formData.role === 'freelancer' || formData.role === 'both') && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Skills <span className="text-[#F24C20]">*</span>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">
+                    Technical Capabilities <span className="text-[#F24C20]">*</span>
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {availableSkills.map((skill) => (
@@ -412,9 +521,9 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
                         key={skill}
                         type="button"
                         onClick={() => toggleSkill(skill)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${formData.skills.includes(skill)
-                          ? 'bg-[#F24C20] text-white'
-                          : 'bg-gray-100 dark:bg-[#262626] hover:bg-gray-200 dark:hover:bg-[#1a1a1a]'
+                        className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${formData.skills.includes(skill)
+                          ? 'bg-[#F24C20] border-[#F24C20] text-white shadow-lg shadow-[#F24C20]/20'
+                          : 'bg-[#09090b] border-[#27272a] text-gray-500 hover:border-gray-600 hover:text-gray-300'
                           }`}
                       >
                         {skill}
@@ -422,62 +531,47 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
                     ))}
                   </div>
                   {errors.skills && (
-                    <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                    <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-3 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {errors.skills}
                     </p>
                   )}
                 </div>
               )}
 
-              {/* Hourly Rate (for Freelancers) */}
-              {(formData.role === 'freelancer' || formData.role === 'both') && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Hourly Rate (USD)</label>
-                  <input
-                    type="number"
-                    value={formData.hourlyRate}
-                    onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#262626] bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
-                    placeholder="25"
-                    min="0"
-                  />
-                </div>
-              )}
-
               {/* Password Fields */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Password <span className="text-[#F24C20]">*</span>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">
+                    Access Key <span className="text-[#F24C20]">*</span>
                   </label>
                   <input
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${errors.password ? 'border-red-500' : 'border-gray-200 dark:border-[#262626]'
-                      } bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]`}
+                    className={`w-full px-6 py-4 rounded-2xl border ${errors.password ? 'border-red-500 bg-red-500/5' : 'border-[#27272a] bg-[#09090b]'
+                      } text-white font-bold placeholder:text-gray-700 focus:outline-none focus:border-[#F24C20] transition-all`}
                     placeholder="••••••••"
                   />
                   {errors.password && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {errors.password}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Confirm Password <span className="text-[#F24C20]">*</span>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-3">
+                    Verify Key <span className="text-[#F24C20]">*</span>
                   </label>
                   <input
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200 dark:border-[#262626]'
-                      } bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]`}
+                    className={`w-full px-6 py-4 rounded-2xl border ${errors.confirmPassword ? 'border-red-500 bg-red-500/5' : 'border-[#27272a] bg-[#09090b]'
+                      } text-white font-bold placeholder:text-gray-700 focus:outline-none focus:border-[#F24C20] transition-all`}
                     placeholder="••••••••"
                   />
                   {errors.confirmPassword && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <p className="text-red-500 text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> {errors.confirmPassword}
                     </p>
                   )}
@@ -486,24 +580,24 @@ export function AddUser({ onNavigate, onBack }: AddUserProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 mt-8">
+            <div className="flex gap-4 mt-12">
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex-1 bg-[#F24C20] hover:bg-[#d43a12] text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+                className="flex-[2] bg-[#F24C20] hover:bg-[#d43a12] text-white px-8 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs transition-all shadow-xl shadow-[#F24C20]/20 flex items-center justify-center gap-3"
               >
                 <Save className="w-5 h-5" />
-                Create User
+                Initialize Deployment
               </motion.button>
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onBack}
-                className="px-6 py-3 rounded-xl font-medium border border-gray-300 dark:border-[#262626] hover:bg-gray-50 dark:hover:bg-[#262626]"
+                className="flex-1 px-8 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs border border-[#27272a] bg-[#18181b] text-gray-500 hover:text-white hover:bg-[#27272a] transition-all"
               >
-                Cancel
+                Abort
               </motion.button>
             </div>
           </motion.div>

@@ -44,31 +44,35 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
   return typeof document !== 'undefined' ? createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white dark:bg-[#1a1a1a] rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden border border-gray-200 dark:border-white/10 shadow-2xl flex flex-col"
+            style={{ background: '#09090b' }}
+            className="rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[#27272a] shadow-2xl flex flex-col"
           >
             {/* Header */}
-            <div className="p-8 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.02]">
+            <div className="p-8 border-b border-[#27272a] flex items-center justify-between bg-black">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#F24C20]/10 flex items-center justify-center">
                   <ShieldCheck className="w-6 h-6 text-[#F24C20]" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-[#044071] dark:text-white uppercase tracking-tighter italic">Review Command</h3>
-                  <p className="text-sm text-gray-500 font-bold uppercase tracking-widest text-[10px]">Verifying {role?.replace('_', ' ')}: {user.full_name}</p>
+                  <h3 className="text-xl font-bold text-white uppercase tracking-tighter italic">Review Command</h3>
+                  <p className="text-sm text-gray-400 font-bold uppercase tracking-widest text-[10px]">Verifying {role?.replace('_', ' ')}: {user.full_name}</p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition-colors">
+              <button 
+                onClick={onClose} 
+                className="p-2 border border-[#27272a] bg-[#18181b] hover:bg-[#27272a] text-gray-400 hover:text-white rounded-xl transition-colors"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar bg-[#09090b]">
               
               {/* --- SECTION 1: IDENTITY & ID --- */}
               <section>
@@ -107,18 +111,18 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
                     <Landmark className="w-5 h-5" />
                     <h4 className="font-black uppercase tracking-[0.2em] text-[10px]">Investor Financials</h4>
                   </div>
-                  <div className="bg-gray-50 dark:bg-white/[0.02] p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 space-y-4 mb-4">
-                    <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-2">
+                  <div className="bg-[#18181b] p-6 rounded-[2rem] border border-[#27272a] space-y-4 mb-4">
+                    <div className="flex justify-between items-center border-b border-[#27272a] pb-2">
                         <span className="text-[10px] font-bold text-gray-500 uppercase">Investor Type</span>
-                        <span className="text-sm font-black text-[#044071] dark:text-blue-400 uppercase">{kyc.financial_investor?.investor_type?.replace('_', ' ')}</span>
+                        <span className="text-sm font-black text-blue-400 uppercase">{kyc.financial_investor?.investor_type?.replace('_', ' ')}</span>
                     </div>
-                    <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-2">
+                    <div className="flex justify-between items-center border-b border-[#27272a] pb-2">
                         <span className="text-[10px] font-bold text-gray-500 uppercase">Ticket Size</span>
-                        <span className="text-sm font-black text-[#044071] dark:text-blue-400">{kyc.financial_investor?.ticket_size_range}</span>
+                        <span className="text-sm font-black text-blue-400">{kyc.financial_investor?.ticket_size_range}</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-gray-500 uppercase">Bank Acc</span>
-                        <span className="text-sm font-black text-[#044071] dark:text-blue-400">{kyc.financial_investor?.bank_details?.account_number}</span>
+                        <span className="text-sm font-black text-blue-400">{kyc.financial_investor?.bank_details?.account_number}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,8 +144,8 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
                     <Rocket className="w-5 h-5" />
                     <h4 className="font-black uppercase tracking-[0.2em] text-[10px]">Startup Infrastructure</h4>
                   </div>
-                  <div className="bg-gray-50 dark:bg-white/[0.02] p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 space-y-4 mb-4">
-                    <div className="flex justify-between items-center border-b border-gray-100 dark:border-white/5 pb-2">
+                  <div className="bg-[#18181b] p-6 rounded-[2rem] border border-[#27272a] space-y-4 mb-4">
+                    <div className="flex justify-between items-center border-b border-[#27272a] pb-2">
                         <span className="text-[10px] font-bold text-gray-500 uppercase">Entity Name</span>
                         <span className="text-sm font-black text-emerald-500 uppercase">{kyc.startup_details?.startup_name}</span>
                     </div>
@@ -201,7 +205,7 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
             </div>
 
             {/* Footer Actions */}
-            <div className="p-8 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex gap-4">
+            <div className="p-8 border-t border-[#27272a] bg-black flex gap-4">
               <button
                 onClick={() => handleAction('reject')}
                 disabled={isProcessing}

@@ -27,10 +27,10 @@ interface StartupIdeaLegalSectionProps {
 export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = ({ type }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   // For Terms & Privacy
   const [pageData, setPageData] = useState<PageData | null>(null);
-  
+
   // For FAQ
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [search, setSearch] = useState('');
@@ -39,10 +39,10 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
   const [faqForm, setFaqForm] = useState({ question: '', answer: '', sort_order: 0 });
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
 
-  const title = type === 'faq' 
-    ? 'Startup Ideas FAQ' 
-    : type === 'terms' 
-      ? 'Startup Ideas Terms & Conditions' 
+  const title = type === 'faq'
+    ? 'Startup Ideas FAQ'
+    : type === 'terms'
+      ? 'Startup Ideas Terms & Conditions'
       : 'Startup Ideas Privacy Policy';
 
   const fetchData = async () => {
@@ -137,8 +137,8 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
     setShowFaqForm(true);
   };
 
-  const filteredFaqs = faqs.filter(f => 
-    f.question.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredFaqs = faqs.filter(f =>
+    f.question.toLowerCase().includes(search.toLowerCase()) ||
     f.answer.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -152,12 +152,15 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
   }
 
   // --- RENDERING FAQ VIEW ---
+
+  // --- RENDERING FAQ VIEW ---
   if (type === 'faq') {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between rounded-[2rem] border border-[#262626] bg-[#111111] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+        {/* Header */}
+        <div className="flex items-center justify-between rounded-2xl border border-[#262626] bg-[#111111] p-6 shadow-lg">
           <div className="flex items-center gap-4">
-            <div className="rounded-2xl border border-[#F24C20]/20 bg-[#F24C20]/10 p-3">
+            <div className="rounded-xl border border-[#F24C20]/20 bg-[#F24C20]/10 p-3">
               <HelpCircle className="w-8 h-8 text-[#F24C20]" />
             </div>
             <div>
@@ -170,7 +173,7 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowFaqForm(true)}
-              className="flex items-center gap-2 bg-[#F24C20] hover:bg-[#E23C10] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md shadow-orange-500/10"
+              className="flex items-center gap-2 bg-[#F24C20] hover:bg-[#E23C10] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md"
             >
               <Plus className="w-5 h-5" />
               Add FAQ
@@ -178,41 +181,45 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
           )}
         </div>
 
+        {/* Add/Edit Form */}
         <AnimatePresence>
           {showFaqForm && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="rounded-[2rem] border border-[#262626] bg-[#111111] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.3)]"
+              className="rounded-2xl border border-[#262626] bg-[#111111] p-6 shadow-lg"
             >
-              <div className="flex items-center justify-between border-b border-[#262626] pb-4">
-                <h3 className="text-xl font-black text-white">{editingFaq ? 'Edit FAQ' : 'Create New FAQ'}</h3>
-                <button onClick={() => { setShowFaqForm(false); setEditingFaq(null); }} className="text-slate-400 transition-colors hover:text-white">
-                  Close
+              <div className="flex items-center justify-between border-b border-[#262626] pb-4 mb-6">
+                <h3 className="text-xl font-bold text-white">{editingFaq ? 'Edit FAQ' : 'Create New FAQ'}</h3>
+                <button
+                  onClick={() => { setShowFaqForm(false); setEditingFaq(null); }}
+                  className="text-slate-400 transition-colors hover:text-white text-xl"
+                >
+                  ×
                 </button>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-3 space-y-4">
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-4">
                   <div>
                     <label className="mb-2 block text-sm font-bold uppercase tracking-wider text-slate-400">Question *</label>
                     <input
                       type="text"
                       value={faqForm.question}
                       onChange={e => setFaqForm({ ...faqForm, question: e.target.value })}
-                      className="w-full rounded-2xl border border-[#303030] bg-[#181818] px-5 py-3.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
+                      className="w-full rounded-xl border border-[#303030] bg-[#181818] px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
                       placeholder="e.g. How does the startup credit system work?"
                     />
                   </div>
-                  <div>
+                  <div className="prose-editor startup-legal-editor">
                     <label className="mb-2 block text-sm font-bold uppercase tracking-wider text-slate-400">Answer *</label>
                     <AdminRichTextEditor
                       value={faqForm.answer}
                       onChange={(answer) => setFaqForm({ ...faqForm, answer })}
                       placeholder="Enter the detailed answer here..."
-                      minHeight={220}
-                      toolbarPreset="compact"
+                      minHeight={200}
+                      toolbarPreset="full"
                     />
                   </div>
                 </div>
@@ -223,22 +230,22 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
                       type="number"
                       value={faqForm.sort_order}
                       onChange={e => setFaqForm({ ...faqForm, sort_order: parseInt(e.target.value) || 0 })}
-                      className="w-full rounded-2xl border border-[#303030] bg-[#181818] px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
+                      className="w-full rounded-xl border border-[#303030] bg-[#181818] px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
                     />
-                    <p className="mt-2 text-[10px] text-slate-500">Determines display sequence on the website.</p>
+                    <p className="mt-2 text-xs text-slate-500">Determines display sequence on the website.</p>
                   </div>
                   <div className="pt-4 space-y-3">
                     <button
                       onClick={handleSubmitFaq}
                       disabled={saving}
-                      className="w-full bg-[#F24C20] text-white px-6 py-4 rounded-2xl font-black hover:bg-[#E23C10] disabled:opacity-50 transition-all flex items-center justify-center gap-3 shadow-lg shadow-orange-500/20"
+                      className="w-full bg-[#F24C20] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#E23C10] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                     >
                       {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                       {saving ? 'Saving...' : editingFaq ? 'Update' : 'Publish'}
                     </button>
                     <button
                       onClick={() => { setShowFaqForm(false); setEditingFaq(null); }}
-                      className="w-full rounded-2xl border border-[#303030] px-6 py-4 font-bold text-slate-300 transition-all hover:bg-[#181818] hover:text-white"
+                      className="w-full rounded-xl border border-[#303030] px-6 py-3 font-bold text-slate-300 transition-all hover:bg-[#181818] hover:text-white"
                     >
                       Cancel
                     </button>
@@ -250,108 +257,146 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
         </AnimatePresence>
 
         {/* Search Bar */}
-        <div className="relative group">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-6 transition-colors group-focus-within:text-[#F24C20]">
-            <Search className="h-5 w-5 text-slate-500" />
-          </div>
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-8 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
           <input
             type="text"
             placeholder="Search through FAQs..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-[#262626] bg-[#111111] py-4 pl-14 pr-6 text-base text-white placeholder:text-slate-500 shadow-[0_16px_50px_rgba(0,0,0,0.22)] transition-all focus:border-[#F24C20]/40 focus:outline-none focus:ring-4 focus:ring-[#F24C20]/10"
+            className="w-full rounded-xl border border-[#262626] bg-[#111111] py-3 pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F24C20] focus:border-transparent"
           />
         </div>
 
-        <div className="space-y-4">
-          {filteredFaqs.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }}
-              className="rounded-[2rem] border border-dashed border-[#2f2f2f] bg-[#111111] py-24 text-center"
-            >
-              <div className="mx-auto mb-6 w-fit rounded-full bg-[#181818] p-6">
-                <MessageCircle className="h-12 w-12 text-slate-600" />
-              </div>
-              <h3 className="mb-2 text-xl font-bold text-white">{search ? 'No matches found' : 'Everything is empty'}</h3>
-              <p className="mx-auto max-w-xs text-slate-400">
-                {search ? `We couldn't find any FAQ covering "${search}"` : 'Start building your knowledge base by clicking Add FAQ'}
-              </p>
-            </motion.div>
-          ) : (
-            filteredFaqs.map((faq, index) => (
-              <motion.div 
-                key={faq._id} 
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`overflow-hidden rounded-[2rem] border bg-[#111111] transition-all duration-300 ${expandedFaqId === faq._id ? 'border-[#F24C20]/30 shadow-[0_24px_80px_rgba(242,76,32,0.08)]' : 'border-[#262626] shadow-[0_18px_60px_rgba(0,0,0,0.22)] hover:border-[#F24C20]/20'}`}
-              >
-                <div 
-                  className="flex items-center gap-6 p-5 cursor-pointer"
-                  onClick={() => setExpandedFaqId(expandedFaqId === faq._id ? null : faq._id)}
-                >
-                  <div className="flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-[#303030] bg-[#181818] transition-colors">
-                    <span className="text-[10px] font-bold uppercase text-slate-500">Order</span>
-                    <span className="text-lg font-bold text-white">{faq.sort_order}</span>
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="truncate-2-lines text-lg font-bold leading-snug text-white">{faq.question}</h3>
-                    <div className="flex items-center gap-3 mt-2">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${faq.is_active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                        {faq.is_active ? 'Published' : 'Hidden'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <button 
-                      onClick={() => handleToggleFaq(faq._id)} 
-                      title={faq.is_active ? 'Hide from website' : 'Publish to website'}
-                      className={`rounded-xl p-2.5 transition-all ${faq.is_active ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-slate-500 hover:bg-[#1d1d1d]'}`}
-                    >
-                      {faq.is_active ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
-                    </button>
-                    <button 
-                      onClick={() => handleEditFaq(faq)} 
-                      className="rounded-xl p-2.5 text-slate-500 transition-all hover:bg-[#F24C20]/10 hover:text-[#F24C20]"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteFaq(faq._id)} 
-                      className="rounded-xl p-2.5 text-slate-500 transition-all hover:bg-red-500/10 hover:text-red-400"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                    <div className={`p-1 text-slate-600 transition-transform duration-300 ${expandedFaqId === faq._id ? 'rotate-180 text-white' : ''}`}>
-                      <ChevronDown className="w-5 h-5" />
-                    </div>
-                  </div>
-                </div>
-                
-                <AnimatePresence>
-                  {expandedFaqId === faq._id && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="border-t border-[#262626] bg-[#0d0d0d] px-6 pb-8 pt-2"
-                    >
-                      <div className="rounded-2xl border border-[#262626] bg-[#161616] p-6">
-                        <label className="mb-3 block text-[10px] font-black uppercase text-slate-500">Answer</label>
-                        <div
-                          className="prose max-w-none font-medium text-slate-200 prose-headings:text-white prose-p:text-slate-300 prose-strong:text-white prose-li:text-slate-300"
-                          dangerouslySetInnerHTML={{ __html: faq.answer }}
-                        />
+        {/* FAQ Table */}
+        <div className="rounded-xl border border-[#262626] bg-[#111111] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#0a0a0a] border-b border-[#262626]">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider w-24">
+                    Sort Order
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Question
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider w-28">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider w-36">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#262626]">
+                {filteredFaqs.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-[#181818] flex items-center justify-center">
+                          <MessageCircle className="w-8 h-8 text-slate-600" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">
+                          {search ? 'No matches found' : 'No FAQs yet'}
+                        </h3>
+                        <p className="text-sm text-slate-400">
+                          {search
+                            ? `We couldn't find any FAQ matching "${search}"`
+                            : 'Click "Add FAQ" to create your first FAQ'}
+                        </p>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))
+                    </td>
+                  </tr>
+                ) : (
+                  filteredFaqs.map((faq) => (
+                    <React.Fragment key={faq._id}>
+                      <tr
+                        className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                        onClick={() => setExpandedFaqId(expandedFaqId === faq._id ? null : faq._id)}
+                      >
+                        <td className="px-6 py-4 align-middle">
+                          <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-[#181818] border border-[#303030] text-white font-bold">
+                            {faq.sort_order}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 align-middle">
+                          <div className="max-w-lg">
+                            <p className="text-white font-medium line-clamp-2">{faq.question}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center align-middle">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${faq.is_active
+                            ? 'bg-emerald-500/10 text-emerald-400'
+                            : 'bg-slate-500/10 text-slate-400'
+                            }`}>
+                            {faq.is_active ? 'Published' : 'Hidden'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right align-middle">
+                          <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                            <button
+                              onClick={() => handleToggleFaq(faq._id)}
+                              title={faq.is_active ? 'Hide from website' : 'Publish to website'}
+                              className={`p-2 rounded-lg transition-all ${faq.is_active
+                                ? 'text-emerald-400 hover:bg-emerald-500/10'
+                                : 'text-slate-500 hover:bg-[#1d1d1d]'
+                                }`}
+                            >
+                              {faq.is_active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                            </button>
+                            <button
+                              onClick={() => handleEditFaq(faq)}
+                              className="p-2 rounded-lg text-slate-500 hover:text-[#F24C20] hover:bg-[#F24C20]/10 transition-all"
+                            >
+                              <Edit className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteFaq(faq._id)}
+                              className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                            <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${expandedFaqId === faq._id ? 'rotate-180' : ''}`} />
+                          </div>
+                        </td>
+                      </tr>
+                      <AnimatePresence>
+                        {expandedFaqId === faq._id && (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-0 bg-[#0a0a0a]">
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-6 border-t border-[#262626]">
+                                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Answer:</h4>
+                                  <div
+                                    className="prose prose-invert max-w-none"
+                                    dangerouslySetInnerHTML={{ __html: faq.answer }}
+                                  />
+                                </div>
+                              </motion.div>
+                            </td>
+                          </tr>
+                        )}
+                      </AnimatePresence>
+                    </React.Fragment>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          {filteredFaqs.length > 0 && (
+            <div className="px-6 py-3 border-t border-[#262626] bg-[#0a0a0a]">
+              <p className="text-xs text-slate-500">
+                Showing {filteredFaqs.length} of {faqs.length} FAQs
+              </p>
+            </div>
           )}
         </div>
 
@@ -363,32 +408,32 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
   // --- RENDERING TERMS/PRIVACY VIEW ---
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl border border-[#F24C20]/20 bg-[#F24C20]/10">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="p-3 rounded-2xl border border-[#F24C20]/20 bg-[#F24C20]/10 flex-shrink-0">
             <AlertCircle className="w-8 h-8 text-[#F24C20]" />
           </div>
-          <div>
-            <h2 className="text-3xl font-black text-white">{title}</h2>
+          <div className="min-w-0">
+            <h2 className="text-3xl font-black text-white mb-1">{title}</h2>
             <p className="text-sm text-slate-400">Manage the specific documentation for the innovation ecosystem.</p>
           </div>
         </div>
         <button
           onClick={handleSavePage}
           disabled={saving}
-          className="flex items-center gap-3 bg-[#F24C20] hover:bg-[#E23C10] disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-lg shadow-orange-500/20"
+          className="flex items-center gap-3 bg-[#F24C20] hover:bg-[#E23C10] disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-lg shadow-orange-500/20 flex-shrink-0 whitespace-nowrap"
         >
           {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
           {saving ? 'Saving...' : 'Save Document'}
         </button>
       </div>
 
-      <div className="rounded-[2rem] border border-[#262626] bg-[#111111] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <div className="mb-6 flex items-start gap-4 rounded-2xl border border-[#1d3b53] bg-[#0f1c29] p-5">
-          <Info className="mt-0.5 h-6 w-6 shrink-0 text-[#59b7ff]" />
-          <div>
-            <h4 className="font-bold text-[#8fd1ff]">Content & Legal Guidelines</h4>
-            <p className="mt-1 text-sm leading-7 text-slate-300">
+      <div className="rounded-[2rem] border border-[#262626] bg-[#111111] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <div className="mb-8 flex items-start gap-4 rounded-2xl border border-[#1d3b53] bg-[#0f1c29] p-6">
+          <Info className="w-6 h-6 shrink-0 text-[#59b7ff] mt-1" />
+          <div className="flex-1 min-w-0">
+            <h4 className="font-bold text-[#8fd1ff] text-base mb-2">Content & Legal Guidelines</h4>
+            <p className="text-sm leading-6 text-slate-300">
               Drafting the {type} is critical for user trust. Ensure all clauses are clear, up-to-date, and visually formatted for readability. This content is specifically gated for the Startup Ideas marketplace.
             </p>
           </div>
@@ -414,7 +459,7 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
 
 const editorStyles = `
   .startup-legal-editor .admin-rich-text-editor {
-    border-radius: 1.75rem !important;
+    border-radius: 1.5rem !important;
     border: 1px solid #262626 !important;
     background: linear-gradient(180deg, #141414 0%, #101010 100%) !important;
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35) !important;
@@ -422,22 +467,30 @@ const editorStyles = `
   }
   .startup-legal-editor .ck.ck-editor {
     background: #111111 !important;
-    border-radius: 1.75rem !important;
+    border-radius: 1.5rem !important;
   }
   .startup-legal-editor .ck.ck-toolbar {
     background: #181818 !important;
     border: 0 !important;
-    border-bottom: 1px solid #2c2c2c !important;
-    border-top-left-radius: 1.75rem !important;
-    border-top-right-radius: 1.75rem !important;
-    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid #1a1a1a !important;
+    border-top-left-radius: 1.5rem !important;
+    border-top-right-radius: 1.5rem !important;
+    padding: 0.875rem 1.25rem !important;
+    gap: 0.5rem !important;
   }
   .startup-legal-editor .ck.ck-editor__main {
     background: #111111 !important;
+    border: 0 !important;
   }
   .startup-legal-editor .ck.ck-button,
   .startup-legal-editor .ck.ck-toolbar .ck.ck-toolbar__separator {
     color: #cbd5e1 !important;
+    border: 0 !important;
+  }
+  .startup-legal-editor .ck.ck-toolbar__separator {
+    background: transparent !important;
+    border: 0 !important;
+    width: 0 !important;
   }
   .startup-legal-editor .ck.ck-button:hover {
     background-color: #242424 !important;
@@ -453,25 +506,42 @@ const editorStyles = `
     background: #111111 !important;
     color: #f8fafc !important;
     border: 0 !important;
-    border-bottom-left-radius: 1.75rem !important;
-    border-bottom-right-radius: 1.75rem !important;
+    border-bottom-left-radius: 1.5rem !important;
+    border-bottom-right-radius: 1.5rem !important;
     min-height: 600px;
-    padding: 2.5rem 3rem !important;
+    padding: 3rem !important;
     font-size: 1.05rem !important;
-    line-height: 1.9 !important;
+    line-height: 1.75 !important;
+    letter-spacing: 0.3px !important;
   }
   .startup-legal-editor .ck.ck-placeholder::before {
     color: #64748b !important;
+    padding-left: 0.25rem !important;
   }
   .startup-legal-editor .ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
     box-shadow: inset 0 0 0 1px rgba(242, 76, 32, 0.35) !important;
   }
   .prose-editor ul, .prose-editor ol {
-      padding-left: 1.5rem;
-      margin-bottom: 1rem;
+    padding-left: 2rem;
+    margin-bottom: 1.25rem;
+    margin-top: 1rem;
   }
   .prose-editor ul { list-style-type: disc; }
   .prose-editor ol { list-style-type: decimal; }
+  .prose-editor li {
+    margin-bottom: 0.5rem;
+    line-height: 1.75;
+  }
+  .prose-editor h1, .prose-editor h2, .prose-editor h3, .prose-editor h4, .prose-editor h5, .prose-editor h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.875rem;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+  .prose-editor p {
+    margin-bottom: 1rem;
+    line-height: 1.75;
+  }
   
   /* Textarea scrollbar */
   textarea::-webkit-scrollbar {

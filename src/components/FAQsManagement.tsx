@@ -163,7 +163,7 @@ export function FAQsManagement() {
                                   onChange={(answer) => setForm({ ...form, answer })}
                                   placeholder="Detailed answer goes here..."
                                   minHeight={220}
-                                  toolbarPreset="compact"
+                                  toolbarPreset="full"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">

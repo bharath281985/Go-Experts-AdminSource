@@ -46,6 +46,8 @@ interface AdminLayoutProps {
   onNavigate: (page: string) => void;
   onLogout: () => void;
   adminUser?: { full_name?: string; email?: string; roles?: string[] } | null;
+  notificationCount: number;
+  onClearNotifications: () => void;
 }
 
 interface MenuItem {
@@ -55,12 +57,22 @@ interface MenuItem {
   submenu?: { id: string; label: string; icon: React.ReactNode }[];
 }
 
-export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage, onNavigate, onLogout, adminUser }: AdminLayoutProps) {
+export function AdminLayout({ 
+  children, 
+  darkMode, 
+  onToggleDarkMode, 
+  currentPage, 
+  onNavigate, 
+  onLogout, 
+  adminUser,
+  notificationCount,
+  onClearNotifications
+}: AdminLayoutProps) {
   const { settings } = useSiteSettings();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['users', 'projects', 'gigs', 'transactions', 'subscriptions', 'disputes', 'content', 'taxonomies', 'startup-ideas']);
-  const [notificationCount] = useState(5);
   const [showAdminCard, setShowAdminCard] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const logoUrl = settings.site_logo ? (settings.site_logo.startsWith('http') ? settings.site_logo : `${apiUrl}${settings.site_logo}`) : logoFallback;
@@ -85,20 +97,9 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
       icon: <FolderKanban className="w-5 h-5" />,
       submenu: [
         { id: 'projects', label: 'Project Listings', icon: <ClipboardList className="w-4 h-4" /> },
-        // { id: 'pending-approvals', label: 'Pending Approvals', icon: <AlertCircle className="w-4 h-4" /> },
         { id: 'proposals', label: 'Proposals Overview', icon: <FileText className="w-4 h-4" /> }
       ]
     },
-    // {
-    //   id: 'gigs',
-    //   label: 'Gigs',
-    //   icon: <Briefcase className="w-5 h-5" />,
-    //   submenu: [
-    //     { id: 'gigs', label: 'Gig Listings', icon: <ShoppingBag className="w-4 h-4" /> },
-    //     { id: 'gig-orders', label: 'Gig Orders', icon: <ClipboardList className="w-4 h-4" /> },
-    //     { id: 'gig-approvals', label: 'Gig Approvals', icon: <FileCheck className="w-4 h-4" /> }
-    //   ]
-    // },
     {
       id: 'startup-ideas',
       label: 'Startup Ideas',
@@ -190,12 +191,12 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
 
   return (
     <div className={`h-screen flex flex-col ${darkMode ? 'dark bg-[#0a0a0a]' : 'bg-white'} overflow-hidden`}>
-      {/* Glassmorphic Header */}
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 ${darkMode ? 'bg-[#1a1a1a]/80 border-[#262626]' : 'bg-white/80'
+        className={`fixed top-0 left-0 right-0 z-[100000] ${darkMode ? 'bg-[#1a1a1a]/80 border-[#262626]' : 'bg-white/80'
           } backdrop-blur-xl border-b shadow-sm`}
+        style={{ zIndex: 100000 }}
       >
         <div className="flex items-center justify-between px-6 h-16">
           <div className="flex items-center gap-4">
@@ -207,11 +208,9 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
             </button>
             <div className="flex items-center gap-2">
               <img src={logoUrl} alt="Go Experts" className="h-8 w-auto" />
-              {/* <h1 className="text-xl font-bold text-[#044071] dark:text-white">GoExperts</h1> */}
             </div>
           </div>
 
-          {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-xl mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -226,7 +225,6 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
             </div>
           </div>
 
-          {/* Right Actions */}
           <div className="flex items-center gap-3">
             <button
               onClick={onToggleDarkMode}
@@ -235,18 +233,30 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
-            <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-[#262626] rounded-lg transition-colors">
-              <Bell className="w-5 h-5" />
-              {notificationCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-1 right-1 w-2 h-2 bg-[#F24C20] rounded-full"
-                />
-              )}
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  if (!showNotifications && notificationCount > 0) {
+                    // We can clear on open or have a button inside
+                  }
+                }}
+                className={`relative p-2 hover:bg-gray-100 dark:hover:bg-[#262626] rounded-lg transition-colors ${showNotifications ? 'bg-gray-100 dark:bg-[#262626]' : ''}`}
+              >
+                <Bell className="w-5 h-5" />
+                {notificationCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#F24C20] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1a1a1a]"
+                  >
+                    {notificationCount}
+                  </motion.span>
+                )}
+              </button>
 
-            {/* Admin Avatar with hover card */}
+            </div>
+
             <div
               className="relative flex items-center gap-2 pl-3 border-l dark:border-[#262626] cursor-pointer"
               onMouseEnter={() => setShowAdminCard(true)}
@@ -261,7 +271,6 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
                 {adminUser?.full_name || 'Admin'}
               </span>
 
-              {/* Hover Dropdown Card */}
               <AnimatePresence>
                 {showAdminCard && (
                   <motion.div
@@ -269,7 +278,7 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full right-0 mt-2 w-64 bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl z-[999] p-4"
+                    className="absolute top-full right-4 mt-4 w-64 bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl z-[100001] p-4"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <img
@@ -300,7 +309,58 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
         </div>
       </motion.header>
 
-      {/* Sidebar */}
+      <AnimatePresence>
+        {showNotifications && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl overflow-hidden"
+            style={{
+              position: 'fixed',
+              top: '80px',
+              right: '24px',
+              width: '420px',
+              zIndex: 2147483647
+            }}
+          >
+            <div className="p-4 border-b border-[#333] flex items-center justify-between gap-4">
+              <h3 className="text-white font-bold text-sm whitespace-nowrap">Notifications</h3>
+              <button
+                onClick={() => {
+                  onClearNotifications();
+                  setShowNotifications(false);
+                }}
+                className="text-[10px] uppercase tracking-wider font-bold text-[#F24C20] hover:text-[#ff6b4a] transition-colors whitespace-nowrap"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="max-h-[400px] overflow-y-auto">
+              {notificationCount === 0 ? (
+                <div className="p-8 text-center">
+                  <Bell className="w-8 h-8 text-gray-600 mx-auto mb-2 opacity-20" />
+                  <p className="text-gray-500 text-xs">No new notifications</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#333]">
+                  <div className="p-4 hover:bg-[#262626] cursor-pointer transition-colors">
+                    <p className="text-white text-xs font-medium mb-1">New User Registered</p>
+                    <p className="text-gray-400 text-[10px]">A new freelancer just joined the platform.</p>
+                    <p className="text-gray-600 text-[9px] mt-2">Just now</p>
+                  </div>
+                  <div className="p-4 hover:bg-[#262626] cursor-pointer transition-colors">
+                    <p className="text-white text-xs font-medium mb-1">Payment Received</p>
+                    <p className="text-gray-400 text-[10px]">Premium subscription purchased by John Doe.</p>
+                    <p className="text-gray-600 text-[9px] mt-2">5 mins ago</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {sidebarOpen && (
           <motion.aside
@@ -395,7 +455,6 @@ export function AdminLayout({ children, darkMode, onToggleDarkMode, currentPage,
         )}
       </AnimatePresence>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
         <main className={`flex-1 pt-16 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'} overflow-y-auto h-full`}>
           <motion.div

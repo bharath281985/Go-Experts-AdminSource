@@ -39,86 +39,86 @@ export function InvestorMeetingsManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold dark:text-white">Investor Meetings</h2>
-          <p className="text-gray-500 dark:text-gray-400">Manage and track all scheduled meetings between investors and founders.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold dark:text-white mb-1">Investor Meetings</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Manage and track all scheduled meetings between investors and founders.</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#262626] p-4">
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#262626] p-6 space-y-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search by investor, founder or idea..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-[#262626] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F24C20] dark:text-white"
+            className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-[#0a0a0a] border border-gray-200 dark:border-[#262626] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F24C20] dark:text-white text-gray-900 placeholder:text-gray-500"
           />
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-6 px-6">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-[#262626]">
-                <th className="px-4 py-3 text-sm font-semibold dark:text-gray-300">Investor</th>
-                <th className="px-4 py-3 text-sm font-semibold dark:text-gray-300">Founder</th>
-                <th className="px-4 py-3 text-sm font-semibold dark:text-gray-300">Idea</th>
-                <th className="px-4 py-3 text-sm font-semibold dark:text-gray-300">Date & Time</th>
-                <th className="px-4 py-3 text-sm font-semibold dark:text-gray-300">Mode</th>
-                <th className="px-4 py-3 text-sm font-semibold dark:text-gray-300">Status</th>
+              <tr className="border-b border-gray-200 dark:border-[#262626] bg-gray-50 dark:bg-[#0a0a0a]">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-300 whitespace-nowrap">Investor</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-300 whitespace-nowrap">Founder</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-300 whitespace-nowrap">Idea</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-300 whitespace-nowrap">Date & Time</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-300 whitespace-nowrap">Mode</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-300 whitespace-nowrap">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-[#262626]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">Loading...</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">Loading...</td>
                 </tr>
               ) : filteredMeetings.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">No meetings found</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">No meetings found</td>
                 </tr>
               ) : (
                 filteredMeetings.map((m) => (
-                  <tr key={m._id} className="hover:bg-gray-50 dark:hover:bg-[#262626] transition-colors">
-                    <td className="px-4 py-4">
+                  <tr key={m._id} className="hover:bg-gray-50 dark:hover:bg-[#262626]/50 transition-colors">
+                    <td className="px-6 py-4 align-middle">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
                           <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <span className="text-sm font-medium dark:text-gray-200">{m.investor?.full_name}</span>
+                        <span className="text-sm font-medium dark:text-gray-200 text-gray-900">{m.investor?.full_name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-4">
+                    <td className="px-6 py-4 align-middle">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
                           <User className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                         </div>
-                        <span className="text-sm font-medium dark:text-gray-200">{m.founder?.full_name}</span>
+                        <span className="text-sm font-medium dark:text-gray-200 text-gray-900">{m.founder?.full_name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <span className="text-sm dark:text-gray-400">{m.startup_idea?.title}</span>
+                    <td className="px-6 py-4 align-middle">
+                      <span className="text-sm dark:text-gray-400 text-gray-700 line-clamp-2">{m.startup_idea?.title}</span>
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2 text-sm dark:text-gray-400">
-                        <Calendar className="w-4 h-4" />
+                    <td className="px-6 py-4 align-middle text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2 text-sm dark:text-gray-400 text-gray-700">
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
                         {new Date(m.meeting_date).toLocaleString()}
                       </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <span className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-[#262626]">
+                    <td className="px-6 py-4 align-middle text-center">
+                      <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 whitespace-nowrap border border-purple-200 dark:border-purple-900/30">
                         {m.mode}
                       </span>
                     </td>
-                    <td className="px-4 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                        m.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                        m.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                        'bg-red-100 text-red-700'
+                    <td className="px-6 py-4 align-middle text-center">
+                      <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap border ${
+                        m.status === 'scheduled' ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30' :
+                        m.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30' :
+                        'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/30'
                       }`}>
-                        {m.status}
+                        {m.status?.charAt(0).toUpperCase() + m.status?.slice(1)}
                       </span>
                     </td>
                   </tr>
