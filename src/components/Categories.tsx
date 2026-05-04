@@ -135,172 +135,164 @@ export function Categories() {
   const topLevelCats = categories.filter(c => !c.parent);
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Site Management', path: 'pages' }, { label: 'Categories' }]} />
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="max-w-[1300px] mx-auto space-y-8 pb-16 px-6">
+      {/* Header - Professional Alignment */}
+      <div className="mt-4">
+        <Breadcrumb items={[{ label: 'Site Management', path: 'pages' }, { label: 'Categories' }]} />
+      </div>
+
+      <div className="flex items-center justify-between border-b border-gray-100 dark:border-[#262626] pb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Categories Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage project and gig categories from the database</p>
+          <h1 className="text-2xl font-semibold text-[#044071] dark:text-white mb-1">Categories Management</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Manage project and gig categories across the marketplace database.</p>
         </div>
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           onClick={openAdd}
-          className="bg-[#F24C20] hover:bg-[#d43a12] text-white px-5 py-3 rounded-xl font-medium flex items-center gap-2">
+          className="bg-[#F24C20] hover:bg-[#d43a12] text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-[#F24C20]/10">
           <Plus className="w-5 h-5" /> Add Category
         </motion.button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Form Panel - Normalized Inline */}
         <AnimatePresence>
           {showForm && (
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 h-fit"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white dark:bg-[#1a1a1a] rounded-[1.5rem] border border-[#F24C20]/20 p-10 shadow-2xl relative overflow-hidden h-fit"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-lg">{editingId ? 'Edit Category' : 'Add New Category'}</h3>
-                <button onClick={closeForm} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"><X className="w-4 h-4" /></button>
-              </div>
-              <div className="space-y-4">
-                {/* Image Section */}
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-[#F24C20]" />
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Category Image</label>
+                  <h3 className="text-lg font-bold text-[#044071] dark:text-white">{editingId ? 'Edit Category' : 'New Category Asset'}</h3>
+                  <p className="text-xs text-gray-500 mt-1">Configure name, parent, and visual identity.</p>
+                </div>
+                <button onClick={closeForm} className="p-2 hover:bg-gray-100 dark:hover:bg-[#262626] rounded-full transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
+              </div>
+              <div className="space-y-6">
+                {/* Image Section - Refined */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Identity Asset</label>
                   <div 
                     onClick={() => document.getElementById('categoryImageInput')?.click()}
-                    className="relative h-24 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#F24C20] bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center cursor-pointer transition-all"
+                    className="relative h-24 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800 hover:border-[#F24C20]/20 bg-gray-50/50 dark:bg-gray-900/50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden"
                   >
                     {imagePreview ? (
                       <img 
                         src={imagePreview.startsWith('data:') ? imagePreview : `${import.meta.env.VITE_API_URL}/${imagePreview}`} 
                         alt="Preview" 
-                        className="w-full h-full object-contain rounded-lg p-1" 
+                        className="w-full h-full object-contain p-2" 
                       />
                     ) : (
                       <>
-                        <Plus className="w-6 h-6 text-gray-400 mb-1" />
-                        <span className="text-xs text-gray-500 text-center px-2">Upload category image (PNG/JPG)</span>
+                        <Plus className="w-5 h-5 text-gray-300 mb-1" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center px-4">Upload Asset</span>
                       </>
                     )}
-                    <input 
-                      id="categoryImageInput"
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleImageChange} 
-                      className="hidden" 
-                    />
+                    <input id="categoryImageInput" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                   </div>
-                  {imagePreview && (
-                    <button 
-                      type="button" 
-                      onClick={(e) => { e.stopPropagation(); setImageFile(null); setImagePreview(null); }}
-                      className="mt-2 text-xs text-red-500 hover:underline flex items-center gap-1"
-                    >
-                      <X className="w-3 h-3" /> Remove image
-                    </button>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Name *</label>
-                  <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Web Development"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20] text-sm" />
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Category Label *</label>
+                  <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Design & Creative"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-100 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F24C20]/20 transition-all text-sm font-medium" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Parent Category</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Hierarchy Parent</label>
                   <select value={form.parent} onChange={e => setForm(p => ({ ...p, parent: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20] text-sm">
+                    className="w-full px-4 py-3 rounded-xl border border-gray-100 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F24C20]/20 transition-all text-sm font-medium">
                     <option value="">None (Top Level)</option>
                     {topLevelCats.filter(c => c._id !== editingId).map(cat => (
-                      <option key={cat._id} value={cat._id}>{cat.icon} {cat.name}</option>
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Short description..."
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20] text-sm resize-none" rows={3} />
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Strategic Description</label>
+                  <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Short strategic description..."
+                    className="w-full px-4 py-3 rounded-xl border border-gray-100 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F24C20]/20 transition-all text-sm font-medium resize-none" rows={3} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Sort Order</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Display Sequence</label>
                   <input type="number" value={form.sort_order} onChange={e => setForm(p => ({ ...p, sort_order: Number(e.target.value) }))} min={0}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20] text-sm" />
+                    className="w-full px-4 py-3 rounded-xl border border-gray-100 dark:border-[#262626] bg-gray-50/50 dark:bg-[#262626] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F24C20]/20 transition-all text-sm font-medium" />
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={closeForm} className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div className="flex gap-4 pt-4 border-t border-gray-50">
+                  <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={handleSubmit} disabled={saving}
+                    className="flex-1 bg-[#F24C20] hover:bg-[#d43a12] text-white px-6 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-[#F24C20]/10 transition-all">
+                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+                    {editingId ? 'Commit Update' : 'Authorize Asset'}
+                  </motion.button>
+                  <button onClick={closeForm} className="px-8 py-3.5 rounded-xl border border-gray-100 text-gray-400 font-bold hover:bg-gray-50 transition-all">
                     Cancel
                   </button>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleSubmit} disabled={saving}
-                    className="flex-1 bg-[#F24C20] hover:bg-[#d43a12] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
-                    {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> {editingId ? 'Update' : 'Create'}</>}
-                  </motion.button>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Table */}
+        {/* Table - Crisp alignment */}
         <div className={showForm ? 'lg:col-span-2' : 'lg:col-span-3'}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-100 dark:border-[#262626] overflow-hidden shadow-sm">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <thead className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-[#262626]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Image/Icon</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Parent</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Description</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold">Actions</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Asset</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Name</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 text-center">Status</th>
+                  <th className="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-50 dark:divide-[#262626]">
                 {loading ? (
-                  <tr><td colSpan={6} className="px-6 py-12 text-center">
-                    <Loader2 className="w-7 h-7 text-[#F24C20] animate-spin mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">Loading categories...</p>
+                  <tr><td colSpan={4} className="px-6 py-20 text-center">
+                    <Loader2 className="w-7 h-7 text-[#F24C20] animate-spin mx-auto mb-2 opacity-30" />
+                    <p className="text-gray-400 text-sm font-semibold tracking-tight">Syncing Categories...</p>
                   </td></tr>
                 ) : categories.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-12 text-center">
-                    <FolderTree className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">No categories yet. Click "Add Category" to create the first one.</p>
+                  <tr><td colSpan={4} className="px-6 py-20 text-center">
+                    <FolderTree className="w-12 h-12 text-gray-100 mx-auto mb-3" />
+                    <p className="text-gray-400 font-semibold tracking-tight">No Categories Found</p>
                   </td></tr>
                 ) : categories.map((cat, i) => (
                   <motion.tr key={cat._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                    whileHover={{ backgroundColor: 'rgba(59,130,246,0.04)' }}>
-                    <td className="px-6 py-4">
-                      {cat.image ? (
-                        <img src={`${import.meta.env.VITE_API_URL}/${cat.image}`} alt={cat.name} className="w-10 h-10 object-contain rounded bg-gray-50 dark:bg-gray-900" />
-                      ) : (
-                        <span className="text-2xl">{cat.icon || '📁'}</span>
-                      )}
+                    className="hover:bg-gray-50/30 transition-all">
+                    <td className="px-6 py-5">
+                      <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden border border-gray-100">
+                        {cat.image ? (
+                          <img src={`${import.meta.env.VITE_API_URL}/${cat.image}`} alt={cat.name} className="w-full h-full object-contain p-2" />
+                        ) : (
+                          <span className="text-xl">{cat.icon || '📁'}</span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{cat.name}</div>
-                      <div className="text-xs text-gray-400 font-mono">{cat.slug}</div>
+                    <td className="px-6 py-5">
+                      <div className="font-bold text-gray-800 dark:text-gray-100 tracking-tight leading-tight">{cat.name}</div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[10px] text-gray-400 font-mono font-black uppercase tracking-tighter">slug: {cat.slug}</span>
+                        {cat.parent && <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-blue-50 text-blue-500 rounded-md">Sub: {cat.parent.name}</span>}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {cat.parent ? <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-md text-xs">{cat.parent.name}</span> : <span className="text-gray-400">—</span>}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">{cat.description || '—'}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${cat.is_active ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600'}`}>
-                        {cat.is_active ? 'Active' : 'Inactive'}
+                    <td className="px-6 py-5 text-center">
+                      <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${cat.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                        {cat.is_active ? 'Public' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openEdit(cat)} className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg" title="Edit">
-                          <Edit className="w-4 h-4 text-blue-600" />
+                    <td className="px-6 py-5">
+                      <div className="flex items-center justify-center gap-1">
+                        <motion.button whileHover={{ scale: 1.1 }} onClick={() => openEdit(cat)} className="p-2.5 text-[#044071] hover:bg-blue-50 rounded-xl transition-colors">
+                          <Edit className="w-4 h-4" />
                         </motion.button>
-                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleToggle(cat)} className="p-2 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg" title="Toggle Status">
-                          {cat.is_active ? <ToggleRight className="w-4 h-4 text-green-600" /> : <ToggleLeft className="w-4 h-4 text-gray-500" />}
+                        <motion.button whileHover={{ scale: 1.1 }} onClick={() => handleToggle(cat)} className="p-2.5 text-green-600 hover:bg-green-50 rounded-xl transition-colors">
+                          {cat.is_active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5 opacity-40" />}
                         </motion.button>
-                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDelete(cat)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg" title="Delete">
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                        <motion.button whileHover={{ scale: 1.1 }} onClick={() => handleDelete(cat)} className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+                          <Trash2 className="w-4 h-4" />
                         </motion.button>
                       </div>
                     </td>

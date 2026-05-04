@@ -1,0 +1,183 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+[2m1:30:15 pm[22m [31m[1m[vite][22m[39m [31mInternal server error:   x Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:463:1]
+ 460 |                     )}
+ 461 |                   </div>
+ 462 |                 )
+ 463 |               })}
+     :               ^
+ 464 | 
+ 465 |               <button
+ 466 |                 onClick={onLogout}
+     `----
+  x Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:463:1]
+ 460 |                     )}
+ 461 |                   </div>
+ 462 |                 )
+ 463 |               })}
+     :                 ^
+ 464 | 
+ 465 |               <button
+ 466 |                 onClick={onLogout}
+     `----
+  x Expression expected
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:475:1]
+ 472 |                 <span className="text-[13px] font-medium">Logout</span>
+ 473 |               </button>
+ 474 |             </nav>
+ 475 |           </motion.aside>
+     :           ^
+ 476 |         )}
+ 477 |       </AnimatePresence>
+     `----
+  x Unterminated regexp literal
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:475:1]
+ 472 |                 <span className="text-[13px] font-medium">Logout</span>
+ 473 |               </button>
+ 474 |             </nav>
+ 475 |           </motion.aside>
+     :            ^^^^^^^^^^^^^^
+ 476 |         )}
+ 477 |       </AnimatePresence>
+     `----
+
+
+Caused by:
+    Syntax Error[39m
+  Plugin: [35mvite:react-swc[39m
+  File: [36mC:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx[39m
+  
+[2m1:30:15 pm[22m [31m[1m[vite][22m[39m [31mInternal server error:   x Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:463:1]
+ 460 |                     )}
+ 461 |                   </div>
+ 462 |                 )
+ 463 |               })}
+     :               ^
+ 464 | 
+ 465 |               <button
+ 466 |                 onClick={onLogout}
+     `----
+  x Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:463:1]
+ 460 |                     )}
+ 461 |                   </div>
+ 462 |                 )
+ 463 |               })}
+     :                 ^
+ 464 | 
+ 465 |               <button
+ 466 |                 onClick={onLogout}
+     `----
+  x Expression expected
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:475:1]
+ 472 |                 <span className="text-[13px] font-medium">Logout</span>
+ 473 |               </button>
+ 474 |             </nav>
+ 475 |           </motion.aside>
+     :           ^
+ 476 |         )}
+ 477 |       </AnimatePresence>
+     `----
+  x Unterminated regexp literal
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:475:1]
+ 472 |                 <span className="text-[13px] font-medium">Logout</span>
+ 473 |               </button>
+ 474 |             </nav>
+ 475 |           </motion.aside>
+     :            ^^^^^^^^^^^^^^
+ 476 |         )}
+ 477 |       </AnimatePresence>
+     `----
+
+
+Caused by:
+    Syntax Error[39m
+  Plugin: [35mvite:react-swc[39m
+  File: [36mC:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx[39m
+  
+[2m1:30:34 pm[22m [31m[1m[vite][22m[39m [31mInternal server error:   x Expected '</', got '{'
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:462:1]
+ 459 |                       </button>
+ 460 |                     )}
+ 461 |                     </div>  {/* end inner group wrapper */}
+ 462 |                   </div>   {/* end outer key div */}
+     :                            ^
+ 463 |                 )
+ 464 |               })}
+     `----
+
+
+Caused by:
+    Syntax Error[39m
+  Plugin: [35mvite:react-swc[39m
+  File: [36mC:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx[39m
+  
+[2m1:30:34 pm[22m [31m[1m[vite][22m[39m [31mInternal server error:   x Expected '</', got '{'
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:462:1]
+ 459 |                       </button>
+ 460 |                     )}
+ 461 |                     </div>  {/* end inner group wrapper */}
+ 462 |                   </div>   {/* end outer key div */}
+     :                            ^
+ 463 |                 )
+ 464 |               })}
+     `----
+
+
+Caused by:
+    Syntax Error[39m
+  Plugin: [35mvite:react-swc[39m
+  File: [36mC:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx[39m
+  
+[2m1:31:33 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error:   x Expected '</', got '{'
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:462:1]
+ 459 |                       </button>
+ 460 |                     )}
+ 461 |                     </div>  {/* end inner group wrapper */}
+ 462 |                   </div>   {/* end outer key div */}
+     :                            ^
+ 463 |                 )
+ 464 |               })}
+     `----
+
+
+Caused by:
+    Syntax Error
+  Plugin: [35mvite:react-swc[39m
+  File: [36mC:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx[39m
+[2m1:31:33 pm[22m [31m[1m[vite][22m[39m [31mInternal server error:   x Expected '</', got '{'
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:462:1]
+ 459 |                       </button>
+ 460 |                     )}
+ 461 |                     </div>  {/* end inner group wrapper */}
+ 462 |                   </div>   {/* end outer key div */}
+     :                            ^
+ 463 |                 )
+ 464 |               })}
+     `----
+
+
+Caused by:
+    Syntax Error[39m
+  Plugin: [35mvite:react-swc[39m
+  File: [36mC:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx[39m
+  
+[2m1:31:34 pm[22m [31m[1m[vite][22m[39m [31mInternal server error:   x Expected '</', got '{'
+     ,-[C:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx:462:1]
+ 459 |                       </button>
+ 460 |                     )}
+ 461 |                     </div>  {/* end inner group wrapper */}
+ 462 |                   </div>   {/* end outer key div */}
+     :                            ^
+ 463 |                 )
+ 464 |               })}
+     `----
+
+
+Caused by:
+    Syntax Error[39m
+  Plugin: [35mvite:react-swc[39m
+  File: [36mC:/Users/goexp/Documents/Go Experts/Go-Experts-AdminSource/src/components/AdminLayout.tsx[39m
+  

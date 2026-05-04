@@ -3,8 +3,6 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
     Plus,
-    Eye,
-    EyeOff,
     Trash2,
     ArrowRight,
     X,
@@ -19,9 +17,9 @@ import {
     Type,
     UserPlus,
     CheckCircle2,
-    CircleDashed
+    CircleDashed,
+    AlertCircle
 } from 'lucide-react';
-
 
 import { toast } from 'sonner';
 import api from '../lib/api';
@@ -68,7 +66,6 @@ export const RegistrationSteps = () => {
             const res = await api.get('/cms/registration-steps/admin');
             const allSteps: RegistrationStep[] = res.data.data;
             
-            // Calculate stats for all sub-roles
             const onboardingSteps = allSteps.filter(s => (s.module || 'onboarding') === 'onboarding');
             
             setStats({
@@ -81,14 +78,13 @@ export const RegistrationSteps = () => {
                 startup_creator: onboardingSteps.filter(s => !s.applicableRoles?.length || s.applicableRoles.includes('startup_creator')).length
             });
 
-            // Filter for display
             let filtered = allSteps.filter(s => (s.module || 'onboarding') === activeModule);
             
             if (activeModule === 'onboarding' && activeRoleTab !== 'all') {
                 filtered = filtered.filter(s => !s.applicableRoles?.length || s.applicableRoles.includes(activeRoleTab));
             }
 
-            setSteps(filtered);
+            setSteps(filtered.sort((a, b) => a.order - b.order));
         } catch {
             toast.error('Failed to fetch steps');
         } finally {
@@ -145,45 +141,39 @@ export const RegistrationSteps = () => {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="max-w-[1300px] mx-auto space-y-8 pb-16 px-6">
             {/* ================= HERO ================= */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="relative overflow-hidden rounded-2xl p-8 text-white"
+                className="relative overflow-hidden rounded-[2rem] p-10 text-white mt-4 border border-white/10 shadow-2xl"
                 style={{
-                    background: 'linear-gradient(135deg, #F24C20 0%, #d43a12 50%, #044071 100%)'
+                    background: 'linear-gradient(135deg, #044071 0%, #032b4d 100%)'
                 }}
             >
-                <div className="absolute inset-0 opacity-20">
-                    <motion.div
-                        animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                        className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"
-                    />
-                </div>
-
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div className="flex gap-4 items-center">
-                        <div className="p-4 rounded-xl bg-white/20">
-                            <Settings2 />
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#F24C20]/20 rounded-full blur-[120px] -mr-64 -mt-64" />
+                
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                    <div className="flex gap-6 items-center min-w-0">
+                        <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center border border-white/20 shadow-inner">
+                            <Settings2 className="w-8 h-8" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold font-heading">Dynamic Logic Flows</h1>
-                            <p className="text-white/80 text-sm font-medium">
-                                Configure steps for {
-                                    activeModule === 'onboarding' ? `Onboarding (Role: ${activeRoleTab.replace('_', ' ').toUpperCase()})` : 
-                                    activeModule === 'project_finder' ? 'Project Search Quiz' : 
-                                    'Talent Finder Flow'
-                                }
+                            <h1 className="text-2xl font-semibold text-white mb-1">Dynamic Logic Flows</h1>
+                            <p className="text-white/60 text-sm font-medium italic">
+                                "{
+                                    activeModule === 'onboarding' ? `Strategic Onboarding Protocol: ${activeRoleTab.replace('_', ' ').toUpperCase()}` : 
+                                    activeModule === 'project_finder' ? 'Predictive Project Search Logic' : 
+                                    'Talent Discovery Algorithm'
+                                }"
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-4">
+                    <div className="flex flex-wrap gap-3 flex-shrink-0">
                         <button
                             onClick={resetSteps}
-                            className="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 border border-white/20 transition-all active:scale-95 text-sm"
+                            className="bg-white/5 hover:bg-white/10 text-white/80 px-6 py-3 rounded-xl font-bold flex items-center gap-2 border border-white/10 transition-all text-xs uppercase tracking-widest"
                         >
                             <CircleDashed className="w-4 h-4" /> Reset Flow
                         </button>
@@ -204,20 +194,19 @@ export const RegistrationSteps = () => {
                                 });
                                 setIsEditing(true);
                             }}
-                            className="bg-white text-[#F24C20] px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-white/20 transition-all active:scale-95 text-sm"
+                            className="bg-[#F24C20] hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl shadow-orange-500/20 transition-all text-xs uppercase tracking-widest"
                         >
-                            <Plus className="w-4 h-4" /> Add Step
+                            <Plus className="w-4 h-4" /> Authorize Step
                         </button>
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="relative z-10 mt-8 flex flex-col gap-4">
-                    <div className="flex flex-wrap gap-2">
+                <div className="relative z-10 mt-12 flex flex-col gap-6">
+                    <div className="flex flex-wrap gap-3 p-1.5 bg-black/20 rounded-[1.5rem] w-fit border border-white/5 backdrop-blur-md">
                         {[
                             { id: 'onboarding', label: 'Onboarding Flow', count: stats.onboarding, icon: UserPlus },
-                            { id: 'project_finder', label: 'Project Finder Filter', count: stats.project_finder, icon: Database },
-                            { id: 'talent_finder', label: 'Talent Finder Flow', count: stats.talent_finder, icon: Database }
+                            { id: 'project_finder', label: 'Project Finder', count: stats.project_finder, icon: Database },
+                            { id: 'talent_finder', label: 'Talent Finder', count: stats.talent_finder, icon: Database }
                         ].map(tab => {
                             const Icon = tab.icon;
                             const isSelected = activeModule === tab.id;
@@ -228,15 +217,15 @@ export const RegistrationSteps = () => {
                                         setActiveModule(tab.id as any);
                                         if (tab.id !== 'onboarding') setActiveRoleTab('all');
                                     }}
-                                    className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold transition-all text-xs border ${
+                                    className={`flex items-center gap-3 px-6 py-3 rounded-xl font-bold transition-all text-[11px] uppercase tracking-widest ${
                                         isSelected 
-                                        ? 'bg-white text-[#F24C20] border-white shadow-xl shadow-black/10' 
-                                        : 'bg-black/10 hover:bg-black/20 text-white border-white/10'
+                                        ? 'bg-white text-[#044071] shadow-xl' 
+                                        : 'text-white/50 hover:text-white'
                                     }`}
                                 >
                                     <Icon className="w-4 h-4" />
                                     {tab.label}
-                                    <span className={`px-2 py-0.5 rounded-full text-[9px] ${isSelected ? 'bg-[#F24C20]/10 text-[#F24C20]' : 'bg-white/10 text-white'}`}>
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] ${isSelected ? 'bg-[#044071]/10 text-[#044071]' : 'bg-white/10 text-white'}`}>
                                         {tab.count}
                                     </span>
                                 </button>
@@ -244,31 +233,30 @@ export const RegistrationSteps = () => {
                         })}
                     </div>
 
-                    {/* Role Sub-tabs for Onboarding */}
                     <AnimatePresence>
                         {activeModule === 'onboarding' && (
                             <motion.div 
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="flex flex-wrap gap-2 p-1.5 bg-black/10 rounded-2xl backdrop-blur-md w-fit border border-white/5"
+                                className="flex flex-wrap gap-2 p-1 bg-white/5 rounded-xl backdrop-blur-md w-fit border border-white/5"
                             >
                                 {[
-                                    { id: 'all', label: 'All Steps', count: stats.onboarding },
+                                    { id: 'all', label: 'Systemwide', count: stats.onboarding },
                                     { id: 'freelancer', label: 'Freelancer', count: stats.freelancer },
-                                    { id: 'client', label: 'Hire Talent', count: stats.client },
+                                    { id: 'client', label: 'Client', count: stats.client },
                                     { id: 'investor', label: 'Investor', count: stats.investor },
-                                    { id: 'startup_creator', label: 'Startup Creator', count: stats.startup_creator }
+                                    { id: 'startup_creator', label: 'Creator', count: stats.startup_creator }
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setActiveRoleTab(sub.id as any)}
-                                        className={`px-4 py-2 rounded-xl text-[10px] font-bold tracking-wide transition-all ${
+                                        className={`px-5 py-2 rounded-lg text-[9px] font-black tracking-[0.2em] transition-all uppercase ${
                                             activeRoleTab === sub.id 
-                                            ? 'bg-white/20 text-white border border-white/20' 
-                                            : 'text-white/50 hover:text-white'
+                                            ? 'bg-white text-[#F24C20]' 
+                                            : 'text-white/40 hover:text-white'
                                         }`}
                                     >
-                                        {sub.label.toUpperCase()} ({sub.count})
+                                        {sub.label} ({sub.count})
                                     </button>
                                 ))}
                             </motion.div>
@@ -279,10 +267,12 @@ export const RegistrationSteps = () => {
 
             {/* ================= GRID ================= */}
             {loading ? (
-                <div className="h-40 flex items-center justify-center">Loading...</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {[1,2,3].map(i => <div key={i} className="h-64 rounded-[2rem] bg-gray-50/50 animate-pulse border border-gray-100" />)}
+                </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <AnimatePresence>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <AnimatePresence mode="popLayout">
                         {steps.map((step, i) => {
                             const typeIcons: Record<string, any> = {
                                 'single-selection': MousePointerClick,
@@ -296,97 +286,93 @@ export const RegistrationSteps = () => {
 
                             return (
                                 <motion.div
-                                    key={step._id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.05 }}
-                                    className="group relative bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 border border-gray-100 dark:border-[#262626] shadow-sm hover:shadow-xl hover:shadow-[#F24C20]/5 transition-all duration-300"
+                                    key={step._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ delay: i * 0.05 }}
+                                    className="group relative bg-white dark:bg-[#1a1a1a] rounded-[2rem] p-8 border border-gray-100 dark:border-[#262626] shadow-sm hover:shadow-2xl hover:border-[#F24C20]/10 transition-all duration-500 overflow-hidden"
                                 >
-                                    {/* Header: Order & Status */}
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:bg-[#F24C20] group-hover:text-white transition-colors duration-300">
-                                                {step.order}
-                                            </div>
-                                            <div className="p-2 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-400">
-                                                <TypeIcon className="w-4 h-4" />
-                                            </div>
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50/50 dark:bg-white/5 rounded-bl-[2rem] flex items-center justify-center text-gray-200 group-hover:text-[#F24C20]/20 transition-colors">
+                                        <TypeIcon className="w-10 h-10" />
+                                    </div>
+
+                                    <div className="flex justify-between items-start mb-8">
+                                        <div className="w-12 h-12 rounded-xl bg-gray-50 dark:bg-[#262626] flex items-center justify-center text-lg font-black text-gray-300 group-hover:bg-[#044071] group-hover:text-white transition-all shadow-inner">
+                                            {step.order < 10 ? `0${step.order}` : step.order}
                                         </div>
                                         <span
-                                            className={`text-[10px] font-bold px-3 py-1 rounded-full tracking-wider ${step.isActive
-                                                ? 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
-                                                : 'bg-gray-100 text-gray-400 dark:bg-white/5 dark:text-gray-500'
+                                            className={`text-[9px] font-black px-3 py-1 rounded-full tracking-[0.2em] border ${step.isActive
+                                                ? 'bg-green-50 text-green-600 border-green-100'
+                                                : 'bg-gray-50 text-gray-400 border-gray-100'
                                                 }`}
                                         >
-                                            {step.isActive ? 'ACTIVE' : 'DRAFT'}
+                                            {step.isActive ? 'OPERATIONAL' : 'STAGED'}
                                         </span>
                                     </div>
 
-                                    {/* Content */}
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] text-[#F24C20] font-black uppercase tracking-widest opacity-80">
-                                            {step.label}
-                                        </p>
-                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                                    <div className="space-y-3 relative z-10">
+                                        <div className="text-[11px] text-[#F24C20] font-black uppercase tracking-[0.2em] ml-1">
+                                            {step.label || 'System Step'}
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
                                             {step.title}
                                         </h3>
-                                        {step.description && (
-                                            <p className="text-sm text-gray-500 line-clamp-2 mt-2 font-medium">
-                                                {step.description}
-                                            </p>
-                                        )}
+                                        <p className="text-sm text-gray-500 line-clamp-2 font-medium italic opacity-70">
+                                            "{step.description || 'No taxonomic description available.'}"
+                                        </p>
                                     </div>
 
-                                    {/* Type Badge */}
-                                    <div className="mt-4 flex items-center gap-2">
-                                        <div className="px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-center gap-2">
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase">
-                                                {step.type.replace('-', ' ')}
+                                    <div className="mt-8 flex flex-wrap gap-2">
+                                        <div className="px-3 py-1.5 rounded-lg bg-gray-50/80 dark:bg-white/5 border border-gray-100 dark:border-white/5 flex items-center gap-2">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                Type: {step.type.replace('-', ' ')}
                                             </span>
                                         </div>
                                         {step.options?.length > 0 && (
-                                            <div className="px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
-                                                <span className="text-[10px] font-bold text-gray-500">
-                                                    {step.options.length} OPTIONS
+                                            <div className="px-3 py-1.5 rounded-lg bg-[#044071]/5 border border-[#044071]/10">
+                                                <span className="text-[10px] font-black text-[#044071] uppercase tracking-widest">
+                                                    {step.options.length} Assets
                                                 </span>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* Footer Actions */}
-                                    <div className="flex justify-between items-center mt-8 pt-5 border-t border-gray-50 dark:border-white/5">
+                                    <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-50 dark:border-white/5">
                                         <button
                                             onClick={() => {
                                                 setCurrentStep(step);
                                                 setIsEditing(true);
                                             }}
-                                            className="text-gray-400 hover:text-[#F24C20] text-xs font-bold flex items-center gap-2 transition-colors uppercase tracking-wider"
+                                            className="text-[#044071] dark:text-blue-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all hover:gap-3"
                                         >
                                             Edit Logic <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
 
-                                        <div className="flex gap-4 items-center">
+                                        <div className="flex gap-2 items-center">
                                             <button
                                                 onClick={() => toggleStatus(step._id, step.isActive)}
-                                                className={`transition-all duration-300 ${step.isActive ? 'text-green-500 hover:scale-110' : 'text-gray-300 hover:text-gray-500'}`}
+                                                className={`transition-all duration-300 ${step.isActive ? 'text-green-500' : 'text-gray-200'}`}
                                             >
                                                 {step.isActive ? (
-                                                    <ToggleRight className="w-7 h-7" />
+                                                    <ToggleRight className="w-8 h-8" />
                                                 ) : (
-                                                    <ToggleLeft className="w-7 h-7" />
+                                                    <ToggleLeft className="w-8 h-8" />
                                                 )}
                                             </button>
                                             <button
                                                 onClick={() => removeStep(step._id)}
-                                                className="text-gray-300 hover:text-red-500 transition-colors"
+                                                className="p-2 text-gray-200 hover:text-red-500 transition-colors"
                                             >
-                                                <Trash2 className="w-5 h-5" />
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
                                 </motion.div>
                             );
                         })}
+                        {steps.length === 0 && (
+                            <div className="col-span-full py-20 text-center">
+                                <AlertCircle className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No logical steps configured for this flow.</p>
+                            </div>
+                        )}
                     </AnimatePresence>
                 </div>
             )}
@@ -400,7 +386,7 @@ export const RegistrationSteps = () => {
             />
         </div>
     );
-}
+};
 
 /* ================= MODAL ================= */
 
@@ -410,192 +396,171 @@ function EditModal({ open, onClose, step, setStep, onSave }: any) {
     return createPortal(
         <AnimatePresence>
             <motion.div
-                className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 sm:p-6 backdrop-blur-xl"
-                style={{ zIndex: 999999 }}
+                className="fixed inset-0 bg-[#044071]/10 backdrop-blur-md flex items-center justify-center p-4 z-[100]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
             >
                 <motion.div
-                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                    className="bg-white dark:bg-[#121212] rounded-[2.5rem] w-full max-w-md shadow-2xl relative flex flex-col h-[85vh] overflow-hidden border border-gray-200/50 dark:border-white/10"
-                    style={{ zIndex: 1000000 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    className="bg-white dark:bg-[#1a1a1a] rounded-[2.5rem] w-full max-w-4xl shadow-2xl overflow-hidden border border-white/20 flex flex-col max-h-[90vh]"
                 >
-                    {/* Header */}
-                    <div className="flex justify-between items-center px-8 py-5 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1a1a1a] flex-shrink-0">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-2xl bg-[#F24C20]/10 flex items-center justify-center text-[#F24C20]">
-                                <Settings2 className="w-5 h-5" />
+                    <div className="px-10 py-8 border-b border-gray-50 dark:border-[#262626] bg-gray-50/30 dark:bg-[#262626]/50 flex justify-between items-center">
+                        <div className="flex items-center gap-5">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#044071] to-[#0a5ea3] flex items-center justify-center text-white shadow-inner">
+                                <Settings2 className="w-6 h-6" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-none mb-1">Logic Configuration</h2>
-                                <p className="text-[11px] text-gray-500 font-medium">Fine-tune this step's behavior</p>
+                                <h2 className="text-xl font-bold text-[#044071] dark:text-white">Logic Configuration</h2>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-1">Configure Strategic Journey Step</p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                            title="Close"
+                            className="p-3 bg-white dark:bg-[#262626] border border-gray-100 dark:border-[#333] hover:bg-gray-50 rounded-full transition-all text-gray-400"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-6 h-6" />
                         </button>
                     </div>
 
-                    {/* Scrollable Body */}
-                    <div className="px-8 py-8 overflow-y-auto min-h-0 space-y-10 flex-1 bg-gray-50/30 dark:bg-[#121212] custom-scrollbar">
-                        {/* GENERAL CONFIGURATION */}
-                        <section>
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                                    <ListChecks className="w-4 h-4 text-blue-500" />
-                                </div>
-                                <h3 className="text-[13px] font-bold text-gray-900 dark:text-white uppercase tracking-widest opacity-80">General Attributes</h3>
+                    <div className="p-10 overflow-y-auto space-y-10 custom-scrollbar">
+                        <section className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-6 bg-[#F24C20] rounded-full" />
+                                <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">General Attributes</h3>
                             </div>
 
-                            <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200/60 dark:border-white/5 rounded-3xl p-6 space-y-6 shadow-sm">
-                                <div className="flex flex-col gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Logic Module</label>
-                                        <select
-                                            value={step?.module || 'onboarding'}
-                                            onChange={e => setStep({ ...step, module: e.target.value })}
-                                            className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-2xl p-4 text-sm focus:outline-none focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 transition-all font-semibold text-gray-900 dark:text-white"
-                                        >
-                                            <option value="onboarding">User Onboarding Flow</option>
-                                            <option value="project_finder">Project Finder Filter</option>
-                                            <option value="talent_finder">Talent Finder Flow</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Internal Reference</label>
-                                        <input
-                                            placeholder="e.g. Account Type"
-                                            value={step?.label || ''}
-                                            onChange={e => setStep({ ...step, label: e.target.value })}
-                                            className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-2xl p-4 text-sm focus:outline-none focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 transition-all font-semibold text-gray-900 dark:text-white"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Public Question Title</label>
-                                        <input
-                                            placeholder="e.g. What brings you here?"
-                                            value={step?.title || ''}
-                                            onChange={e => setStep({ ...step, title: e.target.value })}
-                                            className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-2xl p-4 text-sm focus:outline-none focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 transition-all font-semibold text-gray-900 dark:text-white"
-                                        />
-                                    </div>
-                                </div>
-
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Description (Optional)</label>
-                                    <textarea
-                                        placeholder="Add more context for the user..."
-                                        value={step?.description || ''}
-                                        onChange={e => setStep({ ...step, description: e.target.value })}
-                                        rows={2}
-                                        className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-2xl p-4 text-sm focus:outline-none focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 transition-all resize-none font-medium text-gray-900 dark:text-white"
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Logic Module</label>
+                                    <select
+                                        value={step?.module || 'onboarding'}
+                                        onChange={e => setStep({ ...step, module: e.target.value })}
+                                        className="w-full bg-gray-50/50 dark:bg-[#222] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all"
+                                    >
+                                        <option value="onboarding">User Onboarding Flow</option>
+                                        <option value="project_finder">Project Finder Filter</option>
+                                        <option value="talent_finder">Talent Finder Flow</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Internal Reference</label>
+                                    <input
+                                        placeholder="e.g. Account Type Identification"
+                                        value={step?.label || ''}
+                                        onChange={e => setStep({ ...step, label: e.target.value })}
+                                        className="w-full bg-gray-50/50 dark:bg-[#222] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all"
                                     />
                                 </div>
+                            </div>
 
-                                <div className="flex flex-col gap-6 pt-6 border-t border-gray-100 dark:border-white/5">
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Database Field Key</label>
-                                        <div className="relative group">
-                                            <Database className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#F24C20] w-4 h-4 transition-colors" />
-                                            <input
-                                                placeholder="e.g. account_type"
-                                                value={step?.field || ''}
-                                                onChange={e => setStep({ ...step, field: e.target.value })}
-                                                className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm font-mono focus:outline-none focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 transition-all text-gray-900 dark:text-white"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Input Type</label>
-                                        <div className="relative">
-                                            <select
-                                                value={step?.type}
-                                                onChange={e => setStep({ ...step, type: e.target.value })}
-                                                className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-2xl p-4 text-sm focus:outline-none focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 transition-all appearance-none cursor-pointer font-semibold text-gray-900 dark:text-white"
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Public Strategic Title</label>
+                                <input
+                                    placeholder="e.g. What brings you to Go Experts today?"
+                                    value={step?.title || ''}
+                                    onChange={e => setStep({ ...step, title: e.target.value })}
+                                    className="w-full bg-gray-50/50 dark:bg-[#222] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contextual Description</label>
+                                <textarea
+                                    placeholder="Provide more clarity for the end-user..."
+                                    value={step?.description || ''}
+                                    onChange={e => setStep({ ...step, description: e.target.value })}
+                                    rows={3}
+                                    className="w-full bg-gray-50/50 dark:bg-[#222] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all resize-none"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Database Field Key</label>
+                                    <input
+                                        placeholder="e.g. user_intent_id"
+                                        value={step?.field || ''}
+                                        onChange={e => setStep({ ...step, field: e.target.value })}
+                                        className="w-full bg-gray-50/50 dark:bg-[#222] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm font-mono font-bold text-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Input Archetype</label>
+                                    <select
+                                        value={step?.type}
+                                        onChange={e => setStep({ ...step, type: e.target.value })}
+                                        className="w-full bg-gray-50/50 dark:bg-[#222] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all cursor-pointer"
+                                    >
+                                        <option value="single-selection">Single Selection List</option>
+                                        <option value="multi-selection">Multiple Selection List</option>
+                                        <option value="input">Text Input Field</option>
+                                        <option value="otp-verification">OTP Verification</option>
+                                        <option value="account-creation">Account Creation Form</option>
+                                        <option value="subscription-plan">Subscription Matrix</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-6 border-t border-gray-50">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Role Permissibility</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {['freelancer', 'client', 'investor', 'startup_creator'].map(role => {
+                                        const isSelected = step?.applicableRoles?.includes(role);
+                                        return (
+                                            <button
+                                                key={role} type="button"
+                                                onClick={() => {
+                                                    const currentRoles = step?.applicableRoles || [];
+                                                    const nextRoles = isSelected 
+                                                        ? currentRoles.filter((r: string) => r !== role)
+                                                        : [...currentRoles, role];
+                                                    setStep({ ...step, applicableRoles: nextRoles });
+                                                }}
+                                                className={`px-5 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase border ${
+                                                    isSelected 
+                                                    ? 'bg-[#F24C20] text-white border-[#F24C20] shadow-lg shadow-orange-500/20' 
+                                                    : 'bg-white text-gray-400 border-gray-100 hover:border-[#F24C20] hover:text-[#F24C20]'
+                                                }`}
                                             >
-                                                <option value="single-selection">Single Selection List</option>
-                                                <option value="multi-selection">Multiple Selection List</option>
-                                                <option value="input">Text Input Field</option>
-                                                <option value="otp-verification">OTP Verification</option>
-                                                <option value="account-creation">Account Creation Form</option>
-                                            </select>
-                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                        </div>
-                                    </div>
+                                                {role.replace('_', ' ')}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
-                                
-                                <div className="space-y-2 pt-4 border-t border-gray-100 dark:border-white/5">
-                                    <label className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Applicable Roles (Empty if all)</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['freelancer', 'client', 'investor', 'startup_creator'].map(role => {
-                                            const isSelected = step?.applicableRoles?.includes(role);
-                                            return (
-                                                <button
-                                                    key={role}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const currentRoles = step?.applicableRoles || [];
-                                                        const nextRoles = isSelected 
-                                                            ? currentRoles.filter((r: string) => r !== role)
-                                                            : [...currentRoles, role];
-                                                        setStep({ ...step, applicableRoles: nextRoles });
-                                                    }}
-                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border ${
-                                                        isSelected 
-                                                        ? 'bg-[#F24C20] text-white border-[#F24C20]' 
-                                                        : 'bg-gray-50 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10 hover:border-[#F24C20] hover:text-[#F24C20]'
-                                                    }`}
-                                                >
-                                                    {role.replace('_', ' ').toUpperCase()}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    <p className="text-[10px] text-gray-400 italic">If no role is selected, this step will be shown to everyone.</p>
-                                </div>
+                                <p className="text-[10px] text-gray-400 italic">Universal step if no specific roles are targeted.</p>
                             </div>
                         </section>
 
-                        {/* SELECTION OPTIONS */}
                         {(step?.type === 'single-selection' || step?.type === 'multi-selection') && (
-                            <section>
-                                <div className="flex items-center justify-between mb-5">
+                            <section className="space-y-6">
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
-                                            <List className="w-4 h-4 text-[#F24C20]" />
-                                        </div>
-                                        <h3 className="text-[13px] font-bold text-gray-900 dark:text-white uppercase tracking-widest opacity-80">Selectable Choices</h3>
+                                        <div className="w-2 h-6 bg-[#044071] rounded-full" />
+                                        <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Selectable Assets</h3>
                                     </div>
                                     <button
                                         onClick={() => setStep({ ...step, options: [...(step.options || []), { label: '', value: '', icon: '', subtitle: '' }] })}
-                                        className="text-[#F24C20] text-xs font-bold flex items-center gap-2 hover:bg-[#F24C20] hover:text-white px-5 py-2.5 rounded-xl bg-[#F24C20]/10 border border-[#F24C20]/20 hover:border-[#F24C20] transition-all active:scale-95"
+                                        className="text-[#F24C20] text-[10px] font-black tracking-widest flex items-center gap-2 hover:bg-orange-50 px-6 py-3 rounded-xl border border-orange-100 transition-all uppercase"
                                     >
-                                        <Plus className="w-4 h-4" /> ADD CHOICE
+                                        <Plus className="w-4 h-4" /> Add Logic Option
                                     </button>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <AnimatePresence>
                                         {step.options?.map((opt: any, idx: number) => (
                                             <motion.div
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                key={idx}
-                                                className="bg-white dark:bg-[#1a1a1a] border border-gray-200/60 dark:border-white/5 rounded-3xl p-6 relative group overflow-hidden shadow-sm"
+                                                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                                                key={idx} className="bg-gray-50/50 border border-gray-100 dark:border-white/5 rounded-[2rem] p-8 relative group"
                                             >
-                                                <div className="flex flex-col gap-5 relative z-10 pr-12">
-                                                    <div className="space-y-1.5 relative">
-                                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Display Label</label>
+                                                <div className="space-y-5">
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Asset Label</label>
                                                         <input
-                                                            placeholder="e.g. Design & Creative"
+                                                            placeholder="e.g. Enterprise Solution"
                                                             value={opt.label || ''}
                                                             onChange={(e) => {
                                                                 const newOptions = [...(step.options || [])];
@@ -603,97 +568,80 @@ function EditModal({ open, onClose, step, setStep, onSave }: any) {
                                                                 if (!newOptions[idx].value) newOptions[idx].value = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
                                                                 setStep({ ...step, options: newOptions });
                                                             }}
-                                                            className="w-full bg-gray-50 focus:bg-white dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-sm focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all font-semibold text-gray-900 dark:text-white"
+                                                            className="w-full bg-white border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all"
                                                         />
                                                     </div>
-                                                    <div className="space-y-1.5 relative">
-                                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Internal Value ID</label>
-                                                        <input
-                                                            placeholder="e.g. design"
-                                                            value={opt.value || ''}
-                                                            onChange={(e) => {
-                                                                const newOptions = [...(step.options || [])];
-                                                                newOptions[idx] = { ...newOptions[idx], value: e.target.value };
-                                                                setStep({ ...step, options: newOptions });
-                                                            }}
-                                                            className="w-full bg-gray-50 focus:bg-white dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-sm font-mono text-gray-600 dark:text-gray-400 focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all"
-                                                        />
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Value Key</label>
+                                                            <input
+                                                                placeholder="enterprise"
+                                                                value={opt.value || ''}
+                                                                onChange={(e) => {
+                                                                    const newOptions = [...(step.options || [])];
+                                                                    newOptions[idx] = { ...newOptions[idx], value: e.target.value };
+                                                                    setStep({ ...step, options: newOptions });
+                                                                }}
+                                                                className="w-full bg-white border border-gray-100 rounded-xl p-3 text-[11px] font-mono font-bold text-gray-500"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Icon Name</label>
+                                                            <input
+                                                                placeholder="Globe"
+                                                                value={opt.icon || ''}
+                                                                onChange={(e) => {
+                                                                    const newOptions = [...(step.options || [])];
+                                                                    newOptions[idx] = { ...newOptions[idx], icon: e.target.value };
+                                                                    setStep({ ...step, options: newOptions });
+                                                                }}
+                                                                className="w-full bg-white border border-gray-100 rounded-xl p-3 text-sm font-bold"
+                                                            />
+                                                        </div>
                                                     </div>
-
-                                                    <div className="space-y-1.5 relative">
-                                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1 flex items-center gap-1.5">
-                                                            <Settings2 className="w-3 h-3" /> Icon Name
-                                                        </label>
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Subtext Description</label>
                                                         <input
-                                                            placeholder="e.g. Briefcase"
-                                                            value={opt.icon || ''}
-                                                            onChange={(e) => {
-                                                                const newOptions = [...(step.options || [])];
-                                                                newOptions[idx] = { ...newOptions[idx], icon: e.target.value };
-                                                                setStep({ ...step, options: newOptions });
-                                                            }}
-                                                            className="w-full bg-gray-50 focus:bg-white dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-sm focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all text-gray-900 dark:text-white"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-1.5 relative">
-                                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Description Hint</label>
-                                                        <input
-                                                            placeholder="Short subtext..."
+                                                            placeholder="Scalable architecture for teams..."
                                                             value={opt.subtitle || ''}
                                                             onChange={(e) => {
-                                                                const newOptions = [...(step.options || [])];
-                                                                newOptions[idx] = { ...newOptions[idx], subtitle: e.target.value };
-                                                                setStep({ ...step, options: newOptions });
-                                                            }}
-                                                            className="w-full bg-gray-50 focus:bg-white dark:bg-[#222] border border-gray-200 dark:border-white/5 rounded-xl p-3 text-sm focus:border-[#F24C20] focus:ring-2 focus:ring-[#F24C20]/20 outline-none transition-all text-gray-900 dark:text-white"
+                                                                    const newOptions = [...(step.options || [])];
+                                                                    newOptions[idx] = { ...newOptions[idx], subtitle: e.target.value };
+                                                                    setStep({ ...step, options: newOptions });
+                                                                }}
+                                                            className="w-full bg-white border border-gray-100 rounded-xl p-3 text-xs font-medium italic text-gray-500"
                                                         />
                                                     </div>
                                                 </div>
-
-                                                {/* Delete Button overlaid */}
-                                                <div className="absolute top-3 right-3 z-20">
-                                                    <button
-                                                        onClick={() => {
-                                                            const newOptions = step.options.filter((_: any, i: number) => i !== idx);
-                                                            setStep({ ...step, options: newOptions });
-                                                        }}
-                                                        className="w-10 h-10 bg-white dark:bg-[#222] border border-gray-200 dark:border-white/10 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-2xl flex items-center justify-center transition-all shadow-sm active:scale-95"
-                                                        title="Remove choice"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        const newOptions = step.options.filter((_: any, i: number) => i !== idx);
+                                                        setStep({ ...step, options: newOptions });
+                                                    }}
+                                                    className="absolute -top-3 -right-3 w-10 h-10 bg-white border border-red-50 text-red-200 hover:text-red-500 hover:border-red-100 rounded-full flex items-center justify-center transition-all shadow-lg shadow-red-500/5 active:scale-95"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </motion.div>
                                         ))}
                                     </AnimatePresence>
-
-                                    {(!step.options || step.options?.length === 0) && (
-                                        <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-3xl bg-white dark:bg-[#1a1a1a]">
-                                            <div className="bg-gray-50 dark:bg-[#222] w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100 dark:border-white/5">
-                                                <List className="w-6 h-6 text-gray-400" />
-                                            </div>
-                                            <h4 className="text-sm font-bold text-gray-900 dark:text-white">Empty Choices</h4>
-                                            <p className="text-sm text-gray-500 mt-1 max-w-[250px] mx-auto">Add selectable options for the user to pick from in this step.</p>
-                                        </div>
-                                    )}
                                 </div>
                             </section>
                         )}
                     </div>
 
-                    {/* Footer */}
-                    <div className="px-8 py-5 border-t border-gray-100 dark:border-white/5 bg-white dark:bg-[#1a1a1a] flex justify-end gap-3 rounded-b-[2.5rem] flex-shrink-0 flex-grow-0">
+                    <div className="px-10 py-8 border-t border-gray-50 dark:border-[#262626] bg-gray-50/30 dark:bg-[#262626]/50 flex justify-end gap-4">
                         <button
                             onClick={onClose}
-                            className="flex-1 px-6 py-3.5 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#222] font-bold transition-colors text-xs border border-transparent hover:border-gray-200 dark:hover:border-white/5"
+                            className="px-8 py-4 rounded-2xl font-black text-[10px] text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors"
                         >
-                            Cancel
+                            Abort Configuration
                         </button>
                         <button
                             onClick={onSave}
-                            className="flex-[2] bg-[#F24C20] hover:bg-[#d43a12] text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-[#F24C20]/25 active:scale-95 transition-all text-xs flex items-center justify-center gap-2"
+                            className="bg-[#F24C20] hover:bg-orange-600 text-white px-12 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-orange-500/20 active:scale-95 transition-all flex items-center gap-3"
                         >
-                            <CheckCircle2 className="w-4 h-4" /> Save Changes
+                            <CheckCircle2 className="w-5 h-5" /> Deploy Logic
                         </button>
                     </div>
                 </motion.div>
@@ -702,4 +650,3 @@ function EditModal({ open, onClose, step, setStep, onSave }: any) {
         document.body
     );
 }
-

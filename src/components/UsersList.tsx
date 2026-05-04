@@ -452,35 +452,35 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
         onUserUpdated={handleUserUpdated}
       />
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-gray-100 dark:border-[#262626] pb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Users Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage all users, verify identities, and monitor activities
+          <h1 className="text-2xl font-semibold text-[#044071] dark:text-white mb-2 tracking-tight">Ecosystem Entity Directory</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium italic opacity-70">
+            "Authorized oversight of global user profiles, identity protocols, and interaction telemetry."
           </p>
         </div>
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="bg-[#F24C20] hover:bg-[#d43a12] text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2"
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          className="bg-[#F24C20] hover:bg-[#d43a12] text-white px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-3 shadow-xl shadow-orange-500/20 transition-all"
           onClick={onAddUser}
         >
-          <User className="w-5 h-5" />
-          Add New User
+          <PlusCircle className="w-4 h-4" />
+          Initialize New Entity
         </motion.button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-[#1a1a1a] rounded-[2.5rem] p-8 border border-gray-100 dark:border-[#262626] shadow-sm space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="md:col-span-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#F24C20] transition-colors" />
               <input
                 type="text"
-                placeholder="Search by name or email..."
+                placeholder="Search semantic identities (Name, ID, Email)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-50 dark:border-[#262626] bg-gray-50/50 dark:bg-black/20 focus:bg-white dark:focus:bg-black/40 focus:ring-4 focus:ring-[#F24C20]/5 transition-all outline-none text-sm font-medium"
               />
             </div>
           </div>
@@ -492,17 +492,16 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 setCurrentPage(1);
                 setFilterStatus(e.target.value as any);
               }}
-              style={{ backgroundColor: '#000000', color: '#ffffff', colorScheme: 'dark' }}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-4 rounded-2xl border border-gray-50 dark:border-[#262626] bg-gray-50/50 dark:bg-black/20 text-sm font-bold text-gray-600 dark:text-gray-300 focus:ring-4 focus:ring-[#F24C20]/5 outline-none cursor-pointer"
             >
-              <option value="all" className="bg-black text-white">All Status</option>
-              <option value="new" className="bg-black text-white">New Users</option>
-              <option value="active" className="bg-black text-white">Active Users</option>
-              <option value="kyc_not_verified" className="bg-black text-white">KYC Not Verified</option>
-              <option value="suspended" className="bg-black text-white">Suspended</option>
-              <option value="blocked" className="bg-black text-white">Blocked</option>
-              <option value="deleted" className="bg-black text-white">Deleted</option>
-              <option value="paid" className="bg-black text-white">Subscription / Paid Users</option>
+              <option value="all">Protocol Status: All</option>
+              <option value="new">New Entrants (7d)</option>
+              <option value="active">Operational Assets</option>
+              <option value="kyc_not_verified">Pending Verification</option>
+              <option value="suspended">Suspended Nodes</option>
+              <option value="blocked">Deauthorized</option>
+              <option value="deleted">Purged Entities</option>
+              <option value="paid">Premium Protocols</option>
             </select>
           </div>
 
@@ -513,115 +512,57 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 setCurrentPage(1);
                 setFilterRole(e.target.value as any);
               }}
-              style={{ backgroundColor: '#000000', color: '#ffffff', colorScheme: 'dark' }}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-4 rounded-2xl border border-gray-50 dark:border-[#262626] bg-gray-50/50 dark:bg-black/20 text-sm font-bold text-gray-600 dark:text-gray-300 focus:ring-4 focus:ring-[#F24C20]/5 outline-none cursor-pointer"
             >
-              <option value="all" className="bg-black text-white">All Roles</option>
-              <option value="client" className="bg-black text-white">Client</option>
-              <option value="freelancer" className="bg-black text-white">Freelancer</option>
-              <option value="investor" className="bg-black text-white">Investor</option>
-              <option value="startup_creator" className="bg-black text-white">Startup Idea Creator</option>
+              <option value="all">Ecosystem Role: All</option>
+              <option value="client">Primary Client</option>
+              <option value="freelancer">Active Specialist</option>
+              <option value="investor">Capital Source</option>
+              <option value="startup_creator">Concept Architect</option>
             </select>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-4">
-          <button
-            onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('all');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'all'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+        <div className="flex flex-wrap gap-3">
+          {[
+            { id: 'all', label: 'Global Registry', count: summaryCounts.all, color: 'text-indigo-600 bg-indigo-50 border-indigo-100' },
+            { id: 'new', label: 'Recent Deployment', count: summaryCounts.new, color: 'text-blue-600 bg-blue-50 border-blue-100' },
+            { id: 'active', label: 'Operational', count: summaryCounts.active, color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
+            { id: 'kyc_not_verified', label: 'KYC Pending', count: summaryCounts.kyc_not_verified, color: 'text-amber-600 bg-amber-50 border-amber-100' },
+            { id: 'blocked', label: 'Restricted', count: summaryCounts.blocked, color: 'text-orange-600 bg-orange-50 border-orange-100' },
+            { id: 'deleted', label: 'Terminated', count: summaryCounts.deleted, color: 'text-red-600 bg-red-50 border-red-100' },
+            { id: 'paid', label: 'Premium Tier', count: summaryCounts.paid, color: 'text-[#F24C20] bg-orange-50 border-orange-100' }
+          ].map((chip) => (
+            <button
+              key={chip.id}
+              onClick={() => {
+                setCurrentPage(1);
+                setFilterStatus(chip.id as any);
+              }}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
+                filterStatus === chip.id 
+                ? 'bg-[#F24C20] text-white border-[#F24C20] shadow-lg shadow-orange-500/20 scale-105' 
+                : `${chip.color} hover:shadow-md opacity-80 hover:opacity-100`
               }`}
-          >
-            All Users ({summaryCounts.all})
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('new');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'new'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            New Users ({summaryCounts.new})
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('active');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'active'
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Active Users ({summaryCounts.active})
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('kyc_not_verified');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'kyc_not_verified'
-              ? 'bg-yellow-500 text-black'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            KYC Not Verified ({summaryCounts.kyc_not_verified})
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('blocked');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'blocked'
-              ? 'bg-yellow-500 text-black'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Blocked Users ({summaryCounts.blocked})
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('deleted');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'deleted'
-              ? 'bg-red-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Deleted Users ({summaryCounts.deleted})
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('paid');
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'paid'
-              ? 'bg-yellow-500 text-black'
-              : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-          >
-            Subscription / Paid Users ({summaryCounts.paid})
-          </button>
+            >
+              {chip.label}
+              <span className={`px-2 py-0.5 rounded-full text-[9px] ${filterStatus === chip.id ? 'bg-white/20' : 'bg-black/5'}`}>
+                {chip.count}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-[#1a1a1a] rounded-[2.5rem] border border-gray-100 dark:border-[#262626] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900/50 sticky top-0">
+            <thead className="bg-gray-50/50 dark:bg-black/20 border-b border-gray-50 dark:border-[#262626]">
               <tr>
-                <th className="px-6 py-4 text-left">
+                <th className="px-8 py-5 text-left">
                   <input
                     type="checkbox"
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="w-4 h-4 rounded-lg border-gray-200 text-[#F24C20] focus:ring-[#F24C20]/20"
                     onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedUsers(paginatedUsers.map(u => u._id));
@@ -631,12 +572,12 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                     }}
                   />
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">User</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Role</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Email Varification</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">KYC Status</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Joined</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
+                <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-gray-400">Entity Identity</th>
+                <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-gray-400">Ecosystem Role</th>
+                <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-gray-400">Mail Protocol</th>
+                <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-gray-400">KYC Clearance</th>
+                <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-gray-400">Initialization</th>
+                <th className="px-8 py-5 text-center text-[11px] font-black uppercase tracking-widest text-gray-400">Command Center</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
