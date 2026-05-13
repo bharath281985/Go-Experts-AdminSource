@@ -92,115 +92,103 @@ export function StartupCategories() {
   };
 
   return (
-    <div className="max-w-[1300px] mx-auto space-y-8 pb-16 px-6">
-      {/* Header - Professional Alignment */}
-      <div className="flex items-center justify-between border-b border-gray-100 dark:border-[#262626] pb-6 mt-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold text-[#044071] dark:text-white mb-1">Idea Categories</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Manage classification taxonomies for startup concepts and ideas.</p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Grid3x3 className="w-6 h-6 text-[#F24C20]" />
+            Idea Categories
+          </h1>
+          <p className="text-gray-500">Manage classification for startup concepts</p>
         </div>
-        <motion.button 
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+        <button 
           onClick={() => handleOpenModal()}
-          className="bg-[#F24C20] hover:bg-[#d43a12] text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 flex-shrink-0 shadow-lg shadow-[#F24C20]/10"
+          className="px-6 py-2 bg-[#F24C20] text-white rounded-xl font-bold hover:scale-105 transition-all shadow-lg shadow-[#F24C20]/20 flex items-center gap-2"
         >
           <Plus className="w-5 h-5" /> Add Category
-        </motion.button>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-            [1,2,3].map(i => <div key={i} className="h-48 rounded-[2rem] bg-gray-50/50 animate-pulse border border-gray-100" />)
-        ) : categories.map((cat, idx) => (
-          <motion.div 
-            key={cat._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
-            className="bg-white dark:bg-[#1a1a1a] p-8 rounded-[2rem] border border-gray-100 dark:border-[#262626] shadow-sm hover:shadow-xl hover:border-[#F24C20]/10 transition-all group relative overflow-hidden"
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F24C20] to-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
-                <Grid3x3 className="w-7 h-7" />
+            [1,2,3].map(i => <div key={i} className="h-40 rounded-xl bg-gray-50 animate-pulse" />)
+        ) : categories.map(cat => (
+          <div key={cat._id} className="bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-100 dark:border-[#262626] group">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-[#F24C20]/10 flex items-center justify-center text-[#F24C20]">
+                <Grid3x3 className="w-6 h-6" />
               </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button onClick={() => handleOpenModal(cat)} className="p-2.5 hover:bg-blue-50 text-[#044071] rounded-xl transition-colors"><Pencil className="w-4 h-4" /></button>
-                <button onClick={() => handleDelete(cat._id)} className="p-2.5 hover:bg-red-50 text-red-500 rounded-xl transition-colors"><Trash2 className="w-4 h-4" /></button>
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => handleOpenModal(cat)} className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Pencil className="w-4 h-4" /></button>
+                <button onClick={() => handleDelete(cat._id)} className="p-2 bg-red-50 text-red-600 rounded-lg"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight mb-2 truncate">{cat.name}</h3>
-            <p className="text-sm text-gray-500 line-clamp-3 mb-8 font-medium italic">
-                "{cat.description || 'No strategic description available for this category asset.'}"
-            </p>
-             <div className="flex items-center justify-between mt-auto pt-6 border-t border-gray-50 dark:border-[#262626]">
+            <h3 className="text-lg font-bold mb-1">{cat.name}</h3>
+            <p className="text-sm text-gray-500 line-clamp-2 mb-4">{cat.description || 'No description available'}</p>
+             <div className="flex items-center justify-between mt-auto">
                <button 
                  onClick={() => handleToggleStatus(cat)}
-                 className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                     cat.status === 'active' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-gray-100 text-gray-400'
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-sm' 
+                    : 'bg-red-500/10 text-red-600 border border-red-500/20 shadow-sm'
                  }`}
+                 title="Click to toggle status"
                >
                  {cat.status}
                </button>
-               <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                  {new Date(cat.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-               </div>
+               <div className="text-xs font-semibold text-gray-400">Created: {new Date(cat.createdAt).toLocaleDateString()}</div>
              </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      <AnimatePresence>
-        {showModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#044071]/20 backdrop-blur-md p-4">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-[#1a1a1a] w-full max-w-lg rounded-[2.5rem] p-12 relative shadow-2xl border border-white/20"
-            >
-              <button onClick={() => setShowModal(false)} className="absolute top-8 right-8 p-2 text-gray-300 hover:text-gray-500 transition-colors"><X className="w-6 h-6" /></button>
-              <div className="mb-10">
-                <h2 className="text-2xl font-bold text-[#044071] dark:text-white mb-2">{currentCategory ? 'Edit Taxonomy' : 'New Idea Taxonomy'}</h2>
-                <p className="text-sm text-gray-400">Define the classification parameters for startup concepts.</p>
+      {showModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-md rounded-[32px] p-8 relative">
+            <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-black dark:hover:text-white"><X className="w-6 h-6" /></button>
+            <h2 className="text-2xl font-bold mb-6">{currentCategory ? 'Update Category' : 'New Idea Category'}</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Category Name</label>
+                <input 
+                  type="text" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#262626] border-none outline-none focus:ring-1 focus:ring-[#F24C20]"
+                  required
+                />
               </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Category Label *</label>
-                  <input type="text" value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-5 py-3.5 rounded-xl bg-gray-50 dark:bg-[#262626] border-none outline-none focus:ring-2 focus:ring-[#F24C20]/20 transition-all font-medium"
-                    required placeholder="e.g. Fintech Solutions" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Strategic Description</label>
-                  <textarea value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full px-5 py-3.5 rounded-xl bg-gray-50 dark:bg-[#262626] border-none outline-none focus:ring-2 focus:ring-[#F24C20]/20 resize-none font-medium h-32"
-                    placeholder="Provide a detailed taxonomic description..." />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-2 ml-1">Asset Status</label>
-                  <select value={formData.status}
-                     onChange={(e) => setFormData({...formData, status: e.target.value})}
-                     className="w-full px-5 py-3.5 rounded-xl bg-gray-50 dark:bg-[#262626] border-none outline-none focus:ring-2 focus:ring-[#F24C20]/20 font-bold"
-                  >
-                     <option value="active">Active Placement</option>
-                     <option value="inactive">Hidden Asset</option>
-                  </select>
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Description</label>
+                <textarea 
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#262626] border-none outline-none focus:ring-1 focus:ring-[#F24C20] resize-none"
+                  rows={4}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Status</label>
+                <select 
+                   value={formData.status}
+                   onChange={(e) => setFormData({...formData, status: e.target.value})}
+                   className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#262626] border-none outline-none focus:ring-1 focus:ring-[#F24C20]"
+                >
+                   <option value="active">Active</option>
+                   <option value="inactive">Inactive</option>
+                </select>
+              </div>
 
-                <div className="pt-8 flex gap-4">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-4 text-sm font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" 
-                    className="flex-1 py-4 bg-[#F24C20] text-white rounded-2xl font-bold shadow-xl shadow-[#F24C20]/20 transition-all">
-                    {currentCategory ? 'Commit Update' : 'Authorize Asset'}
-                  </motion.button>
-                </div>
-              </form>
-            </motion.div>
+              <div className="pt-4 flex gap-4">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 text-sm font-bold text-gray-500">Cancel</button>
+                <button type="submit" className="flex-1 py-3 bg-[#F24C20] text-white rounded-xl font-bold shadow-lg shadow-[#F24C20]/20">Save Category</button>
+              </div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
