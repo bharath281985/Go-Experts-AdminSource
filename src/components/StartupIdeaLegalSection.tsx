@@ -38,6 +38,7 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
   const [faqForm, setFaqForm] = useState({ question: '', answer: '', sort_order: 0 });
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
+  const [deleteFaqId, setDeleteFaqId] = useState<string | null>(null);
 
   const title = type === 'faq'
     ? 'Startup Ideas FAQ'
@@ -112,10 +113,10 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
   };
 
   const handleDeleteFaq = async (id: string) => {
-    if (!confirm('Delete this FAQ?')) return;
     try {
       await api.delete(`/cms/startup/faqs/${id}`);
       toast.success('FAQ deleted');
+      setDeleteFaqId(null);
       fetchData();
     } catch {
       toast.error('Failed to delete FAQ');
@@ -352,7 +353,7 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
                               <Edit className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => handleDeleteFaq(faq._id)}
+                              onClick={() => setDeleteFaqId(faq._id)}
                               className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
                             >
                               <Trash2 className="w-5 h-5" />
@@ -399,6 +400,43 @@ export const StartupIdeaLegalSection: React.FC<StartupIdeaLegalSectionProps> = (
             </div>
           )}
         </div>
+
+        <AnimatePresence>
+          {deleteFaqId && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                className="w-full max-w-md rounded-2xl border border-[#2c2c2c] bg-[#111111] p-6 shadow-2xl"
+              >
+                <h3 className="text-xl font-bold text-white">Delete FAQ</h3>
+                <p className="mt-2 text-sm text-slate-400">
+                  Are you sure you want to delete this FAQ? This action cannot be undone.
+                </p>
+                <div className="mt-6 flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setDeleteFaqId(null)}
+                    className="rounded-xl border border-[#303030] px-5 py-2.5 font-semibold text-slate-300 transition-all hover:bg-[#1a1a1a] hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDeleteFaq(deleteFaqId)}
+                    className="rounded-xl bg-red-600 px-5 py-2.5 font-semibold text-white transition-all hover:bg-red-500"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <style dangerouslySetInnerHTML={{ __html: editorStyles }} />
       </div>

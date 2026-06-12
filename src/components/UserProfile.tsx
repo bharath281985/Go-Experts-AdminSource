@@ -15,6 +15,8 @@ interface UserProfileProps {
   onBack: () => void;
 }
 
+const verifiedKycStatuses = ['basic_verified', 'fully_verified', 'premium_verified'];
+
 export function UserProfile({ userId, onBack }: UserProfileProps) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,8 @@ export function UserProfile({ userId, onBack }: UserProfileProps) {
           ? 'Client'
           : 'User';
 
-  const isKycVerified = user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified;
+  const kycDetails = user.profile?.kyc_details || user.kyc_details || {};
+  const isKycVerified = verifiedKycStatuses.includes(String(user.kyc_status || '').toLowerCase()) || Boolean(kycDetails.is_verified);
   const rating = Number(user.review_score || user.rating || 0).toFixed(1);
 
   return (
@@ -205,34 +208,20 @@ export function UserProfile({ userId, onBack }: UserProfileProps) {
               }`}
           >
             <Ban className="w-4 h-4" />
-            {!user.is_suspended ? 'Suspend User' : 'Activate User'}
+            {!user.is_suspended ? 'Block User' : 'Restore User'}
           </button>
 
           <button
             onClick={async () => {
-              const reason = window.prompt('Reason for rejection (this will be emailed to the user):');
-              if (reason === null) return;
+              const isSoftDeleted = Boolean(user.is_deleted || user.deleted_at || user.status === 'deleted');
+              const confirmMessage = isSoftDeleted
+                ? 'PERMANENT DELETE: Are you absolutely sure? This cannot be undone.'
+                : 'Soft delete this user? The user can be restored later.';
+              if (!window.confirm(confirmMessage)) return;
               try {
-                const response = await api.put(`/admin/users/${userId}/reject`, { reason });
-                if (response.data.success) {
-                  const res = await api.get(`/admin/users/${userId}`);
-                  setUser(res.data.user);
-                }
-              } catch (err: any) {
-                console.error('Rejection failed:', err);
-              }
-            }}
-            className="flex-1 min-w-[140px] px-4 py-3 bg-red-600 text-white hover:bg-red-700 border border-red-700 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 shadow-xl"
-          >
-            <ShieldAlert className="w-4 h-4" />
-            Reject Profile
-          </button>
-
-          <button
-            onClick={async () => {
-              if (!window.confirm('PERMANENT DELETE: Are you absolutely sure? This cannot be undone.')) return;
-              try {
-                const response = await api.delete(`/admin/users/${userId}`);
+                const response = await api.delete(`/admin/users/${userId}`, {
+                  params: (user.is_deleted || user.deleted_at || user.status === 'deleted') ? { permanent: true } : {}
+                });
                 if (response.data.success) {
                   onBack();
                 }
@@ -243,7 +232,7 @@ export function UserProfile({ userId, onBack }: UserProfileProps) {
             className="flex-1 min-w-[140px] px-4 py-3 bg-zinc-950 text-red-500 hover:bg-red-600 hover:text-white border border-red-900 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-2 shadow-xl"
           >
             <X className="w-4 h-4" />
-            Delete Permanently
+            {(user.is_deleted || user.deleted_at || user.status === 'deleted') ? 'Delete Permanently' : 'Soft Delete User'}
           </button>
         </div>
 
@@ -484,17 +473,17 @@ export function UserProfile({ userId, onBack }: UserProfileProps) {
               <div className="space-y-3">
                 <DocumentItem
                   label="Aadhaar Card"
-                  exists={!!user.kyc_details?.aadhar_card}
-                  onClick={() => user.kyc_details?.aadhar_card && setPreviewDocument({
-                    url: getFullUrl(user.kyc_details.aadhar_card),
+                  exists={!!kycDetails.aadhar_card}
+                  onClick={() => kycDetails.aadhar_card && setPreviewDocument({
+                    url: getFullUrl(kycDetails.aadhar_card),
                     title: 'Aadhaar Card'
                   })}
                 />
                 <DocumentItem
                   label="PAN Card"
-                  exists={!!user.kyc_details?.pan_card}
-                  onClick={() => user.kyc_details?.pan_card && setPreviewDocument({
-                    url: getFullUrl(user.kyc_details.pan_card),
+                  exists={!!kycDetails.pan_card}
+                  onClick={() => kycDetails.pan_card && setPreviewDocument({
+                    url: getFullUrl(kycDetails.pan_card),
                     title: 'PAN Card'
                   })}
                 />

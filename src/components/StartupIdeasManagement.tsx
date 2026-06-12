@@ -23,13 +23,36 @@ interface Props {
 
 export function StartupIdeasManagement({ onSelectIdea }: Props) {
   const [ideas, setIdeas] = useState<any[]>([]);
+  const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchIdeas();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/startup-categories');
+      const list = res?.data?.data || res?.data?.categories || [];
+      const map: Record<string, string> = {};
+      list.forEach((c: any) => {
+        if (c?._id && c?.name) map[c._id] = c.name;
+      });
+      setCategoryMap(map);
+    } catch (error) {
+      // keep silent fallback
+    }
+  };
+
+  const getCategoryLabel = (idea: any) => {
+    if (idea?.category_name) return idea.category_name;
+    if (idea?.category?.name) return idea.category.name;
+    if (typeof idea?.category === 'string') return categoryMap[idea.category] || idea.category;
+    return 'N/A';
+  };
 
   const fetchIdeas = async () => {
     try {
@@ -57,8 +80,16 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
     }
   };
 
+  const normalizeIdeaStatus = (rawStatus: any): 'pending' | 'approved' | 'rejected' => {
+    const s = String(rawStatus || '').toLowerCase().trim();
+    if (s.includes('approve') || s === 'live') return 'approved';
+    if (s.includes('reject')) return 'rejected';
+    return 'pending';
+  };
+
   const filteredIdeas = ideas.filter(idea => {
-    const matchesFilter = filter === 'all' || idea.status === filter;
+    const normalizedStatus = normalizeIdeaStatus(idea.status);
+    const matchesFilter = filter === 'all' || normalizedStatus === filter;
     const matchesSearch = idea.title.toLowerCase().includes(search.toLowerCase()) ||
       idea.creator?.full_name?.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
@@ -154,7 +185,7 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
                 </td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded uppercase">
-                    {idea.category}
+                    {getCategoryLabel(idea)}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -179,7 +210,7 @@ export function StartupIdeasManagement({ onSelectIdea }: Props) {
                     idea.status === 'pending' ? 'bg-amber-50 text-amber-600' :
                       'bg-red-50 text-red-600'
                     }`}>
-                    {idea.status}
+                    {normalizeIdeaStatus(idea.status)}
                   </span>
                 </td>
                 <td className="px-6 py-4">

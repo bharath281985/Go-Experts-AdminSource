@@ -146,8 +146,16 @@ export function StartupCategories() {
       {showModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-md rounded-[32px] p-8 relative">
-            <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-black dark:hover:text-white"><X className="w-6 h-6" /></button>
-            <h2 className="text-2xl font-bold mb-6">{currentCategory ? 'Update Category' : 'New Idea Category'}</h2>
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold">{currentCategory ? 'Update Category' : 'New Idea Category'}</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="shrink-0 p-2 text-gray-400 hover:text-black dark:hover:text-white"
+                aria-label="Close modal"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">

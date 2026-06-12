@@ -97,7 +97,7 @@ export function AdminLayout({
       icon: <FolderKanban className="w-5 h-5" />,
       submenu: [
         { id: 'projects', label: 'Project Listings', icon: <ClipboardList className="w-4 h-4" /> },
-        { id: 'proposals', label: 'Proposals Overview', icon: <FileText className="w-4 h-4" /> }
+        // { id: 'proposals', label: 'Proposals Overview', icon: <FileText className="w-4 h-4" /> }
       ]
     },
     {
@@ -194,11 +194,11 @@ export function AdminLayout({
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-[100000] ${darkMode ? 'bg-[#1a1a1a]/80 border-[#262626]' : 'bg-white/80'
+        className={`fixed top-0 left-0 right-0 z-[100000] overflow-visible ${darkMode ? 'bg-[#1a1a1a]/80 border-[#262626]' : 'bg-white/80'
           } backdrop-blur-xl border-b shadow-sm`}
         style={{ zIndex: 100000 }}
       >
-        <div className="flex items-center justify-between px-6 h-16">
+        <div className="flex items-center justify-between px-6 h-16 overflow-visible">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -233,14 +233,12 @@ export function AdminLayout({
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
-            <div className="relative">
+            <div
+              className="relative"
+              onMouseEnter={() => setShowNotifications(true)}
+              onMouseLeave={() => setShowNotifications(false)}
+            >
               <button 
-                onClick={() => {
-                  setShowNotifications(!showNotifications);
-                  if (!showNotifications && notificationCount > 0) {
-                    // We can clear on open or have a button inside
-                  }
-                }}
                 className={`relative p-2 hover:bg-gray-100 dark:hover:bg-[#262626] rounded-lg transition-colors ${showNotifications ? 'bg-gray-100 dark:bg-[#262626]' : ''}`}
               >
                 <Bell className="w-5 h-5" />
@@ -258,7 +256,7 @@ export function AdminLayout({
             </div>
 
             <div
-              className="relative flex items-center gap-2 pl-3 border-l dark:border-[#262626] cursor-pointer"
+              className="relative flex items-center gap-2 pl-3 border-l dark:border-[#262626] cursor-pointer overflow-visible"
               onMouseEnter={() => setShowAdminCard(true)}
               onMouseLeave={() => setShowAdminCard(false)}
             >
@@ -278,7 +276,8 @@ export function AdminLayout({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full right-4 mt-4 w-64 bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl z-[100001] p-4"
+                    className="fixed w-64 max-w-[calc(100vw-1rem)] bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl z-[2147483647] p-4"
+                    style={{ top: 88, right: 12 }}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <img
@@ -293,6 +292,16 @@ export function AdminLayout({
                       </div>
                     </div>
                     <div className="border-t border-[#333] pt-3">
+                      <button
+                        onClick={() => {
+                          setShowAdminCard(false);
+                          onNavigate('admin-profile');
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-gray-200 hover:bg-zinc-800 rounded-xl text-sm font-medium transition-colors mb-1"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Settings
+                      </button>
                       <button
                         onClick={onLogout}
                         className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors"
@@ -316,6 +325,8 @@ export function AdminLayout({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             className="bg-[#1a1a1a] border border-[#333] rounded-2xl shadow-2xl overflow-hidden"
+            onMouseEnter={() => setShowNotifications(true)}
+            onMouseLeave={() => setShowNotifications(false)}
             style={{
               position: 'fixed',
               top: '80px',

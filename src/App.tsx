@@ -123,11 +123,17 @@ export default function App() {
   const PAGE_URLS: Record<string, string> = {
     'dashboard': '/',
     'users': '/users',
+    'users-new': '/users/new',
+    'users-active': '/users/active',
+    'users-kyc-not-verified': '/users/kyc-not-verified',
+    'users-blocked': '/users/blocked',
+    'users-soft-deleted': '/users/soft-deleted',
+    'users-paid': '/users/paid',
     'verification': '/verification',
     'suspended': '/suspended-users',
     'projects': '/projects',
-    'pending-approvals': '/pending-approvals',
-    'proposals': '/proposals',
+    // 'pending-approvals': '/pending-approvals',
+    // 'proposals': '/proposals',
     // 'gigs': '/gigs',
     // 'gig-orders': '/gig-orders',
     // 'gig-approvals': '/gig-approvals',
@@ -319,19 +325,31 @@ export default function App() {
 
       // Users & Verification
       case 'users':
-        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} />;
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} viewType="all" />;
+      case 'users-new':
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} viewType="new" />;
+      case 'users-active':
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} viewType="active" />;
+      case 'users-kyc-not-verified':
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} viewType="kyc_not_verified" />;
+      case 'users-blocked':
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} viewType="blocked" />;
+      case 'users-soft-deleted':
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} viewType="deleted" />;
+      case 'users-paid':
+        return <UsersList onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} viewType="paid" />;
       case 'verification':
-        return <UsersList viewType="verification" onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} />;
+        return <UsersList viewType="verification" onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} />;
       case 'suspended':
-        return <UsersList viewType="suspended" onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} />;
+        return <UsersList viewType="suspended" onSelectUser={setSelectedUserId} onVerifyUser={setSelectedVerifyUserId} onAddUser={() => setShowAddUser(true)} onNavigateTab={handleUsersTabNavigate} />;
 
       // Projects
       case 'projects':
         return <ProjectsList onSelectProject={setSelectedProjectId} />;
       case 'pending-approvals':
         return <ProjectsList onSelectProject={setSelectedProjectId} />;
-      case 'proposals':
-        return <ProjectsList onSelectProject={setSelectedProjectId} />;
+      // case 'proposals':
+      //   return <ProjectsList onSelectProject={setSelectedProjectId} />;
 
       /* // Gigs
       case 'gigs':
@@ -427,6 +445,20 @@ export default function App() {
       default:
         return <Dashboard />;
     }
+  };
+
+  const handleUsersTabNavigate = (status: string) => {
+    const statusToPage: Record<string, string> = {
+      all: 'users',
+      new: 'users-new',
+      active: 'users-active',
+      kyc_not_verified: 'users-kyc-not-verified',
+      blocked: 'users-blocked',
+      deleted: 'users-soft-deleted',
+      paid: 'users-paid',
+      suspended: 'suspended'
+    };
+    handleNavigate(statusToPage[status] || 'users');
   };
 
   // Handle Dark Mode

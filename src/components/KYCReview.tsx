@@ -22,6 +22,7 @@ const getFileUrl = (path: string) => {
 
 const isImage = (url: string) => /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(url);
 const isPdf = (url: string) => url.toLowerCase().includes('.pdf');
+const verifiedKycStatuses = ['basic_verified', 'fully_verified', 'premium_verified'];
 
 export function KYCReviewPage({ userId, onBack }: KYCReviewPageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -85,7 +86,8 @@ export function KYCReviewPage({ userId, onBack }: KYCReviewPageProps) {
       user.roles?.includes('freelancer') ? 'freelancer' :
         user.roles?.includes('client') ? 'client' : 'startup_creator');
 
-  const isVerified = user.kyc_status === 'fully_verified' || user.kyc_details?.is_verified;
+  const kycDetails = user.profile?.kyc_details || user.kyc_details || {};
+  const isVerified = verifiedKycStatuses.includes(String(user.kyc_status || '').toLowerCase()) || Boolean(kycDetails.is_verified);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-6">
@@ -148,13 +150,13 @@ export function KYCReviewPage({ userId, onBack }: KYCReviewPageProps) {
                 <DocumentCard
                   title="PAN Card"
                   label="Tax Identification"
-                  path={kyc.id_proof?.pan_card || user.kyc_details?.pan_card || user.kyc_details?.pancard}
+                  path={kyc.id_proof?.pan_card || kycDetails.pan_card || kycDetails.pancard}
                   onPreview={(url) => setPreviewDoc({ url, title: 'PAN Card' })}
                 />
                 <DocumentCard
                   title="Aadhaar Card"
                   label="National ID"
-                  path={kyc.id_proof?.aadhar_card || user.kyc_details?.aadhar_card}
+                  path={kyc.id_proof?.aadhar_card || kycDetails.aadhar_card}
                   onPreview={(url) => setPreviewDoc({ url, title: 'Aadhaar Card' })}
                 />
                 <DocumentCard

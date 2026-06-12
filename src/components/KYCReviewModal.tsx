@@ -11,6 +11,8 @@ interface KYCReviewModalProps {
   onReject: (userId: string) => Promise<void>;
 }
 
+const verifiedKycStatuses = ['basic_verified', 'fully_verified', 'premium_verified'];
+
 export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KYCReviewModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -19,6 +21,8 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
   const kyc = user.kyc || {};
   const isLegacy = !user.kyc;
   const role = kyc.role || (user.roles?.includes('investor') ? 'investor' : 'startup_creator');
+  const kycDetails = user.profile?.kyc_details || user.kyc_details || {};
+  const isVerified = verifiedKycStatuses.includes(String(user.kyc_status || '').toLowerCase()) || Boolean(kycDetails.is_verified);
 
   const handleAction = async (action: 'verify' | 'reject') => {
     setIsProcessing(true);
@@ -83,13 +87,13 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <DocumentCard 
                     title="PAN Card" 
-                    path={kyc.id_proof?.pan_card || user.kyc_details?.pancard} 
-                    onView={() => window.open(getFileUrl(kyc.id_proof?.pan_card || user.kyc_details?.pancard), '_blank')} 
+                    path={kyc.id_proof?.pan_card || kycDetails.pan_card || kycDetails.pancard} 
+                    onView={() => window.open(getFileUrl(kyc.id_proof?.pan_card || kycDetails.pan_card || kycDetails.pancard), '_blank')} 
                   />
                   <DocumentCard 
                     title="Aadhaar / ID Card" 
-                    path={kyc.id_proof?.aadhar_card || user.kyc_details?.aadhar_card} 
-                    onView={() => window.open(getFileUrl(kyc.id_proof?.aadhar_card || user.kyc_details?.aadhar_card), '_blank')} 
+                    path={kyc.id_proof?.aadhar_card || kycDetails.aadhar_card} 
+                    onView={() => window.open(getFileUrl(kyc.id_proof?.aadhar_card || kycDetails.aadhar_card), '_blank')} 
                   />
                    <DocumentCard 
                     title="Address Proof" 
@@ -183,7 +187,7 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
               </section>
 
               {/* Status Warning */}
-              {user.kyc_status === 'fully_verified' ? (
+              {isVerified ? (
                 <div className="p-6 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
                     <CheckCircle className="w-6 h-6" />
@@ -216,7 +220,7 @@ export function KYCReviewModal({ isOpen, onClose, user, onVerify, onReject }: KY
               </button>
               <button
                 onClick={() => handleAction('verify')}
-                disabled={isProcessing || user.kyc_status === 'fully_verified'}
+                disabled={isProcessing || isVerified}
                 className="flex-1 px-6 py-4 rounded-2xl bg-[#F24C20] text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-[#d43a12] transition-all shadow-xl shadow-[#F24C20]/20 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}

@@ -109,7 +109,7 @@ export function ProjectsList({ onSelectProject }: ProjectsListProps) {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-[#F24C20]"
+              className="projects-status-select w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
             >
               <option value="all">All Status</option>
               <option value="in_queue">In Queue</option>

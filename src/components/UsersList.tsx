@@ -32,7 +32,8 @@ interface UsersListProps {
   onSelectUser: (userId: string) => void;
   onVerifyUser?: (userId: string) => void;
   onAddUser?: () => void;
-  viewType?: 'all' | 'verification' | 'suspended';
+  onNavigateTab?: (status: UserFilterStatus) => void;
+  viewType?: UserFilterStatus | 'verification';
 }
 
 type UserFilterStatus =
@@ -45,9 +46,10 @@ type UserFilterStatus =
   | 'deleted'
   | 'paid';
 
-type UserFilterRole = 'all' | 'freelancer' | 'client' | 'startup_creator' | 'investor';
+type UserFilterRole = 'all' | 'freelancer' | 'client' | 'startup_creator' | 'investor' | 'admin';
 
-export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'all' }: UsersListProps) {
+export function UsersList({ onSelectUser, onVerifyUser, onAddUser, onNavigateTab, viewType = 'all' }: UsersListProps) {
+  const USERS_FILTER_STATE_KEY = 'admin_users_filters_v1';
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +74,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
   const [confirmAction, setConfirmAction] = useState<null | {
     title: string;
     message: string;
+    role?: string;
     confirmLabel: string;
     confirmTone?: 'red' | 'orange' | 'blue';
     onConfirm: () => Promise<void> | void;
@@ -96,18 +99,52 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
   const itemsPerPage = 30;
+  const normalizedViewType: UserFilterStatus =
+    viewType === 'verification' ? 'kyc_not_verified' : (viewType as UserFilterStatus);
+
+  useEffect(() => {
+    if (viewType !== 'all') return;
+    try {
+      const raw = window.sessionStorage.getItem(USERS_FILTER_STATE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed.filterStatus) setFilterStatus(parsed.filterStatus);
+      if (parsed.filterRole) setFilterRole(parsed.filterRole);
+      if (typeof parsed.currentPage === 'number' && parsed.currentPage > 0) setCurrentPage(parsed.currentPage);
+      if (typeof parsed.searchQuery === 'string') setSearchQuery(parsed.searchQuery);
+    } catch {
+      // ignore malformed stored state
+    }
+  }, [viewType]);
+
+  useEffect(() => {
+    if (viewType !== 'all') return;
+    try {
+      window.sessionStorage.setItem(
+        USERS_FILTER_STATE_KEY,
+        JSON.stringify({
+          filterStatus,
+          filterRole,
+          currentPage,
+          searchQuery
+        })
+      );
+    } catch {
+      // ignore storage failures
+    }
+  }, [filterStatus, filterRole, currentPage, searchQuery, viewType]);
 
   useEffect(() => {
     fetchUsers();
   }, [currentPage, filterStatus, filterRole]);
 
   useEffect(() => {
-    setFilterStatus(viewType === 'suspended' ? 'suspended' : viewType === 'verification' ? 'kyc_not_verified' : 'all');
+    setFilterStatus(normalizedViewType || 'all');
     setFilterRole('all');
     setSearchQuery('');
     setCurrentPage(1);
     setSelectedUsers([]);
-  }, [viewType]);
+  }, [normalizedViewType]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -118,7 +155,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     return () => window.clearTimeout(timeout);
   }, [searchQuery]);
 
-  const fetchUsers = async (pageOverride?: number, searchOverride?: string) => {
+  const fetchUsers = async (pageOverride?: number, searchOverride?: string, statusOverride?: UserFilterStatus) => {
     try {
       setLoading(true);
       const response = await api.get('/admin/users', {
@@ -126,7 +163,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           page: pageOverride ?? currentPage,
           limit: itemsPerPage,
           search: (searchOverride ?? searchQuery).trim(),
-          status: filterStatus,
+          status: statusOverride ?? filterStatus,
           role: filterRole
         }
       });
@@ -222,15 +259,37 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     }
   };
 
-  const submitDeleteUser = async (userId: string) => {
+  const submitDeleteUser = async (userId: string, permanent = false) => {
     try {
-      const response = await api.delete(`/admin/users/${userId}`);
+      const response = await api.delete(`/admin/users/${userId}`, {
+        params: permanent ? { permanent: true } : {}
+      });
       if (response.data.success) {
-        toast.success('User permanently deleted');
-        fetchUsers();
+        toast.success(response.data.message || (permanent ? 'User permanently deleted' : 'User deleted successfully'));
+        if (!permanent) {
+          setFilterStatus('deleted');
+          setCurrentPage(1);
+          fetchUsers(1, undefined, 'deleted');
+        } else {
+          fetchUsers(1);
+        }
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete user');
+    }
+  };
+
+  const submitRestoreUser = async (userId: string) => {
+    try {
+      const response = await api.put(`/admin/users/${userId}/restore`);
+      if (response.data.success) {
+        toast.success(response.data.message || 'User restored successfully');
+        setFilterStatus('all');
+        setCurrentPage(1);
+        fetchUsers(1);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to restore user');
     }
   };
 
@@ -266,7 +325,10 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     const isBlocked = Boolean(user.is_suspended || user.is_blocked || user.blocked || user.status === 'blocked' || user.kyc_status === 'rejected');
     const isDeleted = Boolean(user.is_deleted || user.deleted_at || user.status === 'deleted');
     const isEmailVerified = Boolean(user.is_email_verified);
-    const isKycVerified = user.kyc_status === 'fully_verified' || Boolean(user.kyc_details?.is_verified);
+    const isKycVerified =
+      ['fully_verified', 'premium_verified', 'basic_verified'].includes(String(user.kyc_status || '').toLowerCase()) ||
+      Boolean(user.kyc_details?.is_verified) ||
+      Boolean(user.profile?.kyc_details?.is_verified);
     const isKycNotVerified = !isKycVerified;
     const isPaidUser = Boolean(
       user.subscription_details?.plan_type === 'premium' ||
@@ -297,7 +359,8 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
 
   const getActionVisibility = (user: any, currentFilter: UserFilterStatus) => {
     const state = getUserDerivedState(user);
-    const hasKycSubmission = Boolean(user.kyc_details?.pancard || user.kyc_details?.pan_card || user.kyc_details?.aadhar_card || user.kyc_status === 'pending');
+    const kycDetails = user.profile?.kyc_details || user.kyc_details || {};
+    const hasKycSubmission = Boolean(kycDetails.pancard || kycDetails.pan_card || kycDetails.aadhar_card || user.kyc_status === 'pending' || user.kyc);
     const canQuickVerify = hasKycSubmission && !state.isKycVerified;
     const isRejected = user.kyc_status === 'rejected';
 
@@ -316,6 +379,9 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
       case 'new':
         return {
           ...baseActions,
+          reviewKyc: !isRejected,
+          quickVerify: canQuickVerify,
+          reject: !isRejected,
           email: true,
           remind: true
         };
@@ -340,20 +406,26 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
       case 'blocked':
         return {
           ...baseActions,
-          view: true,
+          view: false,
+          email: false,
+          reviewKyc: false,
+          quickVerify: false,
+          reject: false,
+          remind: false,
           suspendToggle: true,
           delete: true
         };
       case 'deleted':
         return {
           ...baseActions,
+          view: false,
           email: false,
           reviewKyc: false,
           quickVerify: false,
-          suspendToggle: false,
+          suspendToggle: true,
           reject: false,
           remind: false,
-          delete: false
+          delete: true
         };
       case 'paid':
         return {
@@ -423,6 +495,15 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
     );
   };
 
+  const goToStatusTab = (status: UserFilterStatus) => {
+    if (onNavigateTab) {
+      onNavigateTab(status);
+      return;
+    }
+    setCurrentPage(1);
+    setFilterStatus(status);
+  };
+
   const handleBulkAction = async (action: 'delete' | 'verify' | 'suspend' | 'activate' | 'seed_profile') => {
     try {
       setLoading(true);
@@ -470,7 +551,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
         </motion.button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+      <div className="bg-[#111827] rounded-2xl p-6 border border-[#2b3548]">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
             <div className="relative">
@@ -480,7 +561,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#34405a] bg-[#1a2436] text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -489,8 +570,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
             <select
               value={filterStatus}
               onChange={(e) => {
-                setCurrentPage(1);
-                setFilterStatus(e.target.value as any);
+                goToStatusTab(e.target.value as UserFilterStatus);
               }}
               style={{ backgroundColor: '#000000', color: '#ffffff', colorScheme: 'dark' }}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-black text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -501,7 +581,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
               <option value="kyc_not_verified" className="bg-black text-white">KYC Not Verified</option>
               <option value="suspended" className="bg-black text-white">Suspended</option>
               <option value="blocked" className="bg-black text-white">Blocked</option>
-              <option value="deleted" className="bg-black text-white">Deleted</option>
+              <option value="deleted" className="bg-black text-white">Soft Deleted</option>
               <option value="paid" className="bg-black text-white">Subscription / Paid Users</option>
             </select>
           </div>
@@ -521,6 +601,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
               <option value="freelancer" className="bg-black text-white">Freelancer</option>
               <option value="investor" className="bg-black text-white">Investor</option>
               <option value="startup_creator" className="bg-black text-white">Startup Idea Creator</option>
+              <option value="admin" className="bg-black text-white">Admin</option>
             </select>
           </div>
         </div>
@@ -528,8 +609,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
         <div className="flex flex-wrap gap-2 mt-4">
           <button
             onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('all');
+              goToStatusTab('all');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'all'
               ? 'bg-blue-600 text-white'
@@ -540,8 +620,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           </button>
           <button
             onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('new');
+              goToStatusTab('new');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'new'
               ? 'bg-blue-600 text-white'
@@ -552,8 +631,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           </button>
           <button
             onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('active');
+              goToStatusTab('active');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'active'
               ? 'bg-green-600 text-white'
@@ -564,8 +642,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           </button>
           <button
             onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('kyc_not_verified');
+              goToStatusTab('kyc_not_verified');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'kyc_not_verified'
               ? 'bg-yellow-500 text-black'
@@ -576,8 +653,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           </button>
           <button
             onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('blocked');
+              goToStatusTab('blocked');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'blocked'
               ? 'bg-yellow-500 text-black'
@@ -588,20 +664,18 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
           </button>
           <button
             onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('deleted');
+              goToStatusTab('deleted');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'deleted'
               ? 'bg-red-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
           >
-            Deleted Users ({summaryCounts.deleted})
+            Soft Deleted ({summaryCounts.deleted})
           </button>
           <button
             onClick={() => {
-              setCurrentPage(1);
-              setFilterStatus('paid');
+              goToStatusTab('paid');
             }}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterStatus === 'paid'
               ? 'bg-yellow-500 text-black'
@@ -635,7 +709,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Role</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Email Varification</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">KYC Status</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Joined</th>
+                {/* <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Joined</th> */}
                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
               </tr>
             </thead>
@@ -743,11 +817,12 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                         </button>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    {/* <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {new Date(user.created_at || user.createdAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-3">
+                    </td> */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-end gap-1 whitespace-nowrap">
+                        {filterStatus !== 'deleted' && filterStatus !== 'new' && filterStatus !== 'kyc_not_verified' && filterStatus !== 'blocked' && (
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
@@ -760,54 +835,62 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                             setWalletAmount('');
                             setWalletType('credit');
                           }}
-                          className="p-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                           title="Add Wallet Balance"
                         >
                           <PlusCircle className="w-4 h-4 text-emerald-600" />
+                          <span className="text-emerald-600">Wallet</span>
                         </motion.button>
-                        {getActionVisibility(user, filterStatus).view && (
+                        )}
+                        {filterStatus !== 'new' && filterStatus !== 'kyc_not_verified' && filterStatus !== 'blocked' && getActionVisibility(user, filterStatus).view && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => onSelectUser(user._id)}
-                            className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                             title="View Profile"
                           >
                             <Eye className="w-4 h-4 text-blue-600" />
+                            <span className="text-blue-600">View</span>
                           </motion.button>
                         )}
+                        {filterStatus !== 'deleted' && filterStatus !== 'new' && filterStatus !== 'kyc_not_verified' && filterStatus !== 'blocked' && (
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => setEditingUserId(user._id)}
-                          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                           title="Edit User"
                         >
                           <Pencil className="w-4 h-4 text-slate-500" />
+                          <span className="text-slate-500">Edit</span>
                         </motion.button>
-                        {getActionVisibility(user, filterStatus).reviewKyc && (
+                        )}
+                        {filterStatus !== 'new' && filterStatus !== 'blocked' && getActionVisibility(user, filterStatus).reviewKyc && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleOpenKYC(user)}
-                            className={`p-2 rounded-lg transition-colors ${user.kyc_details?.pancard || user.kyc_details?.pan_card ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-600' : 'hover:bg-gray-100'}`}
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg transition-colors ${(user.profile?.kyc_details || user.kyc_details)?.pancard || (user.profile?.kyc_details || user.kyc_details)?.pan_card ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-600' : 'hover:bg-gray-100'}`}
                             title="Review KYC Documents"
                           >
                             <ShieldAlert className="w-4 h-4" />
+                            <span>Review</span>
                           </motion.button>
                         )}
-                        {getActionVisibility(user, filterStatus).quickVerify && (
+                        {filterStatus !== 'kyc_not_verified' && filterStatus !== 'blocked' && getActionVisibility(user, filterStatus).quickVerify && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleVerifyUser(user._id)}
-                            className="p-2 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-green-100 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                             title="Quick KYC Verify"
                           >
                             <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="text-green-600">Verify</span>
                           </motion.button>
                         )}
-                        {getActionVisibility(user, filterStatus).email && (
+                        {filterStatus !== 'blocked' && getActionVisibility(user, filterStatus).email && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -821,31 +904,50 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                               });
                               setTextActionValue('');
                             }}
-                            className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
                             title="Send Message"
                           >
                             <Mail className="w-4 h-4 text-orange-600" />
+                            <span className="text-orange-600">Mail</span>
                           </motion.button>
                         )}
-                        {getActionVisibility(user, filterStatus).suspendToggle && (
+                        {filterStatus !== 'new' && getActionVisibility(user, filterStatus).suspendToggle && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => handleSuspendUser(user._id, user.is_suspended)}
-                            className={`p-2 rounded-lg transition-colors ${user.is_suspended
+                            onClick={() => {
+                              if (filterStatus === 'deleted') {
+                                setConfirmAction({
+                                  title: 'Restore User',
+                                  message: `Restore "${user.full_name}" from Soft Deleted tab?`,
+                                  confirmLabel: 'Restore User',
+                                  confirmTone: 'blue',
+                                  onConfirm: () => submitRestoreUser(user._id)
+                                });
+                                return;
+                              }
+                              handleSuspendUser(user._id, user.is_suspended);
+                            }}
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg transition-colors ${user.is_suspended
                               ? 'hover:bg-green-100 dark:hover:bg-green-900/20'
                               : 'hover:bg-red-100 dark:hover:bg-red-900/20'
                               }`}
-                            title={user.is_suspended ? 'Restore Access' : 'Blocked User'}
+                            title={filterStatus === 'deleted' ? 'Restore Profile' : (user.is_suspended ? 'Restore Access' : 'Blocked User')}
                           >
-                            {user.is_suspended ? (
-                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            {user.is_suspended || filterStatus === 'deleted' ? (
+                              <>
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                <span className="text-green-600">Restore</span>
+                              </>
                             ) : (
-                              <Ban className="w-4 h-4 text-red-600" />
+                              <>
+                                <Ban className="w-4 h-4 text-red-600" />
+                                <span className="text-red-600">Block</span>
+                              </>
                             )}
                           </motion.button>
                         )}
-                        {getActionVisibility(user, filterStatus).reject && (
+                        {filterStatus !== 'blocked' && getActionVisibility(user, filterStatus).reject && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
@@ -859,38 +961,44 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                               });
                               setTextActionValue('');
                             }}
-                            className="p-2 hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors text-orange-600"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-orange-100 dark:hover:bg-orange-900/20 rounded-lg transition-colors text-orange-600"
                             title="Reject Profile"
                           >
                             <Ban className="w-4 h-4" />
+                            <span>Reject</span>
                           </motion.button>
                         )}
-                        {getActionVisibility(user, filterStatus).remind && (
+                        {filterStatus !== 'new' && filterStatus !== 'blocked' && getActionVisibility(user, filterStatus).remind && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleRemindComplete(user._id)}
-                            className="p-2 hover:bg-yellow-100 dark:hover:bg-yellow-900/20 rounded-lg transition-colors text-yellow-600"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-yellow-100 dark:hover:bg-yellow-900/20 rounded-lg transition-colors text-yellow-600"
                             title="Remind to Complete Profile"
                           >
                             <Loader2 className="w-4 h-4" />
+                            <span>Remind</span>
                           </motion.button>
                         )}
-                        {getActionVisibility(user, filterStatus).delete && (
+                        {filterStatus !== 'new' && getActionVisibility(user, filterStatus).delete && (
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setConfirmAction({
-                              title: 'Delete User',
-                              message: `Are you sure you want to delete "${user.full_name}"? This cannot be undone.`,
-                              confirmLabel: 'Delete User',
+                              title: filterStatus === 'deleted' ? 'Permanently Delete User' : 'Delete User',
+                              message: filterStatus === 'deleted'
+                                ? `Permanently delete "${user.full_name}"? This action cannot be undone.`
+                                : `Delete "${user.full_name}"? User will be moved to Soft Deleted tab.`,
+                              role: role === 'unknown' ? 'User' : role.replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                              confirmLabel: filterStatus === 'deleted' ? 'Delete Permanently' : 'Move to Deleted',
                               confirmTone: 'red',
-                              onConfirm: () => submitDeleteUser(user._id)
+                              onConfirm: () => submitDeleteUser(user._id, filterStatus === 'deleted')
                             })}
-                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium hover:bg-red-100 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                             title="Delete User"
                           >
                             <Trash2 className="w-4 h-4 text-red-600" />
+                            <span className="text-red-600">{filterStatus === 'deleted' ? 'Delete' : 'Soft Delete'}</span>
                           </motion.button>
                         )}
                       </div>
@@ -1023,21 +1131,33 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+                className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/90 p-4 backdrop-blur-lg"
                 style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
               >
                 <motion.div
                   initial={{ scale: 0.96, opacity: 0, y: 16 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.96, opacity: 0, y: 16 }}
-                  className="w-full max-w-md rounded-3xl border border-[#27272a] bg-[#09090b] p-8 shadow-2xl"
+                  className="w-[92vw] max-w-[640px] rounded-2xl border border-gray-200 bg-white p-6 md:p-7 shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
+                  style={{ backgroundColor: '#ffffff' }}
                 >
-                  <h3 className="text-xl font-bold text-white">{confirmAction.title}</h3>
-                  <p className="mt-3 text-sm text-gray-400 leading-relaxed">{confirmAction.message}</p>
-                  <div className="mt-8 flex justify-end gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-5xl md:text-6xl font-bold tracking-tight text-gray-900 leading-none">{confirmAction.title}</h3>
+                      {confirmAction.role && (
+                        <div className="mt-3 inline-flex   rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-700">
+                          Role: {confirmAction.role}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-5 max-w-[560px] text-5xl md:text-6xl leading-[1.2] text-gray-700">
+                    {confirmAction.message}
+                  </p>
+                  <div className="mt-7 flex flex-wrap justify-end gap-3">
                     <button
                       onClick={() => setConfirmAction(null)}
-                      className="px-6 py-3 rounded-xl border border-[#27272a] text-gray-400 font-semibold hover:bg-[#18181b] hover:text-white transition-all"
+                      className="min-w-[150px] px-6 py-3 rounded-xl border border-gray-300 bg-white text-base md:text-lg text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all"
                     >
                       Cancel
                     </button>
@@ -1046,11 +1166,11 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                         await confirmAction.onConfirm();
                         setConfirmAction(null);
                       }}
-                      className={`px-6 py-3 rounded-xl font-bold text-white transition-all shadow-lg ${confirmAction.confirmTone === 'red'
-                        ? 'bg-red-600 hover:bg-red-500 shadow-red-900/20'
+                      className={`min-w-[220px] px-8 py-3 rounded-xl text-base md:text-lg font-bold text-white transition-all shadow-md ${confirmAction.confirmTone === 'red'
+                        ? 'bg-red-600 hover:bg-red-700 shadow-red-900/20'
                         : confirmAction.confirmTone === 'orange'
-                          ? 'bg-orange-600 hover:bg-orange-500 shadow-orange-900/20'
-                          : 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20'
+                          ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-900/20'
+                          : 'bg-blue-600 hover:bg-blue-700 shadow-blue-900/20'
                         }`}
                     >
                       {confirmAction.confirmLabel}
@@ -1067,14 +1187,14 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+                className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/90 p-4 backdrop-blur-lg"
                 style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
               >
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0, y: 20 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                  className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-[#27272a] bg-[#09090b] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.6)]"
+                  className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-[#3f3f46] bg-[#0a0a0f] p-8 shadow-[0_30px_100px_rgba(0,0,0,0.8)]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#F24C20]/10 to-transparent" />
@@ -1188,23 +1308,24 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                className="fixed inset-0 z-[2147483647] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4"
                 style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
               >
                 <motion.div
                   initial={{ scale: 0.96, opacity: 0, y: 16 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.96, opacity: 0, y: 16 }}
-                  className="w-full max-w-lg rounded-3xl border border-[#27272a] bg-[#09090b] p-8 shadow-2xl"
+                  className="w-[92vw] max-w-md overflow-hidden rounded-3xl border border-gray-200 bg-white p-8 shadow-[0_30px_100px_rgba(0,0,0,0.35)]"
+                  style={{ backgroundColor: '#ffffff' }}
                 >
-                  <h3 className="text-xl font-bold text-white">{textAction.title}</h3>
-                  <p className="mt-3 text-sm text-gray-400 leading-relaxed">{textAction.message}</p>
+                  <h3 className="text-xl font-bold text-gray-900">{textAction.title}</h3>
+                  <p className="mt-3 text-sm text-gray-700 leading-relaxed">{textAction.message}</p>
                   <textarea
                     value={textActionValue}
                     onChange={(e) => setTextActionValue(e.target.value)}
                     placeholder={textAction.placeholder}
                     rows={5}
-                    className="mt-6 w-full rounded-2xl border border-[#27272a] bg-black px-6 py-4 text-sm text-white outline-none focus:border-[#F24C20] focus:bg-[#18181b] transition-all resize-none"
+                    className="mt-6 w-full rounded-xl border border-gray-300 bg-white px-6 py-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#F24C20] transition-all resize-none"
                   />
                   <div className="mt-8 flex justify-end gap-3">
                     <button
@@ -1212,7 +1333,7 @@ export function UsersList({ onSelectUser, onVerifyUser, onAddUser, viewType = 'a
                         setTextAction(null);
                         setTextActionValue('');
                       }}
-                      className="px-6 py-3 rounded-xl border border-[#27272a] text-gray-400 font-semibold hover:bg-[#18181b] hover:text-white transition-all"
+                      className="px-6 py-3 rounded-xl border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition-all"
                     >
                       Cancel
                     </button>

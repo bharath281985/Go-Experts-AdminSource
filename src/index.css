@@ -3031,3 +3031,14 @@ html {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(242, 76, 32, 0.5);
 }
+
+/* Projects status dropdown theme */
+.projects-status-select {
+  background-color: #1f2a44 !important;
+  color: #ffffff !important;
+}
+
+.projects-status-select option {
+  background-color: #1f2a44 !important;
+  color: #ffffff !important;
+}
